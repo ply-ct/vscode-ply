@@ -1,0 +1,32 @@
+{
+  "name": "limberest",
+  "version": "1.0.01",
+  "description": "REST API Goodies",
+  "main": "index.js",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "js-yaml": "^3.8.4",
+    "request": "^2.81.0",
+    "util": "^0.10.3",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/limberest/limberest-js.git"
+  },
+  "keywords": [
+    "REST",
+    "API",
+    "Automated Testing",
+    "Microservice"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/limberest/limberest-js/issues"
+  },
+  "homepage": "https://limberest.io"
+}
