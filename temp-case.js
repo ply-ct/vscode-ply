@@ -11,7 +11,9 @@ console.log("ENV: " + limberest.stringify(env));
 var group = limberest.group(testLoc + '/limberest-demo.postman');
 console.log("GROUP: " + limberest.stringify(group));
 
-var test = group.test('api-docs', 'GET');
+var test = group.test('PUT', 'movies/{id}');
 console.log("TEST: " + limberest.stringify(test));
 
-test.run(env);
+var values = Object.assign({}, env);
+values.id = '5c0a01b6';
+test.run(values);
