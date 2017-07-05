@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "defaults": "^1.0.3",
+    "diff": "^3.2.0",
     "fs": "^0.0.1-security",
     "fs-extra": "^3.0.1",
     "js-yaml": "^3.8.4",
