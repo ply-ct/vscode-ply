@@ -2,22 +2,24 @@
 
 const limberest = require('./lib/limberest');
 
-const testLoc = '../limberest-demo/test';
+const testsLoc = '../limberest-demo/test';
   
-var env = limberest.env(testLoc + '/localhost.env');
+var env = limberest.env(testsLoc + '/localhost.env');
 
-var group = limberest.group(testLoc + '/limberest-demo.postman');
+var group = limberest.group(testsLoc + '/limberest-demo.postman');
 
-var test = group.test('GET', 'movies?{query}', {
-  logDir: testLoc + '/results',
+var options = {
+  caseDir: testsLoc,
+  resultDir: './results',
+  logDir: './results',
   debug: true,
-  overwrite: true
-});
+};
+
+var test = group.test('GET', 'movies?{query}');
 
 var values = Object.assign({}, env);
 values.query = 'year=1935&rating=5';
-var testRun = test.run(values, (response, result) => {
-  console.log("RESP:\n" + JSON.stringify(response, null, 2));
+
+test.run(values, options, (response, result, error) => {
   console.log("RES:\n" + JSON.stringify(result, null, 2));
-  console.log("RUN:\n" + JSON.stringify(testRun, null, 2));
 });
