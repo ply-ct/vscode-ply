@@ -9,9 +9,9 @@ var env = limberest.env(testsLoc + '/localhost.env');
 var group = limberest.group(testsLoc + '/limberest-demo.postman');
 
 var options = {
-  caseDir: testsLoc,
-  resultDir: './results',
-  logDir: './results',
+  caseLocation: testsLoc,
+  resultLocation: './results',
+  logLocation: './results',
   debug: true,
 };
 

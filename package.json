@@ -8,6 +8,7 @@
     "diff": "^3.2.0",
     "fs": "^0.0.1-security",
     "js-yaml": "^3.8.4",
+    "mkdirp": "^0.5.1",
     "request": "^2.81.0",
     "sanitize-filename": "^1.6.1",
     "util": "^0.10.3"
