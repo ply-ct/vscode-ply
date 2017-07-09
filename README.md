@@ -1,5 +1,9 @@
-# limberest-js
+# limberest
 
+## Install
+```bash
+npm install --save limberest
+```
 
-### Browserify
-browserify index.js -o limberest.js
+## Usage
+Please don't use this yet.
