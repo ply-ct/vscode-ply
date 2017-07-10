@@ -23,6 +23,6 @@ var test = group.test('GET', 'movies?{query}');
 var values = Object.assign({}, env);
 values.query = 'year=1935&rating=5';
 
-test.run(values, options, (response, result, error) => {
+test.run(values, options, (response, error) => {
   console.log("RES:\n" + JSON.stringify(result, null, 2));
 });

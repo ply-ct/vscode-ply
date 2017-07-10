@@ -8,17 +8,13 @@
     "browser-request": "^0.3.3",
     "defaults": "^1.0.3",
     "diff": "^3.2.0",
-    "fs": "^0.0.1-security",
     "js-yaml": "^3.8.4",
     "mkdirp": "^0.5.1",
     "request": "^2.81.0",
-    "sanitize-filename": "^1.6.1",
-    "util": "^0.10.3"
+    "sanitize-filename": "^1.6.1"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/limberest/limberest-js.git"

@@ -5,23 +5,24 @@ const limberest = require('./lib/limberest');
 const testLoc = '../mdw6/mdw-workflow/assets/com/centurylink/mdw/tests/services';
   
 var env = limberest.env(testLoc + '/localhost.env');
+var group = limberest.group(testLoc + '/admin-apis.postman');
 
 var options = {
-  caseDir: testLoc,
-  resultDir: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
-  logDir: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
+  location: testLoc,
+  resultLocation: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
+  logLocation: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
   debug: true,
 };
 
 // run one test
-var group = limberest.group(testLoc + '/admin-apis.postman');
 var test = group.test('GET', 'workgroups/{group-name}');
 
 var values = Object.assign({}, env);
 values['group-name'] = 'GroupA';
 
-test.run(values, options, (response, result, error) => {
+test.run(options, values, (response, error) => {
   console.log("RESP:\n" + JSON.stringify(response, null, 2));
+  var result = test.verify(values);
   console.log("RES:\n" + JSON.stringify(result, null, 2));
 });
 
