@@ -11,7 +11,7 @@ var options = {
   location: testLoc,
   resultLocation: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
   logLocation: '../mdw6/mdw-workflow/testResults/com.centurylink.mdw.tests.services',
-  debug: true,
+  debug: true
 };
 
 // run one test
