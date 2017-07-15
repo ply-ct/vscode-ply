@@ -14,8 +14,8 @@ var group = limberest.group(testsLoc + '/limberest-demo.postman');
 
 var options = {
   location: testsLoc,
-  resultLocation: '../limberest-demo/test/results',
-  logLocation: '../limberest-demo/test/results',
+  expectedResultLocation: testsLoc + '/results/expected',
+  resultLocation: testsLoc + '/results/actual',
   debug: true,
   responseHeaders: ['content-type']
 };
