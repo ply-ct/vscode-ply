@@ -7,15 +7,17 @@ const limberest = require('./lib/limberest');
 // const testsLoc = 'https://github.com/limberest/limberest-demo/tree/master/test';
 const testsLoc = '../limberest-demo/test';
   
-var env = limberest.env(testsLoc + '/localhost.env');
+// var env = limberest.env(testsLoc + '/localhost.env');
+var env = limberest.env(testsLoc + '/limberest.io.env');
 
 var group = limberest.group(testsLoc + '/limberest-demo.postman');
 
 var options = {
   location: testsLoc,
-  resultLocation: './results',
-  logLocation: './results',
+  resultLocation: '../limberest-demo/test/results',
+  logLocation: '../limberest-demo/test/results',
   debug: true,
+  responseHeaders: ['content-type']
 };
 
 var test = group.test('GET', 'movies?{query}');
@@ -23,6 +25,6 @@ var test = group.test('GET', 'movies?{query}');
 var values = Object.assign({}, env);
 values.query = 'year=1935&rating=5';
 
-test.run(values, options, (response, error) => {
-  console.log("RES:\n" + JSON.stringify(result, null, 2));
+test.run(options, values, (response, error) => {
+  test.verify(values);
 });
