@@ -6,4 +6,10 @@ npm install --save limberest
 ```
 
 ## Usage
-Please don't use this yet.
+Path-Style Locations:
+ - If using Node, point to file system directories. 
+ - If in browser, point to local storage paths.
+ 
+URL-Style Locations:
+(For options.location, options.expectedResultLocation)
+ - Point to GitHub repository relative location.
