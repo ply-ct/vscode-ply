@@ -32,6 +32,6 @@ testCase.run(group.test('GET', 'movies?{query}'), Object.assign({query: 'title='
 });
 
 
-test.run(values, options, (response, error) => {
+test.run(values, options, (error, response) => {
   console.log("RES:\n" + JSON.stringify(result, null, 2));
 });

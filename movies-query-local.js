@@ -20,6 +20,6 @@ var test = group.getTest('GET', 'movies?{query}');
 var values = Object.assign({}, env);
 values.query = 'year=1935&rating=5';
 
-test.run(options, values, (response, error) => {
+test.run(options, values, (error, response) => {
   test.verify(values);
 });
