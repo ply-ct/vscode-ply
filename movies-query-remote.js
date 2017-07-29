@@ -13,11 +13,11 @@ var options = {
   responseHeaders: ['content-type']
 };
   
-limberest.loadEnv(testsLoc + '/limberest.io.env', function(err, env) {
+limberest.loadValues(testsLoc + '/limberest.io.env', function(err, vals) {
   if (err)
     throw err;
-  var values = Object.assign({}, env);
-  limberest.loadGroup(testsLoc + '/limberest-demo.postman', function(err, group) {
+  var values = Object.assign({}, vals);
+  limberest.loadGroup(testsLoc + '/movies-api.postman', function(err, group) {
     if (err)
       throw err;
     var test = group.getTest('GET', 'movies?{query}');

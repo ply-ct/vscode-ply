@@ -12,14 +12,17 @@ var options = {
   responseHeaders: ['content-type']
 };
   
-var env = limberest.loadEnvSync(testsLoc + '/limberest.io.env');
-var group = limberest.loadGroupSync(testsLoc + '/limberest-demo.postman');
+var values = limberest.loadValuesSync(testsLoc + '/limberest.io.env');
+var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
 var test = group.getTest('GET', 'movies?{query}');
 
-var values = Object.assign({}, env);
+values = Object.assign({}, values);
 values.query = 'year=1935&rating=5';
 
 test.run(options, values, (error, response) => {
-  test.verify(values);
+  test.verify(values, (err, result) => {
+    if (err)
+      console.log(err);
+  });
 });
