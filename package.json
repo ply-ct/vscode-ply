@@ -9,7 +9,7 @@
     "builtin-status-codes": "^3.0.0",
     "defaults": "^1.0.3",
     "diff": "^3.2.0",
-    "js-yaml": "^3.8.4",
+    "js-yaml": "^3.9.1",
     "mkdirp": "^0.5.1",
     "request": "^2.81.0",
     "sanitize-filename": "^1.6.1"
