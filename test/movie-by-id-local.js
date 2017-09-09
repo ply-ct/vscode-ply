@@ -1,16 +1,15 @@
 'use strict';
 
-const limberest = require('./lib/limberest');
+const limberest = require('../lib/limberest');
 
 // Note testsLoc on file system allows synchronous reads.
-const testsLoc = '../limberest-demo/test';
-var values = limberest.loadValuesSync(testsLoc + '/limberest.io.env');
+const testsLoc = '../../limberest-demo/test';
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
-var test = group.getTest('GET', 'movies?{query}');
+var test = group.getTest('GET', 'movies/{id}');
 
-values = Object.assign({}, values);
-values.query = 'year=1935&rating=5';
+var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/global.values'));
+values = Object.assign(values, limberest.loadValuesSync(testsLoc + '/limberest.io.env'));
 
 var options = {
   location: testsLoc,
