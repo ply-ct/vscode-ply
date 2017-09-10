@@ -4,7 +4,7 @@ const limberest = require('../lib/limberest');
 
 // Note testsLoc on file system allows synchronous reads.
 const testsLoc = '../../limberest-demo/test';
-var values = limberest.loadValuesSync(testsLoc + '/limberest.io.env');
+var values = limberest.loadValuesSync(testsLoc + '/limberest.io.values');
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
 var test = group.getTest('GET', 'movies?{query}');

@@ -9,7 +9,7 @@ var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 var test = group.getTest('GET', 'movies/{id}');
 
 var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/global.values'));
-values = Object.assign(values, limberest.loadValuesSync(testsLoc + '/limberest.io.env'));
+values = Object.assign(values, limberest.loadValuesSync(testsLoc + '/limberest.io.values'));
 
 var options = {
   location: testsLoc,

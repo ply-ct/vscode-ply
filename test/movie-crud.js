@@ -9,7 +9,7 @@ const Case = require('../lib/limberest').Case;
 // const testsLoc = 'https://github.com/limberest/limberest-demo/tree/master/test';
 const testsLoc = '../../limberest-demo/test';
   
-var values = limberest.loadValuesSync(testsLoc + '/localhost.env');
+var values = limberest.loadValuesSync(testsLoc + '/localhost.values');
 
 var group = limberest.loadGroupSync(testsLoc + '/limberest-demo.postman');
 
