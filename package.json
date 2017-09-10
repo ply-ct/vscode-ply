@@ -1,6 +1,6 @@
 {
   "name": "limberest",
-  "version": "1.0.06",
+  "version": "1.0.07",
   "description": "REST API Goodies",
   "main": "index.js",
   "dependencies": {
