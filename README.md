@@ -1,6 +1,6 @@
 [![Limberest Logo](https://limberest.github.io/limberest/img/logo.png)](https://limberest.io)
 
-# REST API Automated Testing
+## REST API Automated Testing
 
 ## Install
 ```bash
@@ -16,7 +16,7 @@ URL-Style Locations:
 (For options.location, options.expectedResultLocation)
  - Point to GitHub repository relative location.
  
-Example :
+## Example :
 ```javascript
 const limberest = require('../lib/limberest');
 
