@@ -1,6 +1,6 @@
 {
   "name": "limberest",
-  "version": "1.0.07",
+  "version": "1.0.08",
   "description": "REST API Goodies",
   "main": "index.js",
   "dependencies": {
@@ -23,8 +23,7 @@
   "keywords": [
     "REST",
     "API",
-    "Automated Testing",
-    "Microservice"
+    "Automated Testing"
   ],
   "license": "MIT",
   "bugs": {
