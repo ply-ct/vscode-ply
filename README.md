@@ -1,5 +1,3 @@
-# limberest
-
 [![Limberest Logo](https://limberest.github.io/limberest/img/logo.png)](https://limberest.io)
 
 # REST API Automated Testing
