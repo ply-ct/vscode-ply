@@ -1,0 +1,23 @@
+{
+  "plugins": ["node"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:node/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "rules": {
+    "semi": "error",
+    "no-console": "off"
+  },
+  "env": {
+    "browser": false
+  },
+  "globals": {
+    "require": false,
+    "module": false,
+    "localStorage": false
+  }
+}

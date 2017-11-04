@@ -14,7 +14,14 @@
     "request": "^2.81.0",
     "sanitize-filename": "^1.6.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^4.10.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1"
+  },
   "scripts": {},
   "repository": {
     "type": "git",
@@ -29,5 +36,8 @@
   "bugs": {
     "url": "https://github.com/limberest/limberest-js/issues"
   },
-  "homepage": "https://limberest.io"
+  "homepage": "https://limberest.io",
+  "engines": {
+    "node": ">=6.0.0"
+  }  
 }
