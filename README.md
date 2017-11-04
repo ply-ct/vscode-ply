@@ -16,7 +16,7 @@ URL-Style Locations:
 (For options.location, options.expectedResultLocation)
  - Point to GitHub repository relative location.
  
-## Example :
+## Example:
 ```javascript
 const limberest = require('../lib/limberest');
 
@@ -45,3 +45,6 @@ test.run(options, values, (error, response) => {
   });
 });
 ```
+
+## Full Documentation:
+  - https://limberest.io/topics/testing

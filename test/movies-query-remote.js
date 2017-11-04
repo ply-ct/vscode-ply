@@ -12,7 +12,7 @@ var options = {
   responseHeaders: ['content-type']
 };
   
-limberest.loadValues(testsLoc + '/limberest.io.values', function(err, vals) {
+limberest.loadValues(options, ['/limberest.io.values'], function(err, vals) {
   if (err)
     throw err;
   var values = Object.assign({}, vals);
