@@ -19,10 +19,10 @@ limberest.loadValues(options, ['/limberest.io.values'], function(err, vals) {
   limberest.loadGroup(testsLoc + '/movies-api.postman', function(err, group) {
     if (err)
       throw err;
-    var test = group.getTest('GET', 'movies?{query}');
+    var request = group.getRequest('GET', 'movies?{query}');
     values.query = 'year=1935&rating=5';
-    test.run(options, values, (error, response) => {
-      test.verify(values);
+    request.run(options, values, (error, response) => {
+      request.verify(values);
     });
   });
 });

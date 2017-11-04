@@ -6,7 +6,7 @@ const limberest = require('../lib/limberest');
 const testsLoc = '../../limberest-demo/test';
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
-var test = group.getTest('GET', 'movies/{id}');
+var request = group.getRequest('GET', 'movies/{id}');
 
 var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/global.values'));
 values = Object.assign(values, limberest.loadValuesSync(testsLoc + '/limberest.io.values'));
@@ -19,8 +19,8 @@ var options = {
   responseHeaders: ['content-type']
 };
     
-test.run(options, values, (error, response) => {
-  test.verify(values, (err, result) => {
+request.run(options, values, (error, response) => {
+  request.verify(values, (err, result) => {
     if (err)
       console.log(err);
   });

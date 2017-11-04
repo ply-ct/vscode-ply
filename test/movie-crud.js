@@ -11,7 +11,7 @@ const testsLoc = '../../limberest-demo/test';
   
 var values = limberest.loadValuesSync(testsLoc + '/localhost.values');
 
-var group = limberest.loadGroupSync(testsLoc + '/limberest-demo.postman');
+var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
 var options = {
   location: testsLoc,
@@ -27,8 +27,8 @@ var movie = {
 var vals = Object.assign({query: 'title=' + movie.title}, values);
 
 var testCase = new Case('movieCrud', options);
-testCase.run(group.getTest('GET', 'movies?{query}'), vals, (response, error) => {
+testCase.run(group.getRequest('GET', 'movies?{query}'), vals, (response, error) => {
   if (testCase.verify()) {
-    testCase.run(group.getTest('DEL', 'movies/{id}'), values);
+    testCase.run(group.getRequest('DEL', 'movies/{id}'), values);
   }
 });

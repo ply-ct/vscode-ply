@@ -7,7 +7,7 @@ const testsLoc = '../../limberest-demo/test';
 var values = limberest.loadValuesSync(testsLoc + '/limberest.io.values');
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
-var test = group.getTest('GET', 'movies?{query}');
+var request = group.getRequest('GET', 'movies?{query}');
 
 values = Object.assign({}, values);
 values.query = 'year=1935&rating=5';
@@ -20,8 +20,8 @@ var options = {
   responseHeaders: ['content-type']
 };
     
-test.run(options, values, (error, response) => {
-  test.verify(values, (err, result) => {
+request.run(options, values, (error, response) => {
+  request.verify(values, (err, result) => {
     if (err)
       console.log(err);
   });
