@@ -39,5 +39,5 @@
   "homepage": "https://limberest.io",
   "engines": {
     "node": ">=6.0.0"
-  }  
+  }
 }
