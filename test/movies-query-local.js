@@ -4,12 +4,10 @@ const limberest = require('../lib/limberest');
 
 // Note testsLoc on file system allows synchronous reads.
 const testsLoc = '../../limberest-demo/test';
-var values = limberest.loadValuesSync(testsLoc + '/limberest.io.values');
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
-
 var request = group.getRequest('GET', 'movies?{query}');
 
-values = Object.assign({}, values);
+var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/limberest.io.values'));
 values.query = 'year=1935&rating=5';
 
 var options = {
@@ -20,9 +18,10 @@ var options = {
   responseHeaders: ['content-type']
 };
     
-request.run(options, values, (error, response) => {
-  request.verify(values, (err, result) => {
-    if (err)
-      console.log(err);
-  });
+request.run(options, values)
+.then(response => {
+  request.verify(values);
+})
+.catch(err => {
+  console.log(err);
 });

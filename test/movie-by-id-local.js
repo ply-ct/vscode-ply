@@ -5,11 +5,9 @@ const limberest = require('../lib/limberest');
 // Note testsLoc on file system allows synchronous reads.
 const testsLoc = '../../limberest-demo/test';
 var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
-
 var request = group.getRequest('GET', 'movies/{id}');
-
-var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/global.values'));
-values = Object.assign(values, limberest.loadValuesSync(testsLoc + '/limberest.io.values'));
+var values = Object.assign({}, limberest.loadValuesSync(testsLoc + '/global.values'), 
+      limberest.loadValuesSync(testsLoc + '/limberest.io.values'));
 
 var options = {
   location: testsLoc,
@@ -19,9 +17,10 @@ var options = {
   responseHeaders: ['content-type']
 };
     
-request.run(options, values, (error, response) => {
-  request.verify(values, (err, result) => {
-    if (err)
-      console.log(err);
-  });
+request.run(options, values)
+.then(response => {
+  request.verify(values);
+})
+.catch(err => {
+  console.log(err);
 });

@@ -4,7 +4,7 @@ const limberest = require('../lib/limberest');
 
 const testsLoc = 'https://raw.githubusercontent.com/limberest/limberest-demo/master/test';
 
-var options = {
+const options = {
   location: testsLoc,
   expectedResultLocation: testsLoc + '/results/expected',
   resultLocation: '../../limberest-demo/test/results/actual',
@@ -12,19 +12,24 @@ var options = {
   responseHeaders: ['content-type']
 };
   
-limberest.loadValues(options, ['/limberest.io.values'], function(err, vals) {
-  if (err)
-    throw err;
-  var values = Object.assign({}, vals);
-  limberest.loadGroup(testsLoc + '/movies-api.postman', function(err, group) {
-    if (err)
-      throw err;
-    var request = group.getRequest('GET', 'movies?{query}');
-    values.query = 'year=1935&rating=5';
-    request.run(options, values, (error, response) => {
-      request.verify(values);
-    });
-  });
+var request;
+var values;
+
+limberest.loadGroup(testsLoc + '/movies-api.postman')
+.then(group => {
+  request = group.getRequest('GET', 'movies?{query}');
+  return limberest.loadValues(options, ['/limberest.io.values']);
+})
+.then(vals => {
+  values = vals;
+  values.query = 'year=1935&rating=5';
+  return request.run(options, values);
+})
+.then(response => {
+  request.verify(values);
+})
+.catch(err => {
+  console.log(err);
 });
 
 
