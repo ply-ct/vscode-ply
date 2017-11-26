@@ -27,8 +27,7 @@ var group = limberest.loadGroupSync(testsLoc + '/movies-api.postman');
 
 var request = group.getRequest('GET', 'movies?{query}');
 
-values = Object.assign({}, values);
-values.query = 'year=1935&rating=5';
+values = Object.assign({}, values, {query: 'year=1935&rating=5'});
 
 var options = {
   location: testsLoc,
@@ -38,11 +37,12 @@ var options = {
   responseHeaders: ['content-type']
 };
 
-request.run(options, values, (error, response) => {
-  request.verify(values, (err, result) => {
-    if (err)
-      console.log(err);
-  });
+request.run(options, values)
+.then(response => {
+  request.verify(values);
+})
+.catch(err => {
+  console.log(err);
 });
 ```
 
