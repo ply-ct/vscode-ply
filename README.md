@@ -47,4 +47,4 @@ request.run(options, values)
 ```
 
 ## Full Documentation:
-  - https://limberest.io/topics/testing
+  - https://limberest.io/topics/requests
