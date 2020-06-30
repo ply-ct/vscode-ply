@@ -77,14 +77,13 @@ export class PlyAdapter implements TestAdapter {
         await runner.runTests(testIds);
     }
 
-/*    implement this method if your TestAdapter supports debugging tests
-    async debug(tests: string[]): Promise<void> {
-        // start a test run in a child process and attach the debugger to it...
-    }
-*/
+    // TODO support debugging tests
+    // async debug(tests: string[]): Promise<void> {
+    //     // start a test run in a child process and attach the debugger to it...
+    // }
 
     cancel(): void {
-        // in a "real" TestAdapter this would kill the child process for the current test run (if there is any)
+        // TODO: kill the child process for the current test run (if there is any)
         throw new Error("Method not implemented.");
     }
 

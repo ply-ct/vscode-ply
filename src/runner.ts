@@ -11,6 +11,7 @@ import { WorkerArgs } from './worker/args';
 export class PlyRunner {
 
     private runningTestProcess: ChildProcess | undefined;
+	private testRunId = 0;
 
     private readonly workerScript = require.resolve('../out/worker/bundle.js');
     private readonly config: PlyConfig;
@@ -25,11 +26,14 @@ export class PlyRunner {
     }
 
     /**
-     * debugging is not supported as yet
+     * TODO: debugging is not supported as yet
      */
     async runTests(testIds: string[], debug = false): Promise<void> {
+        this.testRunId++;
+        const testRunId = `${this.testRunId}`;
+
         try {
-            this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds });
+            this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
             const testInfos: TestInfo[] = [];
             for (const testId of testIds) {
@@ -51,14 +55,15 @@ export class PlyRunner {
                     return uri.toString(true);
                 }
             });
-            this.runPlyees(plyees, debug);
+            await this.runPlyees(plyees, debug);
 
-            this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+            this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
         catch (err) {
             if (this.log.enabled) {
                 this.log.error(`Error while running plyees: ${inspect(err)}`);
             }
+            this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
     }
 
@@ -95,6 +100,7 @@ export class PlyRunner {
         return new Promise<void>(resolve => {
 
             let runningTest: string | undefined = undefined;
+            const testRunId = `${this.testRunId}`;
 
             const childProcScript = this.workerScript;
 
@@ -123,9 +129,9 @@ export class PlyRunner {
                         this.log.info(`Received ${JSON.stringify(message)}`);
                     }
                     if (message.type !== 'finished') {
-                        this.testStatesEmitter.fire(message);
+                        this.testStatesEmitter.fire({ ...message as any, testRunId });
                         if (message.type === 'test') {
-                            runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
+//                             runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
                             } else {
@@ -149,7 +155,8 @@ export class PlyRunner {
                         type: 'test',
                         state: 'running',
                         test: runningTest,
-                        message: data.toString()
+                        message: data.toString(),
+                        testRunId
                     });
                 }
             };
@@ -165,7 +172,7 @@ export class PlyRunner {
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
                     childProcessFinished = true;
-                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
                     resolve();
                 }
             });
@@ -178,12 +185,11 @@ export class PlyRunner {
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
                     childProcessFinished = true;
-                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
                     resolve();
                 }
             });
         });
-
     }
 
     private stringsOnly(env: { [envVar: string]: string | null | undefined }): { [envVar: string]: string } {

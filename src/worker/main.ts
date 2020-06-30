@@ -99,6 +99,6 @@ function getTestId(plyee: string) {
         return plyee;
     }
     else {
-        return 'file:///' + plyee;
+        return 'file://' + plyee;
     }
 }
