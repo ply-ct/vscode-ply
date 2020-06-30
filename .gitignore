@@ -1,3 +1,8 @@
-node_modules/
-notes/
-/npm-debug.log
+.DS_Store
+node_modules
+.rpt2_cache/
+out
+dist
+*.vsix
+npm-debug.log*
+/notes/

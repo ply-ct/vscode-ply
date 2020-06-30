@@ -1,44 +1,154 @@
 {
-  "name": "limberest",
-  "version": "1.0.15",
-  "description": "REST API Goodies",
-  "main": "index.js",
-  "dependencies": {
-    "async": "^2.5.0",
-    "browser-request": "^0.3.3",
-    "builtin-status-codes": "^3.0.0",
-    "defaults": "^1.0.3",
-    "diff": "^3.3.0",
-    "glob": "^7.1.2",
-    "js-yaml": "^3.9.1",
-    "mkdirp": "^0.5.1",
-    "request": "^2.81.0",
-    "sanitize-filename": "^1.6.1"
-  },
-  "devDependencies": {
-    "eslint": "^4.10.0",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1"
-  },
-  "scripts": {},
+  "name": "ply",
+  "displayName": "Ply",
+  "description": "REST API Automated Testing",
+  "icon": "resources/icon.png",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Donald Oakes <donald@oakesville.io>",
+  "publisher": "ply-ct",
+  "homepage": "https://ply-ct.com/ply",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/limberest/limberest-js.git"
+    "url": "https://github.com/oakesville/vscode-ply.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oakesville/vscode-ply/issues"
   },
   "keywords": [
-    "REST",
-    "API",
-    "Automated Testing"
+    "rest",
+    "api",
+    "test",
+    "testing"
   ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/limberest/limberest-js/issues"
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tslint -p ./",
+    "test": "mocha --require ts-node/register src/test/**/*.ts",
+    "build-worker": "rollup -c",
+    "watch-worker": "rollup --watch -c"
   },
-  "homepage": "https://limberest.io",
   "engines": {
-    "node": ">=6.0.0"
+    "vscode": "^1.43.1"
+  },
+  "dependencies": {
+    "ply-ct": "^2.0.4",
+    "tslib": "^1.10.0",
+    "vscode-test-adapter-api": "^1.7.0",
+    "vscode-test-adapter-util": "^0.7.0",
+    "vscode-uri": "^2.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/register": "^7.7.4",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^10.17.6",
+    "esm": "^3.2.25",
+    "mocha": "^7.1.1",
+    "rollup": "^1.27.5",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.22.1",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2",
+    "vscode": "^1.1.36"
+  },
+  "extensionDependencies": [
+    "hbenl.vscode-test-explorer"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Ply",
+      "properties": {
+        "ply.testsLocation": {
+          "type": "string",
+          "description": "Base directory (relative to workspace root) for all Ply request and case files.  Defaults to value from ply.json/yaml if present.",
+          "default": "."
+        },
+        "ply.requestFiles": {
+          "type": "array",
+          "description": "Glob patterns for Ply request files",
+          "default": [
+            "**/*.{ply.yaml,ply.yml}"
+          ]
+        },
+        "ply.caseFiles": {
+          "type": "array",
+          "description": "Glob patterns for Ply case files",
+          "default": [
+            "**/*.ply.ts"
+          ]
+        },
+        "ply.excludes": {
+          "type": "array",
+          "description": "Glob patterns for places to exclude",
+          "default": [
+            "**/{node_modules,bin,dist,out}/**"
+          ]
+        },
+        "ply.logpanel": {
+          "type": "boolean",
+          "description": "Write log output to the Ply console panel",
+          "default": false,
+          "scope": "resource"
+        },
+        "ply.logfile": {
+          "type": "string",
+          "description": "Write all log output to the specified file",
+          "scope": "resource"
+        },
+        "ply.debugPort": {
+          "type": "number",
+          "description": "The port to use for debugging sessions",
+          "default": 9229
+        },
+        "ply.nodePath": {
+          "description": "Path to node executable to use. Default is to find on your PATH; if not found or if this option is set to `null`, use node shipped with VS Code",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": "default"
+        },
+        "ply.plyPath": {
+          "description": "Path to ply package to use (relative to workspace folder). By default (or if this option is set to `null`), use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "ply.diff",
+        "title": "Ply Diff",
+        "icon": {
+          "dark": "./icons/diff-dark.svg",
+          "light": "./icons/diff-light.svg"
+        }
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "ply.diff",
+          "group": "inline@4",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
+        }
+      ]
+    }
   }
 }

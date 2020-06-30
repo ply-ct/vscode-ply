@@ -1,0 +1,15 @@
+.vscode/**
+.vscode-test/**
+out/test/**
+out/worker/main.js*
+out/worker/args.js*
+src/**
+.gitignore
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/tslint.json
+**/*.map
+**/*.ts
+tsconfig.json
+rollup.config.js
+.rpt2_cache/

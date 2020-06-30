@@ -1,1 +1,0 @@
-TODO: automate these tests by capturing console output and comparing with expected (in the form of .out files)

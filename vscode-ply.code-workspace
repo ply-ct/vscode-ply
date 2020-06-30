@@ -1,0 +1,12 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+      ],
+    "settings": {
+        "mochaExplorer.files": "test/**/*.ts",
+        "mochaExplorer.optsFile": "test/mocha.opts",
+        "mochaExplorer.logpanel": true
+    },
+}

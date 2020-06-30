@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2018",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "out",
+    "sourceMap": true,
+    "rootDir": "src",
+    "strict": true,
+    "noUnusedLocals": false
+  },
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "test"
+  ]
+}
