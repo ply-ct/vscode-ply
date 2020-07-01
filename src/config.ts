@@ -9,7 +9,7 @@ export class PlyConfig {
     }
 
     get plyPath(): string {
-        let plyPath = vscode.workspace.getConfiguration().get<string | null>('ply.plyPath');
+        let plyPath = vscode.workspace.getConfiguration().get<string>('ply.plyPath');
         if (plyPath) {
             return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
@@ -18,8 +18,8 @@ export class PlyConfig {
     }
 
     async getNodePath(): Promise<string | undefined> {
-        let nodePath = vscode.workspace.getConfiguration().get<string | null>('ply.nodePath') || undefined;
-        if (nodePath === 'default') {
+        let nodePath = vscode.workspace.getConfiguration().get<string>('ply.nodePath');
+        if (!nodePath) {
             nodePath = await detectNodePath();
         }
         if (this.log && this.log.enabled) {
@@ -53,7 +53,7 @@ export class PlyConfig {
 
         const workspacePath = this.workspaceFolder.uri.fsPath.replace(/\\/g, '/');
         let options = new ply.Config(new ply.Defaults(workspacePath)).options;
-        let abs = (location: string) => {
+        const abs = (location: string) => {
             if (path.isAbsolute(location)) {
                 return path.normalize(location).replace(/\\/g, '/');
             }
@@ -61,14 +61,18 @@ export class PlyConfig {
                 return path.normalize(workspacePath + '/' + location).replace(/\\/g, '/');
             }
         };
+        const val = (name: string, defaultVal: string): string => {
+            let val = vscode.workspace.getConfiguration().get(name, '');
+            return val ? val  : defaultVal;
+        };
         options = Object.assign({}, options, {
-            testsLocation: abs(vscode.workspace.getConfiguration().get('ply.testsLocation', options.testsLocation)),
-            expectedLocation: abs(options.expectedLocation),
-            actualLocation: abs(options.actualLocation),
-            logLocation: options.logLocation ? abs(options.logLocation) : undefined,
-            requestFiles: vscode.workspace.getConfiguration().get('ply.requestFiles', options.requestFiles),
-            caseFiles: vscode.workspace.getConfiguration().get('ply.caseFiles', options.caseFiles),
-            excludes: vscode.workspace.getConfiguration().get('ply.excludes', options.excludes)
+            testsLocation: abs(val('ply.testsLocation', options.testsLocation)),
+            requestFiles: val('ply.requestFiles', options.requestFiles),
+            caseFiles: val('ply.caseFiles', options.caseFiles),
+            excludes: val('ply.excludes', options.excludes),
+            expectedLocation: abs(val('ply.expectedLocation', options.expectedLocation)),
+            actualLocation: abs(val('ply.actualLocation', options.actualLocation)),
+            logLocation: abs(val('ply.logLocation', options.logLocation || options.actualLocation))
         });
 
         return options;

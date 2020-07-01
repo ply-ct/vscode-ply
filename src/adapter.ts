@@ -47,10 +47,10 @@ export class PlyAdapter implements TestAdapter {
 
             const requestFiles = this.config.plyOptions.requestFiles;
             const excludes = this.config.plyOptions.excludes;
-            const requests = await loader.loadRequests(requestFiles.join(','), excludes.join(','));
+            const requests = await loader.loadRequests(requestFiles, excludes);
 
             const caseFiles = this.config.plyOptions.caseFiles;
-            const cases = await loader.loadCases(caseFiles.join(','), excludes.join(','));
+            const cases = await loader.loadCases(caseFiles, excludes);
 
             this.plyRoots.build(requests, cases);
             this.log.debug('requestsRoot: ' + this.plyRoots.requestsRoot.toString());

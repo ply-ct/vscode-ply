@@ -74,61 +74,60 @@
       "properties": {
         "ply.testsLocation": {
           "type": "string",
-          "description": "Base directory (relative to workspace root) for all Ply request and case files.  Defaults to value from ply.json/yaml if present.",
-          "default": "."
+          "description": "Base directory (absolute or relative to workspace root) for all Ply request and case files.  Defaults to value from .plyrc.yml if present, otherwise '.'",
+          "scope": "resource"
         },
         "ply.requestFiles": {
-          "type": "array",
-          "description": "Glob patterns for Ply request files",
-          "default": [
-            "**/*.{ply.yaml,ply.yml}"
-          ]
+          "type": "string",
+          "description": "Glob pattern for Ply request files ('**/*.{ply.yaml,ply.yml}').",
+          "scope": "resource"
         },
         "ply.caseFiles": {
-          "type": "array",
-          "description": "Glob patterns for Ply case files",
-          "default": [
-            "**/*.ply.ts"
-          ]
+          "type": "string",
+          "description": "Glob pattern for Ply case files ('**/*.ply.ts').",
+          "scope": "resource"
         },
         "ply.excludes": {
-          "type": "array",
-          "description": "Glob patterns for places to exclude",
-          "default": [
-            "**/{node_modules,bin,dist,out}/**"
-          ]
+          "type": "string",
+          "description": "Glob pattern for places to exclude ('**/{node_modules,bin,dist,out}/**').",
+          "scope": "resource"
+        },
+        "ply.expectedLocation": {
+          "type": "string",
+          "description": "Expected results base dir (testsLocation + '/results/expected').",
+          "scope": "resource"
+        },
+        "ply.actualLocation": {
+          "type": "string",
+          "description": "Actual results base dir (testsLocation + '/results/actual').",
+          "scope": "resource"
+        },
+        "ply.logLocation": {
+          "type": "string",
+          "description": "Log file base dir (actualLocation).",
+          "scope": "resource"
         },
         "ply.logpanel": {
           "type": "boolean",
-          "description": "Write log output to the Ply console panel",
+          "description": "Write detailed log output to the Ply Invoker output panel.",
           "default": false,
-          "scope": "resource"
-        },
-        "ply.logfile": {
-          "type": "string",
-          "description": "Write all log output to the specified file",
           "scope": "resource"
         },
         "ply.debugPort": {
           "type": "number",
-          "description": "The port to use for debugging sessions",
-          "default": 9229
+          "description": "Port to use for debug connections",
+          "default": 9229,
+          "scope": "resource"
         },
         "ply.nodePath": {
-          "description": "Path to node executable to use. Default is to find on your PATH; if not found or if this option is set to `null`, use node shipped with VS Code",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": "default"
+          "description": "Path to node executable. Default is to find on your PATH; if not found, use node shipped with VS Code",
+          "type": "string",
+          "scope": "resource"
         },
         "ply.plyPath": {
-          "description": "Path to ply package to use (relative to workspace folder). By default (or if this option is set to `null`), use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
+          "description": "Path to ply package (relative to workspace folder). Default is to use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
+          "type": "string",
+          "scope": "resource"
         }
       }
     },
