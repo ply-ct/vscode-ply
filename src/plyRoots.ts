@@ -170,7 +170,9 @@ export class PlyRoots {
         label: 'Ply',
         children: []
     };
+
     private readonly testsById = new Map<string,Test>();
+    private readonly suitesByTestId = new Map<string,Suite<Request|Case>>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
@@ -192,6 +194,7 @@ export class PlyRoots {
                 for (const request of suite) {
                     let testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
+                    this.suitesByTestId.set(testId, suite);
                     requestUris.push([Uri.parse(testId), request.start || 0]);
                 }
             }
@@ -207,6 +210,7 @@ export class PlyRoots {
                 for (const plyCase of suite) {
                     let testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
                     this.testsById.set(testId, plyCase);
+                    this.suitesByTestId.set(testId, suite);
                     caseUris.push([Uri.parse(testId), plyCase.start || 0]);
                 }
             }
@@ -227,6 +231,10 @@ export class PlyRoots {
 
     getTest(testId: string): Test | undefined {
         return this.testsById.get(testId);
+    }
+
+    getSuiteForTest(testId: string): Suite<Request|Case> | undefined {
+        return this.suitesByTestId.get(testId);
     }
 
     findFirstTestInfo(suiteId: string): TestInfo | undefined {

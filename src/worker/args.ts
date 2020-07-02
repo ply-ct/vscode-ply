@@ -4,6 +4,7 @@ export interface WorkerArgs {
     plyPath: string;
     plyOptions: object;
     plyValues: object;
+    runOptions?: object;
     logEnabled: boolean;
     workerScript: string;
     debugPort: number;

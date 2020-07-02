@@ -60,7 +60,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
             sendMessage('Running plyees');
         }
 
-        plyer.run(args.plyees, args.plyValues)
+        plyer.run(args.plyees, args.plyValues, args.runOptions)
         .then(() => {
             sendMessage({ type: 'finished' });
             if (onFinished) {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as ply from 'ply-ct';
 import { ChildProcess, fork } from 'child_process';
 import { inspect } from 'util';
 import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent } from 'vscode-test-adapter-api';
@@ -33,8 +34,6 @@ export class PlyRunner {
         const testRunId = `${this.testRunId}`;
 
         try {
-            this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
-
             const testInfos: TestInfo[] = [];
             for (const testId of testIds) {
                 const testOrSuite = this.plyRoots.findTestOrSuiteInfo(testId);
@@ -42,6 +41,16 @@ export class PlyRunner {
                     this.collectTests(testOrSuite, testInfos);
                 }
             }
+
+            const noExpectedDispensation = await this.checkMissingExpectedResults(testInfos);
+            if (!noExpectedDispensation) {
+                return;
+            }
+            const runOptions = { noExpectedResult: noExpectedDispensation };
+
+            this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
+
+            // convert to plyees
             let plyees = testInfos.map(testInfo => {
                 let uri = vscode.Uri.parse(testInfo.id);
                 if (uri.scheme === 'file') {
@@ -55,7 +64,7 @@ export class PlyRunner {
                     return uri.toString(true);
                 }
             });
-            await this.runPlyees(plyees, debug);
+            await this.runPlyees(plyees, debug, runOptions);
 
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
@@ -67,7 +76,7 @@ export class PlyRunner {
         }
     }
 
-    async runPlyees(plyees: string[], debug = false): Promise<void> {
+    async runPlyees(plyees: string[], debug = false, runOptions?: object): Promise<void> {
 
         let childProcessFinished = false;
 
@@ -92,6 +101,7 @@ export class PlyRunner {
             plyPath: this.config.plyPath,
             plyOptions: options,
             plyValues: plyValues,
+            runOptions: runOptions,
             logEnabled: this.log.enabled,
             workerScript: this.workerScript,
             debugPort: debugPort
@@ -131,7 +141,6 @@ export class PlyRunner {
                     if (message.type !== 'finished') {
                         this.testStatesEmitter.fire({ ...message as any, testRunId });
                         if (message.type === 'test') {
-//                             runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
                             } else {
@@ -190,6 +199,77 @@ export class PlyRunner {
                 }
             });
         });
+    }
+
+    /**
+     * Check for missing expected result file(s).
+     * @return dispensation: undefined if run is canceled; Proceed if no missing expected results
+     */
+    private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.NoExpectedResultDispensation | undefined> {
+        const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case>[] = [];
+        for (const testInfo of testInfos) {
+            let suite = this.plyRoots.getSuiteForTest(testInfo.id);
+            if (suite) {
+                let expectedExists = await suite.runtime.results.expected.exists;
+                if (!expectedExists && !suitesWithMissingResults.find(s => s.path === suite?.path)) {
+                    suitesWithMissingResults.push(suite);
+                }
+            } else {
+                throw new Error(`Cannot find suite for test: ${testInfo.id}`);
+            }
+        }
+        if (suitesWithMissingResults.length > 0) {
+            const firstMissingExpected = suitesWithMissingResults[0].runtime.results.expected;
+            let firstMissing = firstMissingExpected.location.toString();
+            if (firstMissingExpected.location.isChildOf(this.workspaceFolder.uri.fsPath)) {
+                firstMissing = firstMissingExpected.location.relativeTo(this.workspaceFolder.uri.fsPath);
+            }
+            let msg = `No expected result(s): ${firstMissing}`;
+            if (suitesWithMissingResults.length > 1) {
+                msg += ` (+ ${suitesWithMissingResults.length - 1} more)`;
+            }
+            const items: vscode.QuickPickItem[] = [];
+            const proceed = { label: 'Proceed', description: 'let verification fail' };
+            items.push(proceed);
+            const noVerify = { label: 'Run without verifying', description: 'ad hoc execution' };
+            items.push(noVerify);
+            const addToIgnore = { label: 'Add to .plyignore', description: 'execution will never be attempted'};
+            if (suitesWithMissingResults.reduce((accum, suite) => accum && !suite.runtime.results.expected.location.isUrl, true)) {
+                // no suites are loaded from urls
+                items.push(addToIgnore);
+            }
+            const createExpected = { label: 'Create expected result', description: 'from actual' };
+            items.push(createExpected);
+            const options = {
+                placeHolder: msg,
+                canPickMany: false,
+                ignoreFocusOut: true
+            }
+            let res = await vscode.window.showQuickPick(items, options);
+            if (res) {
+                if (res === noVerify) {
+                    return ply.NoExpectedResultDispensation.NoVerify;
+                } else if (res === addToIgnore) {
+                    // add suite file to .plyignore
+                    for (const suite of suitesWithMissingResults) {
+                        let suiteLoc = new ply.Location(this.config.plyOptions.testsLocation + '/' + suite.path);
+                        let plyIgnore = new ply.Storage(suiteLoc.parent + '/.plyignore');
+                        let contents = plyIgnore.read() || '';
+                        if (contents && !contents.endsWith('\n')) {
+                            contents += ply.Location.NEWLINE;
+                        }
+                        contents += suiteLoc.name;
+                        plyIgnore.write(contents);
+                    }
+                    return;
+                } else if (res === createExpected) {
+                    return ply.NoExpectedResultDispensation.CreateExpected;
+                }
+            } else {
+                return;
+            }
+        }
+        return ply.NoExpectedResultDispensation.Proceed;
     }
 
     private stringsOnly(env: { [envVar: string]: string | null | undefined }): { [envVar: string]: string } {
