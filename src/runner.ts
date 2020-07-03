@@ -69,6 +69,7 @@ export class PlyRunner {
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
         catch (err) {
+            console.error(err);
             if (this.log.enabled) {
                 this.log.error(`Error while running plyees: ${inspect(err)}`);
             }
@@ -210,9 +211,11 @@ export class PlyRunner {
         for (const testInfo of testInfos) {
             let suite = this.plyRoots.getSuiteForTest(testInfo.id);
             if (suite) {
-                let expectedExists = await suite.runtime.results.expected.exists;
-                if (!expectedExists && !suitesWithMissingResults.find(s => s.path === suite?.path)) {
-                    suitesWithMissingResults.push(suite);
+                if (!suite.ignored) {
+                    let expectedExists = await suite.runtime.results.expected.exists;
+                    if (!expectedExists && !suitesWithMissingResults.find(s => s.path === suite?.path)) {
+                        suitesWithMissingResults.push(suite);
+                    }
                 }
             } else {
                 throw new Error(`Cannot find suite for test: ${testInfo.id}`);
@@ -289,7 +292,10 @@ export class PlyRunner {
                 this.collectTests(child, testInfos);
             }
         } else {
-            testInfos.push(testOrSuite);
+            // honor .plyignores
+            if (!this.plyRoots.getSuiteForTest(testOrSuite.id)?.ignored) {
+                testInfos.push(testOrSuite);
+            }
         }
     }
 }
