@@ -82,9 +82,12 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
     }
 }
 
-function mapStatus(status: String | undefined): 'passed' | 'failed' | 'errored' {
+function mapStatus(status: String | undefined): 'passed' | 'skipped' | 'failed' | 'errored' {
     if (status === 'Passed') {
         return 'passed';
+    }
+    else if (status === 'Not Verified') {
+        return 'skipped';
     }
     else if (status === 'Failed') {
         return 'failed';

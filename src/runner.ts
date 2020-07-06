@@ -237,12 +237,12 @@ export class PlyRunner {
             const noVerify = { label: 'Run without verifying', description: 'ad hoc execution' };
             items.push(noVerify);
             const addToIgnore = { label: 'Add to .plyignore', description: 'execution will never be attempted'};
+            const createExpected = { label: 'Create expected result', description: 'from actual' };
             if (suitesWithMissingResults.reduce((accum, suite) => accum && !suite.runtime.results.expected.location.isUrl, true)) {
                 // no suites are loaded from urls
                 items.push(addToIgnore);
+                items.push(createExpected);
             }
-            const createExpected = { label: 'Create expected result', description: 'from actual' };
-            items.push(createExpected);
             const options = {
                 placeHolder: msg,
                 canPickMany: false,
@@ -286,14 +286,15 @@ export class PlyRunner {
         return result;
     }
 
-    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[]) {
+    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], ignore = false) {
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
-                this.collectTests(child, testInfos);
+                // honor .plyignores when executing from parent suite (not explicitly running test or suite)
+                let shouldIgnore = ignore || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.ignored);
+                this.collectTests(child, testInfos, shouldIgnore);
             }
         } else {
-            // honor .plyignores
-            if (!this.plyRoots.getSuiteForTest(testOrSuite.id)?.ignored) {
+            if (!ignore) {
                 testInfos.push(testOrSuite);
             }
         }

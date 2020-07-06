@@ -172,7 +172,7 @@ export class PlyRoots {
     };
 
     private readonly testsById = new Map<string,Test>();
-    private readonly suitesByTestId = new Map<string,Suite<Request|Case>>();
+    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
@@ -191,10 +191,11 @@ export class PlyRoots {
         for (const requestSuiteUri of requestSuiteUris) {
             let suite = requestSuites.get(requestSuiteUri);
             if (suite) {
+                this.suitesByTestOrSuiteId.set(this.requestsRoot.formSuiteId(requestSuiteUri), suite);
                 for (const request of suite) {
                     let testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
-                    this.suitesByTestId.set(testId, suite);
+                    this.suitesByTestOrSuiteId.set(testId, suite);
                     requestUris.push([Uri.parse(testId), request.start || 0]);
                 }
             }
@@ -207,10 +208,11 @@ export class PlyRoots {
         for (const caseSuiteUri of caseSuiteUris) {
             let suite = caseSuites.get(caseSuiteUri);
             if (suite) {
+                this.suitesByTestOrSuiteId.set(this.casesRoot.formSuiteId(caseSuiteUri), suite);
                 for (const plyCase of suite) {
                     let testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
                     this.testsById.set(testId, plyCase);
-                    this.suitesByTestId.set(testId, suite);
+                    this.suitesByTestOrSuiteId.set(testId, suite);
                     caseUris.push([Uri.parse(testId), plyCase.start || 0]);
                 }
             }
@@ -234,7 +236,11 @@ export class PlyRoots {
     }
 
     getSuiteForTest(testId: string): Suite<Request|Case> | undefined {
-        return this.suitesByTestId.get(testId);
+        return this.suitesByTestOrSuiteId.get(testId);
+    }
+
+    getSuite(suiteId: string): Suite<Request|Case> | undefined {
+        return this.suitesByTestOrSuiteId.get(suiteId);
     }
 
     findFirstTestInfo(suiteId: string): TestInfo | undefined {
