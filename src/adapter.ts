@@ -70,7 +70,7 @@ export class PlyAdapter implements TestAdapter {
     async run(testIds: string[]): Promise<void> {
 
         if (this.log.enabled) {
-            this.log.info(`Running plyee(s): ${JSON.stringify(testIds)}`);
+            this.log.info(`Running: ${JSON.stringify(testIds)}`);
         }
 
         const runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);

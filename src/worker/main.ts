@@ -29,20 +29,20 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
             sendMessage(`Using ply package at ${plyPath}`);
         }
 
-        const Plyer: typeof import('ply-ct').Plyer = require(plyPath + '/index.js').Plyer;
-        const plyer = new Plyer(args.plyOptions);
+        const Plier: typeof import('ply-ct').Plier = require(plyPath + '/index.js').Plier;
+        const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();
         module.paths.push(cwd, path.join(cwd, 'node_modules'));
 
-        plyer.on('start', (plyEvent: PlyEvent) => {
+        plier.on('start', (plyEvent: PlyEvent) => {
             sendMessage({
                 type: 'test',
                 test: getTestId(plyEvent.plyee),
                 state: 'running'
             });
         });
-        plyer.on('outcome', (outcomeEvent: OutcomeEvent) => {
+        plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
             sendMessage({
                 type: 'test',
                 test: getTestId(outcomeEvent.plyee),
@@ -50,7 +50,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
                 description: outcomeEvent.outcome.message
             });
         });
-        plyer.on('error', (err: Error) => {
+        plier.on('error', (err: Error) => {
             if (args.logEnabled) {
                 sendMessage(`Caught error ${util.inspect(err)}`);
             }
@@ -60,7 +60,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
             sendMessage('Running plyees');
         }
 
-        plyer.run(args.plyees, args.plyValues, args.runOptions)
+        plier.run(args.plyees, args.plyValues, args.runOptions)
         .then(() => {
             sendMessage({ type: 'finished' });
             if (onFinished) {

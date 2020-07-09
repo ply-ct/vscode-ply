@@ -1,3 +1,4 @@
+import * as os from 'os';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { ChildProcess, fork } from 'child_process';
@@ -64,6 +65,9 @@ export class PlyRunner {
                     return uri.toString(true);
                 }
             });
+            if (this.log.enabled) {
+                this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
+            }
             await this.runPlyees(plyees, debug, runOptions);
 
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
@@ -259,7 +263,7 @@ export class PlyRunner {
                         let plyIgnore = new ply.Storage(suiteLoc.parent + '/.plyignore');
                         let contents = plyIgnore.read() || '';
                         if (contents && !contents.endsWith('\n')) {
-                            contents += ply.Location.NEWLINE;
+                            contents += os.EOL;
                         }
                         contents += suiteLoc.name;
                         plyIgnore.write(contents);
