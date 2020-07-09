@@ -19,7 +19,7 @@ export default {
         nodeResolve(),
         commonjs(),
         typescript({
-            tsconfigOverride: { compilerOptions: { module: 'ES2015' } }
+            tsconfigOverride: { compilerOptions: { module: 'es2015' } }
         }),
         json({
             compact: true

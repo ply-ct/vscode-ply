@@ -1,5 +1,5 @@
 {
-  "name": "ply",
+  "name": "vscode-ply",
   "displayName": "Ply",
   "description": "REST API Automated Testing",
   "icon": "resources/icon.png",
@@ -7,13 +7,13 @@
   "license": "MIT",
   "author": "Donald Oakes <donald@oakesville.io>",
   "publisher": "ply-ct",
-  "homepage": "https://ply-ct.com/ply",
+  "homepage": "https://github.com/ply-ct/vscode-ply#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oakesville/vscode-ply.git"
+    "url": "https://github.com/ply-ct/vscode-ply.git"
   },
   "bugs": {
-    "url": "https://github.com/oakesville/vscode-ply/issues"
+    "url": "https://github.com/ply-ct/vscode-ply/issues"
   },
   "keywords": [
     "rest",

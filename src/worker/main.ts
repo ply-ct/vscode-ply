@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as util from 'util';
 import { WorkerArgs } from './args';
 import { PlyEvent, OutcomeEvent } from 'ply-ct';
 
@@ -30,6 +29,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         }
 
         const Plier: typeof import('ply-ct').Plier = require(plyPath + '/index.js').Plier;
+        // const Plier: typeof import('ply-ct').Plier = (await import(plyPath + '/index.js')).Plier;
         const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();
@@ -52,7 +52,8 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         });
         plier.on('error', (err: Error) => {
             if (args.logEnabled) {
-                sendMessage(`Caught error ${util.inspect(err)}`);
+                console.error(err);
+                sendMessage(`Caught error ${err.stack}`);
             }
         });
 
@@ -70,14 +71,16 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         .catch((err: Error) => {
             console.error(err);
             if (args.logEnabled) {
-                sendMessage(`Caught error ${util.inspect(err)}`);
+                console.error(err);
+                sendMessage(`Caught error ${err.stack}`);
             }
         });
     }
     catch (err) {
         console.error(err);
         if (args.logEnabled) {
-            sendMessage(`Caught error ${util.inspect(err)}`);
+            console.error(err);
+            sendMessage(`Caught error ${err.stack}`);
         }
     }
 }
