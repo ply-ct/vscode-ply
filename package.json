@@ -119,6 +119,12 @@
           "default": 9229,
           "scope": "resource"
         },
+        "ply.debugConfig": {
+          "description": "Name of a launch configuration to use for debugging",
+          "type": [ "string", "null" ],
+          "default": null,
+          "scope": "resource"
+        },
         "ply.nodePath": {
           "description": "Path to node executable. Default is to find on your PATH; if not found, use node shipped with VS Code",
           "type": "string",

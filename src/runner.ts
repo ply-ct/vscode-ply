@@ -2,7 +2,6 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { ChildProcess, fork } from 'child_process';
-import { inspect } from 'util';
 import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots} from './plyRoots';
@@ -27,9 +26,6 @@ export class PlyRunner {
             this.config = new PlyConfig(workspaceFolder, log);
     }
 
-    /**
-     * TODO: debugging is not supported as yet
-     */
     async runTests(testIds: string[], debug = false): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
@@ -78,7 +74,7 @@ export class PlyRunner {
         catch (err) {
             console.error(err);
             if (this.log.enabled) {
-                this.log.error(`Error while running plyees: ${inspect(err)}`);
+                this.log.error(`Error while running plyees: ${err.stack}`);
             }
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
@@ -115,7 +111,7 @@ export class PlyRunner {
             debugPort: debugPort
         };
 
-        return new Promise<void>(resolve => {
+        return new Promise<void>(async resolve => {
 
             let runningTest: string | undefined = undefined;
             const testRunId = `${this.testRunId}`;
@@ -196,7 +192,7 @@ export class PlyRunner {
 
             this.runningTestProcess.on('error', err => {
                 if (this.log.enabled) {
-                    this.log.error(`Error from child process: ${inspect(err)}`);
+                    this.log.error(`Error from child process: ${err}`);
                 }
                 runningTest = undefined;
                 this.runningTestProcess = undefined;
@@ -208,6 +204,15 @@ export class PlyRunner {
             });
         });
     }
+
+    cancel(): void {
+		if (this.runningTestProcess) {
+            if (this.log.enabled) {
+                this.log.info('Killing running test process');
+            }
+			this.runningTestProcess.kill();
+		}
+	}
 
     /**
      * Check for missing expected result file(s).

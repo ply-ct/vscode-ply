@@ -19,6 +19,7 @@ export class PlyAdapter implements TestAdapter {
     get testStates(): vscode.Event<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent> { return this.testStatesEmitter.event; }
     get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
+    private runner: PlyRunner | undefined;
     private config: PlyConfig;
 
     constructor(
@@ -68,23 +69,91 @@ export class PlyAdapter implements TestAdapter {
     }
 
     async run(testIds: string[]): Promise<void> {
-
         if (this.log.enabled) {
             this.log.info(`Running: ${JSON.stringify(testIds)}`);
         }
-
-        const runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);
-        await runner.runTests(testIds);
+        this.runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);
+        await this.runner.runTests(testIds);
     }
 
-    // TODO support debugging tests
-    // async debug(tests: string[]): Promise<void> {
-    //     // start a test run in a child process and attach the debugger to it...
-    // }
+    async debug(testIds: string[]): Promise<void> {
+        // start a test run in a child process and attach the debugger to it...
+        if (this.log.enabled) {
+            this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
+        }
+
+        this.runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);
+		const testRunPromise = this.runner.runTests(testIds, true);
+
+		this.log.info('Starting debug session');
+		let debugSession: any;
+		try {
+			debugSession = await this.startDebugging();
+		} catch (err) {
+			this.log.error('Failed starting the debug session - aborting', err);
+			this.cancel();
+			return;
+		}
+
+		const subscription = this.onDidTerminateDebugSession((session) => {
+			if (debugSession != session) {
+                return;
+            }
+			this.log.info('Debug session ended');
+			this.cancel();
+			subscription.dispose();
+		});
+
+		await testRunPromise;
+    }
+
+	private async startDebugging(): Promise<vscode.DebugSession> {
+
+		const debuggerConfigName = this.config.debugConfig || 'Ply Debugging';
+		const debuggerConfig = this.config.debugConfig || {
+			name: 'Ply Debugging',
+			type: 'node',
+			request: 'attach',
+			port: this.config.debugPort,
+			protocol: 'inspector',
+			timeout: 10000,
+			stopOnEntry: false
+		};
+
+		const debugSessionPromise = new Promise<vscode.DebugSession>((resolve, reject) => {
+
+			let subscription: vscode.Disposable | undefined;
+			subscription = vscode.debug.onDidStartDebugSession(debugSession => {
+				if ((debugSession.name === debuggerConfigName) && subscription) {
+					resolve(debugSession);
+					subscription.dispose();
+                    subscription = undefined;
+				}
+			});
+
+			setTimeout(() => {
+				if (subscription) {
+					reject(new Error('Debug session failed to start within alloted timeout'));
+					subscription.dispose();
+					subscription = undefined;
+				}
+			}, 10000);
+		});
+
+		const started = await vscode.debug.startDebugging(this.workspaceFolder, debuggerConfig);
+		if (started) {
+			return await debugSessionPromise;
+		} else {
+			throw new Error('Could not start debug session');
+		}
+	}
+
+    private onDidTerminateDebugSession(cb: (session: vscode.DebugSession) => any): vscode.Disposable {
+		return vscode.debug.onDidTerminateDebugSession(cb);
+	}
 
     cancel(): void {
-        // TODO: kill the child process for the current test run (if there is any)
-        throw new Error("Method not implemented.");
+        this.runner?.cancel();
     }
 
     dispose(): void {

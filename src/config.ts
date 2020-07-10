@@ -46,6 +46,14 @@ export class PlyConfig {
         return debugPort;
     }
 
+    get debugConfig(): string | undefined {
+        const debugConfig = vscode.workspace.getConfiguration().get<string>('ply.debugConfig');
+        if (debugConfig && this.log && this.log.enabled) {
+            this.log.debug(`Debug config: ${debugConfig}`);
+        }
+        return debugConfig;
+    }
+
     get importCaseModulesFromBuilt(): boolean {
         return vscode.workspace.getConfiguration().get('ply.importCaseModulesFromBuilt', false);
     }

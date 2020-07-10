@@ -25,8 +25,25 @@ Setting | Description | Default
 `ply.logLocation` | Log file base dir | actualLocation
 `ply.logpanel` | Write detailed log output to the Ply Invoker output panel | false
 `ply.debugPort` | Port to use for debug connections | 9229
+`ply.debugConfig` | Name of a launch configuration to use for debugging | (see below)
 `ply.nodePath` | Path to node executable | Find on your PATH; if not found, use node shipped with VS Code
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
-`ply.importCaseModulesFromBuilt` | Import case suite modules from generated .js instead of .ts sourc (this same runOption needs to be set in your case's calls to Suite.run) | false
+`ply.importCaseModulesFromBuilt` | Import case suite modules from generated .js instead of .ts source (this same runOption needs to be set in your case's calls to Suite.run) | false
+
+### Custom debug configuration
+You can specify a custom vscode debug configuration to use instead of the built-in default.
+Do this by creating a debugging configuration in `.vscode/launch.json`.  Then specify the name of that
+in setting `ply.debugConfig`.  The default built-in debug configuration looks like this:
+```
+{
+  "name": "Ply Debugging",
+  "type": "node",
+  "request": "attach",
+  "port": 9229,
+  "protocol": "inspector",
+  "timeout": 10000,
+  "stopOnEntry": false
+}
+```
 
 ## Troubleshooting
