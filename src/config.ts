@@ -46,6 +46,10 @@ export class PlyConfig {
         return debugPort;
     }
 
+    get importCaseModulesFromBuilt(): boolean {
+        return vscode.workspace.getConfiguration().get('ply.importCaseModulesFromBuilt', false);
+    }
+
     /**
      * All locations are made normalized, absolute where relative is relative to workspace folder.
      */

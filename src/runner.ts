@@ -47,7 +47,10 @@ export class PlyRunner {
             if (!noExpectedDispensation) {
                 return;
             }
-            const runOptions = { noExpectedResult: noExpectedDispensation };
+            const runOptions: ply.RunOptions = { noExpectedResult: noExpectedDispensation };
+            if (this.config.importCaseModulesFromBuilt) {
+                runOptions.importCaseModulesFromBuilt = true;
+            }
 
             this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
@@ -105,8 +108,8 @@ export class PlyRunner {
             plyees,  // file locs and/or uris
             plyPath: this.config.plyPath,
             plyOptions: options,
-            plyValues: plyValues,
-            runOptions: runOptions,
+            plyValues,
+            runOptions,
             logEnabled: this.log.enabled,
             workerScript: this.workerScript,
             debugPort: debugPort

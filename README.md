@@ -27,5 +27,6 @@ Setting | Description | Default
 `ply.debugPort` | Port to use for debug connections | 9229
 `ply.nodePath` | Path to node executable | Find on your PATH; if not found, use node shipped with VS Code
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
+`ply.importCaseModulesFromBuilt` | Import case suite modules from generated .js instead of .ts sourc (this same runOption needs to be set in your case's calls to Suite.run) | false
 
 ## Troubleshooting

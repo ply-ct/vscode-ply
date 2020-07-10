@@ -59,7 +59,7 @@
     "rollup-plugin-typescript2": "^0.22.1",
     "ts-node": "^8.10.2",
     "tslint": "^5.20.1",
-    "typescript": "^3.7.2",
+    "typescript": "^3.9.6",
     "vscode": "^1.1.36"
   },
   "extensionDependencies": [
@@ -128,6 +128,12 @@
           "description": "Path to ply package (relative to workspace folder). Default is to use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
           "type": "string",
           "scope": "resource"
+        },
+        "ply.importCaseModulesFromBuilt": {
+          "description": "Import case suite modules from generated .js instead of .ts source.  This same runOption needs to be set in your case's calls to Suite.run.",
+          "type": "boolean",
+          "scope": "resource",
+          "default": false
         }
       }
     },
