@@ -51,8 +51,8 @@ export class PlyRunner {
             this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
             // convert to plyees
-            let plyees = testInfos.map(testInfo => {
-                let uri = vscode.Uri.parse(testInfo.id);
+            const plyees = testInfos.map(testInfo => {
+                const uri = vscode.Uri.parse(testInfo.id);
                 if (uri.scheme === 'file') {
                     let path = uri.fsPath;
                     if (uri.fragment) {
@@ -97,7 +97,7 @@ export class PlyRunner {
             execArgv.push(`--inspect-brk=${debugPort}`);
         }
 
-        let options = this.config.plyOptions;
+        const options = this.config.plyOptions;
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
@@ -111,7 +111,7 @@ export class PlyRunner {
             debugPort: debugPort
         };
 
-        return new Promise<void>(async resolve => {
+        return new Promise<void>(resolve => {
 
             let runningTest: string | undefined = undefined;
             const testRunId = `${this.testRunId}`;
@@ -135,12 +135,12 @@ export class PlyRunner {
 
                 if (typeof message === 'string') {
                     if (this.log.enabled) {
-                        this.log.info(`Worker: ${message}`);
+                        this.log.debug(`Worker: ${message}`);
                     }
                 }
                 else {
                     if (this.log.enabled) {
-                        this.log.info(`Received ${JSON.stringify(message)}`);
+                        this.log.debug(`Received ${JSON.stringify(message)}`);
                     }
                     if (message.type !== 'finished') {
                         this.testStatesEmitter.fire({ ...message as any, testRunId });
@@ -153,8 +153,7 @@ export class PlyRunner {
                         }
                     }
                     else if (this.runningTestProcess) {
-                        // TODO: ever need to kill?
-                        // this.runningTestProcess.kill();
+                        this.runningTestProcess.kill();
                     }
                 }
             });
@@ -221,10 +220,10 @@ export class PlyRunner {
     private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.NoExpectedResultDispensation | undefined> {
         const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case>[] = [];
         for (const testInfo of testInfos) {
-            let suite = this.plyRoots.getSuiteForTest(testInfo.id);
+            const suite = this.plyRoots.getSuiteForTest(testInfo.id);
             if (suite) {
                 if (!suite.ignored) {
-                    let expectedExists = await suite.runtime.results.expected.exists;
+                    const expectedExists = await suite.runtime.results.expected.exists;
                     if (!expectedExists && !suitesWithMissingResults.find(s => s.path === suite?.path)) {
                         suitesWithMissingResults.push(suite);
                     }
@@ -259,16 +258,16 @@ export class PlyRunner {
                 placeHolder: msg,
                 canPickMany: false,
                 ignoreFocusOut: true
-            }
-            let res = await vscode.window.showQuickPick(items, options);
+            };
+            const res = await vscode.window.showQuickPick(items, options);
             if (res) {
                 if (res === noVerify) {
                     return ply.NoExpectedResultDispensation.NoVerify;
                 } else if (res === addToIgnore) {
                     // add suite file to .plyignore
                     for (const suite of suitesWithMissingResults) {
-                        let suiteLoc = new ply.Location(this.config.plyOptions.testsLocation + '/' + suite.path);
-                        let plyIgnore = new ply.Storage(suiteLoc.parent + '/.plyignore');
+                        const suiteLoc = new ply.Location(this.config.plyOptions.testsLocation + '/' + suite.path);
+                        const plyIgnore = new ply.Storage(suiteLoc.parent + '/.plyignore');
                         let contents = plyIgnore.read() || '';
                         if (contents && !contents.endsWith('\n')) {
                             contents += os.EOL;
@@ -302,7 +301,7 @@ export class PlyRunner {
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
                 // honor .plyignores when executing from parent suite (not explicitly running test or suite)
-                let shouldIgnore = ignore || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.ignored);
+                const shouldIgnore = ignore || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.ignored);
                 this.collectTests(child, testInfos, shouldIgnore);
             }
         } else {

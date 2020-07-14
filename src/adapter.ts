@@ -95,8 +95,8 @@ export class PlyAdapter implements TestAdapter {
 			return;
 		}
 
-		const subscription = this.onDidTerminateDebugSession((session) => {
-			if (debugSession != session) {
+		const subscription = this.onDidTerminateDebugSession((session) => {
+			if (debugSession !== session) {
                 return;
             }
 			this.log.info('Debug session ended');

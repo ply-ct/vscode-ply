@@ -36,12 +36,12 @@ export class PlyRoot {
         this.baseSuite.children = [];
 
         for (let i = 0; i < testUris.length; i++) {
-            let testUri = testUris[i][0];
-            let testPath = this.relativize(testUri);
-            let lastHash = testPath.lastIndexOf('#');
-            let requestName = testPath.substring(lastHash + 1);
+            const testUri = testUris[i][0];
+            const testPath = this.relativize(testUri);
+            const lastHash = testPath.lastIndexOf('#');
+            const requestName = testPath.substring(lastHash + 1);
 
-            let test: TestInfo = {
+            const test: TestInfo = {
                 type: 'test',
                 id: testUri.toString(true),
                 label: requestName,
@@ -50,10 +50,10 @@ export class PlyRoot {
             };
 
             // find suite (file)
-            let lastSlash = testPath.lastIndexOf('/');
-            let fileName = testPath.substring(lastSlash + 1, lastHash);
-            let filePath = testPath.substring(0, lastHash);
-            let fileUri = Uri.parse(this.uri.toString(true) + '/' + filePath);
+            const lastSlash = testPath.lastIndexOf('/');
+            const fileName = testPath.substring(lastSlash + 1, lastHash);
+            const filePath = testPath.substring(0, lastHash);
+            const fileUri = Uri.parse(this.uri.toString(true) + '/' + filePath);
             let suite = this.findSuite(suite => suite.id === this.formSuiteId(fileUri));
             if (suite) {
                 suite.children.push(test);
@@ -70,8 +70,8 @@ export class PlyRoot {
                 suite.children.push(test);
 
                 // find parent suite (dir)
-                let dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
-                let dirUri = this.toUri(dirPath);
+                const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+                const dirUri = this.toUri(dirPath);
                 let parentSuite = this.findSuite(suite => suite.id === this.formSuiteId(dirUri));
                 if (!parentSuite) {
                     parentSuite = {
@@ -111,8 +111,8 @@ export class PlyRoot {
             return start;
         }
         else {
-            for (let childSuite of start.children.filter(child => child.type === 'suite')) {
-                let foundSuite = this.findSuiteFrom((childSuite as TestSuiteInfo), test);
+            for (const childSuite of start.children.filter(child => child.type === 'suite')) {
+                const foundSuite = this.findSuiteFrom((childSuite as TestSuiteInfo), test);
                 if (foundSuite) {
                     return foundSuite;
                 }
@@ -130,8 +130,8 @@ export class PlyRoot {
             return start;
         }
         else if (start.type === 'suite') {
-            for (let child of start.children) {
-                let found = this.findFrom(child, id);
+            for (const child of start.children) {
+                const found = this.findFrom(child, id);
                 if (found) {
                     return found;
                 }
@@ -140,13 +140,13 @@ export class PlyRoot {
     }
 
     toString() {
-        let indent = '    ';
+        const indent = '    ';
         let str = this.label + '\n';
-        for (let dirSuite of this.baseSuite.children as TestSuiteInfo[]) {
+        for (const dirSuite of this.baseSuite.children as TestSuiteInfo[]) {
             str += indent + dirSuite.label + '\n';
-            for (let fileSuite of dirSuite.children as TestSuiteInfo[]) {
+            for (const fileSuite of dirSuite.children as TestSuiteInfo[]) {
                 str += indent + indent + fileSuite.label + '\n';
-                for (let plyTest of fileSuite.children as TestInfo[]) {
+                for (const plyTest of fileSuite.children as TestInfo[]) {
                     str += indent + indent + indent + '- ' + plyTest.label + '\n';
                 }
             }
@@ -189,11 +189,11 @@ export class PlyRoots {
         const requestSuiteUris = Array.from(requestSuites.keys());
         const requestUris: [Uri, number][] = [];
         for (const requestSuiteUri of requestSuiteUris) {
-            let suite = requestSuites.get(requestSuiteUri);
+            const suite = requestSuites.get(requestSuiteUri);
             if (suite) {
                 this.suitesByTestOrSuiteId.set(this.requestsRoot.formSuiteId(requestSuiteUri), suite);
                 for (const request of suite) {
-                    let testId = requestSuiteUri.toString(true) + '#' + request.name;
+                    const testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
                     this.suitesByTestOrSuiteId.set(testId, suite);
                     requestUris.push([Uri.parse(testId), request.start || 0]);
@@ -206,11 +206,11 @@ export class PlyRoots {
         const caseSuiteUris = Array.from(caseSuites.keys());
         const caseUris: [Uri, number][] = [];
         for (const caseSuiteUri of caseSuiteUris) {
-            let suite = caseSuites.get(caseSuiteUri);
+            const suite = caseSuites.get(caseSuiteUri);
             if (suite) {
                 this.suitesByTestOrSuiteId.set(this.casesRoot.formSuiteId(caseSuiteUri), suite);
                 for (const plyCase of suite) {
-                    let testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
+                    const testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
                     this.testsById.set(testId, plyCase);
                     this.suitesByTestOrSuiteId.set(testId, suite);
                     caseUris.push([Uri.parse(testId), plyCase.start || 0]);
@@ -224,7 +224,7 @@ export class PlyRoots {
 
     findTestOrSuiteInfo(testId: string): TestSuiteInfo | TestInfo | undefined {
         for (const plyRoot of this.roots) {
-            let testOrSuite = plyRoot.find(testId);
+            const testOrSuite = plyRoot.find(testId);
             if (testOrSuite) {
                 return testOrSuite;
             }
@@ -251,7 +251,7 @@ export class PlyRoots {
                     return child;
                 }
                 else {
-                    let first = this.findFirstTestInfo(child.id);
+                    const first = this.findFirstTestInfo(child.id);
                     if (first) {
                         return first;
                     }

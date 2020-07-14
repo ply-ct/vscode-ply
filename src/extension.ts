@@ -2,11 +2,10 @@ import * as vscode from 'vscode';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { PlyAdapter } from './adapter';
-import { PlyResultContentProvider } from './result/provider';
+import { PlyResultContentProvider, PlyResultUri } from './result/provider';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { Decorations } from './decorations';
-import {existsSync as exists, writeFileSync as write} from 'fs';
 export async function activate(context: vscode.ExtensionContext) {
 
     // get the Test Explorer extension
@@ -43,51 +42,62 @@ export async function activate(context: vscode.ExtensionContext) {
         log
     ));
 
-    const provider = new PlyResultContentProvider();
+    // register for ply.result scheme
+    const resultContentProvider = new PlyResultContentProvider();
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
+        PlyResultUri.SCHEME, resultContentProvider));
 
-    // register content provider for scheme `references`
-    // register document link provider for scheme `references`
-    const providerRegistrations = vscode.Disposable.from(
-        vscode.workspace.registerTextDocumentContentProvider(PlyResultContentProvider.scheme, provider)
-    );
+    const diffCommand = vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
+        try {
+            if (args.length) {
+                const node = args[0];
+                if (node.adapterIds) {
+                    const id = node.adapterIds[0];  // suiteId is file uri
+                    log.debug(`ply.diff item id: ${id}`);
 
-    let disposable = vscode.commands.registerCommand('ply.diff', (...args: any[]) => {
+                    const info = plyRoots.findTestOrSuiteInfo(id);
+                    if (!info) {
+                        vscode.window.showErrorMessage(`Ply test info not found for id: ${id}`);
+                        return;
+                    }
 
-        if (args.length) {
-            const node = args[0];
-            if (node.adapterIds) {
-                let suiteId = node.adapterIds[0];  // suiteId is file uri
-                log.debug('ply.diff suiteId: ' + suiteId);
+                    const suite = info.type === 'test' ? plyRoots.getSuiteForTest(id) : plyRoots.getSuite(id);
+                    if (!suite) {
+                        throw new Error(`Ply suite not found for id: ${id}`);
+                    }
+                    const test = info.type === 'test' ? plyRoots.getTest(id) : undefined;
 
-                var test;
-                const testInfo = plyRoots.findFirstTestInfo(suiteId);
-                if (testInfo) {
-                    test = plyRoots.getTest(testInfo.id);
+                    const expected = suite.runtime.results.expected;
+                    const expectedPlyUri = new PlyResultUri(expected, test?.name);
+                    const expectedUri = expectedPlyUri.toUri();
+                    const expectedLabel = expectedPlyUri.label(workspaceFolder.uri.fsPath);
+                    if (!(await expectedPlyUri.exists())) {
+                        vscode.window.showErrorMessage(`Expected result not found: ${expectedLabel}`);
+                        return;
+                    }
+
+                    const actual = suite.runtime.results.actual;
+                    const actualPlyUri = new PlyResultUri(actual, test?.name);
+                    const actualUri = actualPlyUri.toUri();
+                    let actualLabel = actualPlyUri.label(workspaceFolder.uri.fsPath);
+                    if (!(await actualPlyUri.exists())) {
+                        actualLabel = `(not found) ${actualLabel}`;
+                    }
+
+                    const title = `${expectedLabel} ⟷ ${actualLabel}`;
+                    // TODO location in file based on test
+                    vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title).then(() => {
+                        // checkUpdateDecorations();
+                    });
                 }
-                if (!test) {
-                    throw new Error("Plyee not found for suite: " + suiteId);
-                }
-
-                // if (plyee.actual.exists()) {
-                //     const actualUri = vscode.Uri.file(plyee.actual.toString());
-                //     const expected = plyee.expected.toString();
-                //     const expectedUri = plyee.expected.isUrl() ? vscode.Uri.parse(expected) : vscode.Uri.file(expected);
-                //     if (!exists(expectedUri.fsPath)) {
-                //         // create empty expected result file
-                //         write(expectedUri.fsPath, '', 'utf-8');
-                //     }
-                //     vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri).then(() => {
-                //         checkUpdateDecorations();
-                //     });
-                // } else {
-                //     // TODO suppress show diff if actual result does not exist
-                //     vscode.window.showErrorMessage("Result does not exist: " + plyee.actual);
-                // }
             }
+        } catch (err) {
+            console.error(err);
+            vscode.window.showErrorMessage(`Error executing ply.diff: ${err.message}`);
         }
     });
 
-    let timeout: NodeJS.Timer | undefined = undefined;
+    const timeout: NodeJS.Timer | undefined = undefined;
 
     function checkUpdateDecorations() {
 

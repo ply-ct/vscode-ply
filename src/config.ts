@@ -9,7 +9,7 @@ export class PlyConfig {
     }
 
     get plyPath(): string {
-        let plyPath = vscode.workspace.getConfiguration().get<string>('ply.plyPath');
+        const plyPath = vscode.workspace.getConfiguration().get<string>('ply.plyPath');
         if (plyPath) {
             return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
@@ -74,7 +74,7 @@ export class PlyConfig {
             }
         };
         const val = (name: string, defaultVal: string): string => {
-            let val = vscode.workspace.getConfiguration().get(name, '');
+            const val = vscode.workspace.getConfiguration().get(name, '');
             return val ? val  : defaultVal;
         };
         options = Object.assign({}, options, {
