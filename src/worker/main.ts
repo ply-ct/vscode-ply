@@ -47,7 +47,8 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
                 type: 'test',
                 test: getTestId(outcomeEvent.plyee),
                 state: mapStatus(outcomeEvent.outcome.status),
-                description: outcomeEvent.outcome.message
+                description: outcomeEvent.outcome.message,
+                diffs: outcomeEvent.outcome.diffs
             });
         });
         plier.on('error', (err: Error) => {

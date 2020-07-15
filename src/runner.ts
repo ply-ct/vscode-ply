@@ -18,11 +18,12 @@ export class PlyRunner {
     private readonly config: PlyConfig;
 
     constructor(
-        readonly workspaceFolder: vscode.WorkspaceFolder,
-        readonly plyRoots: PlyRoots,
-        readonly outputChannel: vscode.OutputChannel,
-        readonly log: Log,
-        readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>) {
+        private readonly workspaceFolder: vscode.WorkspaceFolder,
+        private readonly workspaceState: vscode.Memento,
+        private readonly plyRoots: PlyRoots,
+        private readonly outputChannel: vscode.OutputChannel,
+        private readonly log: Log,
+        private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>) {
             this.config = new PlyConfig(workspaceFolder, log);
     }
 
@@ -147,7 +148,12 @@ export class PlyRunner {
                         if (message.type === 'test') {
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
+                                this.workspaceState.update(`diffs~${runningTest}`, undefined);
                             } else {
+                                const diffs = (message as any).diffs;
+                                if (runningTest && diffs) {
+                                    this.workspaceState.update(`diffs~${runningTest}`, diffs);
+                                }
                                 runningTest = undefined;
                             }
                         }

@@ -23,9 +23,10 @@ export class PlyAdapter implements TestAdapter {
     private config: PlyConfig;
 
     constructor(
-        public readonly workspaceFolder: vscode.WorkspaceFolder,
+        readonly workspaceFolder: vscode.WorkspaceFolder,
+        private readonly workspaceState: vscode.Memento,
         private readonly outputChannel: vscode.OutputChannel,
-        public readonly plyRoots: PlyRoots,
+        private readonly plyRoots: PlyRoots,
         private readonly log: Log
     ) {
         this.log.info('Initializing Ply...');
@@ -72,7 +73,8 @@ export class PlyAdapter implements TestAdapter {
         if (this.log.enabled) {
             this.log.info(`Running: ${JSON.stringify(testIds)}`);
         }
-        this.runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);
+        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
+            this.log, this.testStatesEmitter);
         await this.runner.runTests(testIds);
     }
 
@@ -82,7 +84,8 @@ export class PlyAdapter implements TestAdapter {
             this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
         }
 
-        this.runner = new PlyRunner(this.workspaceFolder, this.plyRoots, this.outputChannel, this.log, this.testStatesEmitter);
+        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
+            this.log, this.testStatesEmitter);
 		const testRunPromise = this.runner.runTests(testIds, true);
 
 		this.log.info('Starting debug session');

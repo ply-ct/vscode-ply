@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
+import * as ply from 'ply-ct';
 import { PlyAdapter } from './adapter';
-import { PlyResultContentProvider, PlyResultUri } from './result/provider';
+import { ResultContentProvider } from './result/provider';
+import { Result } from './result/result';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { Decorations } from './decorations';
@@ -35,17 +37,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const plyRoots = new PlyRoots(workspaceFolder.uri);
     const testHub = testExplorerExtension.exports;
-    // register PlyTestAdapter for each WorkspaceFolder
+    // register PlyAdapter for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
         testHub,
-        workspaceFolder => new PlyAdapter(workspaceFolder, outputChannel, plyRoots, log),
+        workspaceFolder => new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, plyRoots, log),
         log
     ));
 
     // register for ply.result scheme
-    const resultContentProvider = new PlyResultContentProvider();
+    const resultContentProvider = new ResultContentProvider();
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
-        PlyResultUri.SCHEME, resultContentProvider));
+        Result.URI_SCHEME, resultContentProvider));
 
     const diffCommand = vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
@@ -68,25 +70,76 @@ export async function activate(context: vscode.ExtensionContext) {
                     const test = info.type === 'test' ? plyRoots.getTest(id) : undefined;
 
                     const expected = suite.runtime.results.expected;
-                    const expectedPlyUri = new PlyResultUri(expected, test?.name);
-                    const expectedUri = expectedPlyUri.toUri();
-                    const expectedLabel = expectedPlyUri.label(workspaceFolder.uri.fsPath);
-                    if (!(await expectedPlyUri.exists())) {
+                    const expectedResult = new Result(expected, test?.name);
+                    let expectedLabel = expectedResult.label;
+                    if (!(await expectedResult.exists())) {
                         vscode.window.showErrorMessage(`Expected result not found: ${expectedLabel}`);
                         return;
                     }
+                    const expectedTests = await expectedResult.includedTestNames();
+                    let expectedUri = expectedResult.toUri();
 
                     const actual = suite.runtime.results.actual;
-                    const actualPlyUri = new PlyResultUri(actual, test?.name);
-                    const actualUri = actualPlyUri.toUri();
-                    let actualLabel = actualPlyUri.label(workspaceFolder.uri.fsPath);
-                    if (!(await actualPlyUri.exists())) {
+                    const actualResult = new Result(actual, test?.name);
+                    let actualLabel = actualResult.label;
+                    const actualTests = await actualResult.includedTestNames();
+                    let actualUri = actualResult.toUri();
+
+
+                    let useFsUri = !test; // use (editable) file system uri for suite
+                    if (test) {
+                        // other condition: expected actual test names are the same as actual
+                        if (expectedTests.length === actualTests.length) {
+                            useFsUri = expectedTests.every(expectedTest => actualTests.includes(expectedTest));
+                        }
+                    }
+
+                    if (useFsUri) {
+                        expectedUri = Result.convertUri(expectedUri);
+                        actualUri = Result.convertUri(actualUri);
+                    }
+                    else {
+                        // expected is read-only virtual file
+                        expectedLabel = `(read only) ${expectedResult.plyResult.location.name}#${test?.name}`;
+                        actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
+                    }
+                    if (!(await actualResult.exists())) {
                         actualLabel = `(not found) ${actualLabel}`;
                     }
 
                     const title = `${expectedLabel} ⟷ ${actualLabel}`;
-                    // TODO location in file based on test
-                    vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title).then(() => {
+                    const options: vscode.TextDocumentShowOptions = {
+                        preserveFocus: true,
+                        preview: true
+                    };
+
+                    let diffs: ply.Diff[] = [];
+                    if (test) {
+                        const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
+                        if (testDiffs) {
+                            diffs = diffs.concat(testDiffs as ply.Diff[]);
+                        }
+                    }
+                    else {
+                        const testInfos = plyRoots.getTestInfosForSuite(info.id);
+                        for (const actualTest of actualTests) {
+                            const testInfo = testInfos.find(ti => ti.label === actualTest);
+                            if (!testInfo) {
+                                throw new Error(`Test info '${actualTest}' not found in suite: ${info.id}`);
+                            }
+                            const testDiffs = context.workspaceState.get(`diffs~${testInfo.id}`);
+                            if (testDiffs) {
+                                diffs = diffs.concat(testDiffs as ply.Diff[]);
+                            }
+                        }
+                    }
+
+                    // console.log("DIFFS -> " + JSON.stringify(diffs, null, 2));
+
+                    vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
+                        // TODO lineNumber should be first diff
+                        vscode.commands.executeCommand("revealLine", { lineNumber: 3, at: 'top' });
+                        // TODO decorations
                         // checkUpdateDecorations();
                     });
                 }

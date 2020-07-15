@@ -243,21 +243,24 @@ export class PlyRoots {
         return this.suitesByTestOrSuiteId.get(suiteId);
     }
 
-    findFirstTestInfo(suiteId: string): TestInfo | undefined {
+    getSuiteInfo(suiteId: string): TestSuiteInfo | undefined {
         const testOrSuite = this.findTestOrSuiteInfo(suiteId);
         if (testOrSuite && testOrSuite.type === 'suite') {
-            for (const child of testOrSuite.children) {
+            return testOrSuite;
+        }
+    }
+
+    getTestInfosForSuite(suiteId: string): TestInfo[] {
+        const testInfos: TestInfo[] = [];
+        const suiteInfo = this.getSuiteInfo(suiteId);
+        if (suiteInfo) {
+            for (const child of suiteInfo.children) {
                 if (child.type === 'test') {
-                    return child;
-                }
-                else {
-                    const first = this.findFirstTestInfo(child.id);
-                    if (first) {
-                        return first;
-                    }
+                    testInfos.push(child);
                 }
             }
         }
+        return testInfos;
     }
 
     static toUri(testId: string): Uri {
