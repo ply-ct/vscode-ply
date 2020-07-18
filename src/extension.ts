@@ -8,6 +8,7 @@ import { Result } from './result/result';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { Decorations } from './decorations';
+import { ResultDiffs, ResultDecorator } from './result/decorator';
 export async function activate(context: vscode.ExtensionContext) {
 
     // get the Test Explorer extension
@@ -113,11 +114,11 @@ export async function activate(context: vscode.ExtensionContext) {
                         preview: true
                     };
 
-                    let diffs: ply.Diff[] = [];
+                    const resultDiffs: ResultDiffs[] = [];
                     if (test) {
                         const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
                         if (testDiffs) {
-                            diffs = diffs.concat(testDiffs as ply.Diff[]);
+                            resultDiffs.push({ testId: info.id, diffs: testDiffs as ply.Diff[] });
                         }
                     }
                     else {
@@ -129,19 +130,32 @@ export async function activate(context: vscode.ExtensionContext) {
                             }
                             const testDiffs = context.workspaceState.get(`diffs~${testInfo.id}`);
                             if (testDiffs) {
-                                diffs = diffs.concat(testDiffs as ply.Diff[]);
+                                resultDiffs.push({ testId: testInfo.id, diffs: testDiffs as ply.Diff[] });
                             }
                         }
                     }
 
-                    // console.log("DIFFS -> " + JSON.stringify(diffs, null, 2));
+//                    console.log("RESULT DIFFS: " + JSON.stringify(resultDiffs, null, 2));
+
 
                     vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
-                        // TODO lineNumber should be first diff
-                        vscode.commands.executeCommand("revealLine", { lineNumber: 3, at: 'top' });
+                        const expectedEditor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === expectedUri.toString());
+                        const actualEditor = vscode.window.visibleTextEditors.find((ed => ed.document.uri.toString() === actualUri.toString()));
+
+                        const decorator = new ResultDecorator();
+                        if (expectedEditor && actualEditor) {
+                            decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs, true);
+                        }
+
                         // TODO decorations
                         // checkUpdateDecorations();
+
+
+
+                        // TODO lineNumber should be either test top or first diff (hardcoded to line 3 now)
+                        // vscode.commands.executeCommand("revealLine", { lineNumber: 2, at: 'top' });
                     });
+
                 }
             }
         } catch (err) {
@@ -159,7 +173,7 @@ export async function activate(context: vscode.ExtensionContext) {
         for (const editor of vscode.window.visibleTextEditors) {
             if (!editor.viewColumn && editor.document.uri.scheme === 'file') {
                 // could be diff editor
-                console.log("fsPath: " + editor.document.uri.fsPath);
+                // console.log("fsPath: " + editor.document.uri.fsPath);
 
             }
         }

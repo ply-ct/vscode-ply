@@ -6,7 +6,7 @@ export type ResultContents = {
     contents: string;
     start: number;
     end: number;
-};
+}
 
 export class Result {
     static URI_SCHEME = 'ply-result';
@@ -53,6 +53,9 @@ export class Result {
         return new Result(new ply.Retrieval(path), testName);
     }
 
+    /**
+     * TODO: load only once per instance
+     */
     private async load(): Promise<string | undefined> {
         if (fs.existsSync(this.plyResult.location.path) && this.isInWorkspace()) {
             const document = await vscode.workspace.openTextDocument(Result.convertUri(this.toUri()));
@@ -65,6 +68,7 @@ export class Result {
 
     /**
      * Load yaml object containing test object properties
+     * TODO: parse only once per instance
      */
     private async loadYaml(): Promise<any> {
         const contents = await this.load();
