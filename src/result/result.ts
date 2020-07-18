@@ -77,6 +77,16 @@ export class Result {
         }
     }
 
+    async getStart(testName: string): Promise<number> {
+        const yamlObj = (await this.loadYaml())[testName];
+        return yamlObj ? yamlObj.__start : 0;
+    }
+
+    async getEnd(testName: string): Promise<number> {
+        const yamlObj = (await this.loadYaml())[testName];
+        return yamlObj ? yamlObj.__end : 0;
+    }
+
     /**
      * Loads object from yaml.
      */
@@ -85,7 +95,7 @@ export class Result {
         if (contents) {
             const lines = contents.split(/\r?\n/);
             if (this.testName) {
-                const yamlObj = ply.loadYaml(this.plyResult.location.path, contents, true)[this.testName];
+                const yamlObj = (await this.loadYaml())[this.testName];
                 if (yamlObj) {
                     const contents = lines.slice(yamlObj.__start, yamlObj.__end + 1).join('\n');
                     return { contents, start: yamlObj.__start, end: yamlObj.__end };

@@ -86,7 +86,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     const actualTests = await actualResult.includedTestNames();
                     let actualUri = actualResult.toUri();
 
-
                     let useFsUri = !test; // use (editable) file system uri for suite
                     if (test) {
                         // other condition: expected actual test names are the same as actual
@@ -118,7 +117,12 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (test) {
                         const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
                         if (testDiffs) {
-                            resultDiffs.push({ testId: info.id, diffs: testDiffs as ply.Diff[] });
+                            resultDiffs.push({
+                                testId: info.id,
+                                start: useFsUri ? (await actualResult.getStart(info.label)) : 0,
+                                end: useFsUri ? (await actualResult.getEnd(info.label)) : 0, // TODO end is resultcontents end
+                                diffs: (testDiffs || []) as ply.Diff[]
+                            });
                         }
                     }
                     else {
@@ -129,9 +133,12 @@ export async function activate(context: vscode.ExtensionContext) {
                                 throw new Error(`Test info '${actualTest}' not found in suite: ${info.id}`);
                             }
                             const testDiffs = context.workspaceState.get(`diffs~${testInfo.id}`);
-                            if (testDiffs) {
-                                resultDiffs.push({ testId: testInfo.id, diffs: testDiffs as ply.Diff[] });
-                            }
+                            resultDiffs.push({
+                                testId: testInfo.id,
+                                start: await actualResult.getStart(testInfo.label),
+                                end: await actualResult.getEnd(testInfo.label),
+                                diffs: (testDiffs || []) as ply.Diff[]
+                            });
                         }
                     }
 
