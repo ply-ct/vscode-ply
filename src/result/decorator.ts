@@ -17,6 +17,11 @@ export type Ignored = {
 
 export class ResultDecorator {
 
+    private ignored: Ignored = {
+        expected: [],
+        actual: []
+    }
+
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
 
     constructor() {
@@ -46,9 +51,6 @@ export class ResultDecorator {
         const expectedLines = expectedEditor.document.getText().split(/\r?\n/);
         const actualLines = actualEditor.document.getText().split(/\r?\n/);
 
-        let ignoredExpected: vscode.DecorationOptions[] = [];
-        let ignoredActual: vscode.DecorationOptions[] = [];
-
         for (const resultDiff of resultDiffs) {
             let line = resultDiff.start;
             if (resultDiff.diffs.length > 0) {
@@ -60,40 +62,13 @@ export class ResultDecorator {
                     if (diff.removed && i < resultDiff.diffs.length - 1) {
                         const nextDiff = resultDiff.diffs[i + 1];
                         if (nextDiff.added) {
-
                             if (diff.ignored && nextDiff.ignored) {
-                                const diffComputer = new DiffComputer(removedLines, addedLines, {
-                                    shouldComputeCharChanges: true,
-                                    shouldPostProcessCharChanges: true,
-                                    shouldIgnoreTrimWhitespace: true,
-                                    shouldMakePrettyDiff: true,
-                                    maxComputationTime: 0
-                                });
-                                const changes = diffComputer.computeDiff().changes;
-                                // TODO check whether charChange.originalStartLineNumber adjustment below correctly handles multi-line diffs
-                                for (const change of changes) {
-                                    if (change.charChanges) {
-                                        for (const charChange of change.charChanges) {
-                                            ignoredExpected.push({
-                                                range: new Range(
-                                                    new Position(line + charChange.originalStartLineNumber - 1, charChange.originalStartColumn - 1),
-                                                    new Position(line + charChange.originalEndLineNumber - 1, charChange.originalEndColumn - 1)
-                                                )
-                                            });
-                                            ignoredActual.push({
-                                                range: new Range(
-                                                    new Position(line + charChange.modifiedStartLineNumber - 1, charChange.modifiedStartColumn - 1),
-                                                    new Position(line + charChange.modifiedEndLineNumber - 1, charChange.modifiedEndColumn - 1)
-                                                )
-                                            });
-                                        }
-                                    }
-                                }
+                                this.ignore(line, removedLines, addedLines);
                             }
                             i++; // skip corresponding add
                         }
                     }
-                    else if (!diff.added) {
+                    else if (!diff.added) {  // TODO: added without previous removed
                         // ignore trailing comments on both sides
                         const removedCodeLines = new ply.Code(removedLines, '#').lines;
                         const addedCodeLines = new ply.Code(addedLines, '#').lines;
@@ -103,22 +78,7 @@ export class ResultDecorator {
                                 const addedCodeLine = addedCodeLines[j];
                                 if (removedCodeLine.code === addedCodeLine.code) {
                                     // only differences are comments
-                                    if (removedCodeLine.comment) {
-                                        ignoredExpected.push({
-                                            range: new Range(
-                                                new Position(line + j, removedCodeLine.code.length),
-                                                new Position(line + j, removedCodeLine.code.length + removedCodeLine.comment.length)
-                                            )
-                                        });
-                                    }
-                                    if (addedCodeLine.comment) {
-                                        ignoredActual.push({
-                                            range: new Range(
-                                                new Position(line + j, addedCodeLine.code.length),
-                                                new Position(line + j, addedCodeLine.code.length + addedCodeLine.comment.length)
-                                            )
-                                        });
-                                    }
+                                    this.ignore(line, [removedCodeLine.code], [addedCodeLine.code]);
                                 }
                             }
                         }
@@ -130,23 +90,19 @@ export class ResultDecorator {
                 // all diffs ignored
                 const removedLines = expectedLines.slice(line, resultDiff.end);
                 const addedLines = actualLines.slice(line, resultDiff.end);
-                const ignored = this.ignore(line, removedLines, addedLines);
-                ignoredExpected = ignoredExpected.concat(ignored.expected);
-                ignoredActual = ignoredActual.concat(ignored.actual);
+                this.ignore(line, removedLines, addedLines);
             }
         }
 
-        if (ignoredExpected.length > 0) {
-            expectedEditor.setDecorations(this.ignoredDiffDecorator, ignoredExpected);
+        if (this.ignored.expected.length > 0) {
+            expectedEditor.setDecorations(this.ignoredDiffDecorator, this.ignored.expected);
         }
-        if (ignoredActual.length > 0) {
-            actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredActual);
+        if (this.ignored.actual.length > 0) {
+            actualEditor.setDecorations(this.ignoredDiffDecorator, this.ignored.actual);
         }
     }
 
-    ignore(line: number, removedLines: string[], addedLines: string[]): Ignored {
-        const expected: vscode.DecorationOptions[] = [];
-        const actual: vscode.DecorationOptions[] = [];
+    private ignore(line: number, removedLines: string[], addedLines: string[]) {
 
         const diffComputer = new DiffComputer(removedLines, addedLines, {
             shouldComputeCharChanges: true,
@@ -163,7 +119,7 @@ export class ResultDecorator {
                 for (const charChange of change.charChanges) {
                     // zero start/end column indicates changes are only on the other side
                     if (charChange.originalStartColumn && charChange.originalEndColumn) {
-                        expected.push({
+                        this.ignored.expected.push({
                             range: new Range(
                                 new Position(line + charChange.originalStartLineNumber - 1, charChange.originalStartColumn - 1),
                                 new Position(line + charChange.originalEndLineNumber - 1, charChange.originalEndColumn - 1)
@@ -171,7 +127,7 @@ export class ResultDecorator {
                         });
                     }
                     if (charChange.modifiedStartColumn && charChange.modifiedEndColumn) {
-                        actual.push({
+                        this.ignored.actual.push({
                             range: new Range(
                                 new Position(line + charChange.modifiedStartLineNumber - 1, charChange.modifiedStartColumn - 1),
                                 new Position(line + charChange.modifiedEndLineNumber - 1, charChange.modifiedEndColumn - 1)
@@ -182,6 +138,5 @@ export class ResultDecorator {
                 }
             }
         }
-        return { expected, actual };
     }
 }
