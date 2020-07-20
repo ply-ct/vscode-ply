@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Range, Position } from 'vscode';
 import * as ply from 'ply-ct';
-import { DiffComputer } from './diffComputer';
+import { DiffComputer } from '../vscode/diffComputer';
 
 export type ResultDiffs = {
     testId: string;
