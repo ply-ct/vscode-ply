@@ -10,28 +10,42 @@ export type ResultDiffs = {
     diffs: ply.Diff[];
 }
 
-export type Ignored = {
-    expected: vscode.DecorationOptions[];
-    actual: vscode.DecorationOptions[];
+class Decorations {
+    expected: vscode.DecorationOptions[] = [];
+    actual: vscode.DecorationOptions[] = [];
 }
 
 export class ResultDecorator {
 
-    private ignored: Ignored = {
-        expected: [],
-        actual: []
-    }
+    private ignored = new Decorations();
+    private legit = new Decorations();
 
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
+    private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
 
-    constructor() {
+    constructor(context: vscode.ExtensionContext) {
         const bg = new vscode.ThemeColor('editor.background');
 
         this.ignoredDiffDecorator = vscode.window.createTextEditorDecorationType({
             isWholeLine: false, // false actually overrides diff color
             backgroundColor: bg,
             opacity: '1.0',
-            overviewRulerColor: bg
+            overviewRulerColor: bg,
+            dark: {
+                gutterIconPath: context.asAbsolutePath('icons/check-dark.svg')
+            },
+            light: {
+                gutterIconPath: context.asAbsolutePath('icons/check-light.svg')
+            }
+        });
+
+        this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
+            dark: {
+                gutterIconPath: context.asAbsolutePath('icons/error-dark.svg')
+            },
+            light: {
+                gutterIconPath: context.asAbsolutePath('icons/error-light.svg')
+            }
         });
     }
 
@@ -44,9 +58,8 @@ export class ResultDecorator {
      * @param expectedEditor
      * @param actualEditor
      * @param resultDiffs
-     * @param isActual
      */
-    async applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[], isActual = false) {
+    async applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[]) {
 
         const expectedLines = expectedEditor.document.getText().split(/\r?\n/);
         const actualLines = actualEditor.document.getText().split(/\r?\n/);
@@ -65,6 +78,9 @@ export class ResultDecorator {
                             if (diff.ignored && nextDiff.ignored) {
                                 this.ignore(line, removedLines, addedLines);
                             }
+                            else {
+                                this.legitimize(line, removedLines, addedLines);
+                            }
                             i++; // skip corresponding add
                         }
                     }
@@ -77,8 +93,19 @@ export class ResultDecorator {
                                 const removedCodeLine = removedCodeLines[j];
                                 const addedCodeLine = addedCodeLines[j];
                                 if (removedCodeLine.code === addedCodeLine.code) {
-                                    // only differences are comments
-                                    this.ignore(line, [removedCodeLine.code], [addedCodeLine.code]);
+                                    // the only differences are comments
+                                    this.ignore(
+                                        line + j,
+                                        [removedCodeLine.code + removedCodeLine.comment || ''],
+                                        [addedCodeLine.code + addedCodeLine.comment || '']
+                                    );
+                                }
+                                else {
+                                    this.legitimize(
+                                        line + j,
+                                        [removedCodeLine.code + removedCodeLine.comment || ''],
+                                        [addedCodeLine.code + addedCodeLine.comment || '']
+                                    );
                                 }
                             }
                         }
@@ -99,6 +126,12 @@ export class ResultDecorator {
         }
         if (this.ignored.actual.length > 0) {
             actualEditor.setDecorations(this.ignoredDiffDecorator, this.ignored.actual);
+        }
+        if (this.legit.expected.length > 0) {
+            expectedEditor.setDecorations(this.legitDiffDecorator, this.legit.expected);
+        }
+        if (this.legit.actual.length > 0) {
+            actualEditor.setDecorations(this.legitDiffDecorator, this.legit.actual);
         }
     }
 
@@ -138,5 +171,25 @@ export class ResultDecorator {
                 }
             }
         }
+    }
+
+    legitimize(line: number, removedLines: string[], addedLines: string[]) {
+        removedLines.forEach((_, i) => {
+            this.legit.expected.push({
+                range: new Range(
+                    new Position(line + i, 0),
+                    new Position(line + i, 0)
+                )
+            });
+        }, this);
+
+        addedLines.forEach((_, i) => {
+            this.legit.actual.push({
+                range: new Range(
+                    new Position(line + i, 0),
+                    new Position(line + i, 0)
+                )
+            });
+        });
     }
 }

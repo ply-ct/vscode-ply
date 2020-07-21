@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4f, 2020-05-01)"
+   sodipodi:docname="check-light.svg"
+   id="svg12"
+   version="1.1"
+   fill="none"
+   viewBox="0 0 16 16"
+   height="16"
+   width="16">
+  <metadata
+     id="metadata18">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs16" />
+  <sodipodi:namedview
+     inkscape:current-layer="svg12"
+     inkscape:window-maximized="0"
+     inkscape:window-y="23"
+     inkscape:window-x="0"
+     inkscape:cy="8"
+     inkscape:cx="8"
+     inkscape:zoom="50.9375"
+     showgrid="false"
+     id="namedview14"
+     inkscape:window-height="797"
+     inkscape:window-width="1489"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff" />
+  <path
+     id="path10"
+     fill="#424242"
+     d="M14.4315 3.32316L5.96151 13.3232L5.1708 13.2874L1.8208 8.51736L2.63915 7.94264L5.61697 12.1827L13.6684 2.67684L14.4315 3.32316Z"
+     clip-rule="evenodd"
+     fill-rule="evenodd" />
+  <path
+     id="path26"
+     d="M 5.5461081,13.29696 C 5.3464063,13.287198 5.1774388,13.272983 5.1706248,13.265372 5.1613389,13.255 2.0631667,8.8416909 1.8733515,8.5684456 L 1.8386463,8.5184864 2.2248446,8.2482519 C 2.4372537,8.0996231 2.6193587,7.9773595 2.6295225,7.9765552 c 0.010164,-8.049e-4 0.6816366,0.9427922 1.4921619,2.0968808 0.8105255,1.154089 1.4842058,2.098343 1.4970676,2.098343 0.012862,0 1.8225592,-2.124662 4.0215497,-4.7214723 C 11.839292,4.8534969 13.64571,2.7211073 13.654564,2.7116631 13.670351,2.6948227 14.4,3.2972919 14.4,3.3271678 c 0,0.027202 -8.4416811,9.9831952 -8.4666171,9.9854022 -0.013299,0.0012 -0.1875728,-0.0058 -0.3872748,-0.01561 z"
+     style="fill:#333333;stroke-width:0.0196319" />
+</svg>

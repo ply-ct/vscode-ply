@@ -74,8 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const expectedResult = new Result(expected, test?.name);
                     let expectedLabel = expectedResult.label;
                     if (!(await expectedResult.exists())) {
-                        vscode.window.showErrorMessage(`Expected result not found: ${expectedLabel}`);
-                        return;
+                        throw new Error(`Expected result not found: ${expectedLabel}`);
                     }
                     const expectedTests = await expectedResult.includedTestNames();
                     let expectedUri = expectedResult.toUri();
@@ -142,22 +141,17 @@ export async function activate(context: vscode.ExtensionContext) {
                         }
                     }
 
-//                    console.log("RESULT DIFFS: " + JSON.stringify(resultDiffs, null, 2));
+//                     console.log("RESULT DIFFS: " + JSON.stringify(resultDiffs, null, 2));
 
 
                     vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
                         const expectedEditor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === expectedUri.toString());
                         const actualEditor = vscode.window.visibleTextEditors.find((ed => ed.document.uri.toString() === actualUri.toString()));
 
-                        const decorator = new ResultDecorator();
+                        const decorator = new ResultDecorator(context);
                         if (expectedEditor && actualEditor) {
-                            decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs, true);
+                            decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
                         }
-
-                        // TODO decorations
-                        // checkUpdateDecorations();
-
-
 
                         // TODO lineNumber should be either test top or first diff (hardcoded to line 3 now)
                         // vscode.commands.executeCommand("revealLine", { lineNumber: 2, at: 'top' });
