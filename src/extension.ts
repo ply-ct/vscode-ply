@@ -7,7 +7,6 @@ import { ResultContentProvider } from './result/provider';
 import { Result } from './result/result';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
-import { Decorations } from './decorations';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -106,12 +105,6 @@ export async function activate(context: vscode.ExtensionContext) {
                         actualLabel = `(not found) ${actualLabel}`;
                     }
 
-                    const title = `${expectedLabel} ⟷ ${actualLabel}`;
-                    const options: vscode.TextDocumentShowOptions = {
-                        preserveFocus: true,
-                        preview: true
-                    };
-
                     const resultDiffs: ResultDiffs[] = [];
                     if (test) {
                         const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
@@ -143,6 +136,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 //                     console.log("RESULT DIFFS: " + JSON.stringify(resultDiffs, null, 2));
 
+                    const title = `${expectedLabel} ⟷ ${actualLabel}`;
+                    const options: vscode.TextDocumentShowOptions = {
+                        preserveFocus: false,
+                        preview: true
+                    };
 
                     vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
                         const expectedEditor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === expectedUri.toString());
@@ -151,10 +149,11 @@ export async function activate(context: vscode.ExtensionContext) {
                         const decorator = new ResultDecorator(context);
                         if (expectedEditor && actualEditor) {
                             decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
+                            // TODO actual is read-only
+                            // TODO lineNumber should be either test top or first diff (hardcoded to line 3 now)
+                            // (ALSO AVOID LOSING FOCUS -- maybe cursorMove or editorScroll command)
+                            // vscode.commands.executeCommand("revealLine", { lineNumber: 0, at: 'top' });
                         }
-
-                        // TODO lineNumber should be either test top or first diff (hardcoded to line 3 now)
-                        // vscode.commands.executeCommand("revealLine", { lineNumber: 2, at: 'top' });
                     });
 
                 }

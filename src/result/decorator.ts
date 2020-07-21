@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { Range, Position } from 'vscode';
 import * as ply from 'ply-ct';
 import { DiffComputer } from '../vscode/diffComputer';
 
@@ -13,6 +12,15 @@ export type ResultDiffs = {
 class Decorations {
     expected: vscode.DecorationOptions[] = [];
     actual: vscode.DecorationOptions[] = [];
+
+    applyExpected(start: vscode.Position, end: vscode.Position) {
+        this.expected.push({ range: new vscode.Range(start, end) });
+    }
+
+    applyActual(start: vscode.Position, end: vscode.Position) {
+        this.actual.push({ range: new vscode.Range(start, end) });
+    }
+
 }
 
 export class ResultDecorator {
@@ -21,6 +29,7 @@ export class ResultDecorator {
     private legit = new Decorations();
 
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
+    private readonly ignoredLineDecorator: vscode.TextEditorDecorationType;
     private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
 
     constructor(context: vscode.ExtensionContext) {
@@ -37,6 +46,13 @@ export class ResultDecorator {
             light: {
                 gutterIconPath: context.asAbsolutePath('icons/check-light.svg')
             }
+        });
+
+        this.ignoredLineDecorator = vscode.window.createTextEditorDecorationType({
+            isWholeLine: true,
+            backgroundColor: bg,
+            opacity: '1.0',
+            overviewRulerColor: bg
         });
 
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
@@ -59,7 +75,7 @@ export class ResultDecorator {
      * @param actualEditor
      * @param resultDiffs
      */
-    async applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[]) {
+    applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[]) {
 
         const expectedLines = expectedEditor.document.getText().split(/\r?\n/);
         const actualLines = actualEditor.document.getText().split(/\r?\n/);
@@ -152,22 +168,17 @@ export class ResultDecorator {
                 for (const charChange of change.charChanges) {
                     // zero start/end column indicates changes are only on the other side
                     if (charChange.originalStartColumn && charChange.originalEndColumn) {
-                        this.ignored.expected.push({
-                            range: new Range(
-                                new Position(line + charChange.originalStartLineNumber - 1, charChange.originalStartColumn - 1),
-                                new Position(line + charChange.originalEndLineNumber - 1, charChange.originalEndColumn - 1)
-                            )
-                        });
+                        this.ignored.applyExpected(
+                            new vscode.Position(line + charChange.originalStartLineNumber - 1, charChange.originalStartColumn - 1),
+                            new vscode.Position(line + charChange.originalEndLineNumber - 1, charChange.originalEndColumn - 1)
+                        );
                     }
                     if (charChange.modifiedStartColumn && charChange.modifiedEndColumn) {
-                        this.ignored.actual.push({
-                            range: new Range(
-                                new Position(line + charChange.modifiedStartLineNumber - 1, charChange.modifiedStartColumn - 1),
-                                new Position(line + charChange.modifiedEndLineNumber - 1, charChange.modifiedEndColumn - 1)
-                            )
-                        });
+                        this.ignored.applyActual(
+                            new vscode.Position(line + charChange.modifiedStartLineNumber - 1, charChange.modifiedStartColumn - 1),
+                            new vscode.Position(line + charChange.modifiedEndLineNumber - 1, charChange.modifiedEndColumn - 1)
+                        );
                     }
-
                 }
             }
         }
@@ -175,21 +186,11 @@ export class ResultDecorator {
 
     legitimize(line: number, removedLines: string[], addedLines: string[]) {
         removedLines.forEach((_, i) => {
-            this.legit.expected.push({
-                range: new Range(
-                    new Position(line + i, 0),
-                    new Position(line + i, 0)
-                )
-            });
+            this.legit.applyExpected(new vscode.Position(line + i, 0), new vscode.Position(line + i, 0));
         }, this);
 
         addedLines.forEach((_, i) => {
-            this.legit.actual.push({
-                range: new Range(
-                    new Position(line + i, 0),
-                    new Position(line + i, 0)
-                )
-            });
+            this.legit.applyActual(new vscode.Position(line + i, 0), new vscode.Position(line + i, 0));
         });
     }
 }
