@@ -1,5 +1,5 @@
 # vscode-ply
-REST API Automated Testing via [Ply](https://github.com/ply-ct/ply#readme).
+REST API Automated Testing via [Ply](https://github.com/ply-ct/ply).
 
 ## Features
   - Test Explorer sidebar shows all detected tests and suites and their statuses
