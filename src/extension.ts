@@ -82,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const actualResult = new Result(actual, test?.name);
                     let actualLabel = actualResult.label;
                     const actualTests = await actualResult.includedTestNames();
-                    let actualUri = actualResult.toUri();
+                    const actualUri = actualResult.toUri();
 
                     let useFsUri = !test; // use (editable) file system uri for suite
                     if (test) {
@@ -94,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
                     if (useFsUri) {
                         expectedUri = Result.convertUri(expectedUri);
-                        actualUri = Result.convertUri(actualUri);
+                        // actual uri stays virtual so as to be read-only
                     }
                     else {
                         // expected is read-only virtual file
@@ -149,10 +149,8 @@ export async function activate(context: vscode.ExtensionContext) {
                         const decorator = new ResultDecorator(context);
                         if (expectedEditor && actualEditor) {
                             decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
-                            // TODO actual is read-only
-                            // TODO lineNumber should be either test top or first diff (hardcoded to line 3 now)
-                            // (ALSO AVOID LOSING FOCUS -- maybe cursorMove or editorScroll command)
-                            // vscode.commands.executeCommand("revealLine", { lineNumber: 0, at: 'top' });
+                            // TODO set focus to expected
+                            vscode.commands.executeCommand("revealLine", { lineNumber: 3, at: 'top' });
                         }
                     });
 
