@@ -146,16 +146,18 @@ export class PlyRunner {
                     if (message.type !== 'finished') {
                         this.testStatesEmitter.fire({ ...message as any, testRunId });
                         if (message.type === 'test') {
+                            const diffState = this.workspaceState.get('ply-diffs') || {} as any;
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
-                                this.workspaceState.update(`diffs~${runningTest}`, undefined);
+                                delete diffState[runningTest];
                             } else {
                                 const diffs = (message as any).diffs;
                                 if (runningTest && diffs) {
-                                    this.workspaceState.update(`diffs~${runningTest}`, diffs);
+                                    diffState[runningTest] = diffs;
                                 }
                                 runningTest = undefined;
                             }
+                            this.workspaceState.update('ply-diffs', undefined);
                         }
                     }
                     else if (this.runningTestProcess) {

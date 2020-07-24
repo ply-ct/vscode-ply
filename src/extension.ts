@@ -8,6 +8,17 @@ import { Result } from './result/result';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
+
+
+interface ResultPair {
+    infoId: string; // test or suite id
+    testName?: string;
+    expectedUri: vscode.Uri;
+    expectedResult: Result;
+    actualUri: vscode.Uri;
+    actualResult: Result;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
 
     // get the Test Explorer extension
@@ -46,8 +57,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register for ply.result scheme
     const resultContentProvider = new ResultContentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
-        Result.URI_SCHEME, resultContentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, resultContentProvider));
+
+    const resultPairs: ResultPair[] = [];
 
     const diffCommand = vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
@@ -75,13 +87,11 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (!(await expectedResult.exists())) {
                         throw new Error(`Expected result not found: ${expectedLabel}`);
                     }
-                    const expectedTests = await expectedResult.includedTestNames();
                     let expectedUri = expectedResult.toUri();
 
                     const actual = suite.runtime.results.actual;
                     const actualResult = new Result(actual, test?.name);
                     let actualLabel = actualResult.label;
-                    const actualTests = await actualResult.includedTestNames();
                     const actualUri = actualResult.toUri();
 
                     if (test) {
@@ -97,39 +107,6 @@ export async function activate(context: vscode.ExtensionContext) {
                         actualLabel = `(not found) ${actualLabel}`;
                     }
 
-                    const resultDiffs: ResultDiffs[] = [];
-                    if (test) {
-                        const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
-                        resultDiffs.push({
-                            testId: info.id,
-                            expectedStart: await expectedResult.getStart(),
-                            expectedEnd: await expectedResult.getEnd(),
-                            actualStart: await actualResult.getStart(),
-                            actualEnd: await actualResult.getEnd(),
-                            diffs: (testDiffs || []) as ply.Diff[]
-                        });
-                    }
-                    else {
-                        const testInfos = plyRoots.getTestInfosForSuite(info.id);
-                        for (const actualTest of actualTests) {
-                            const testInfo = testInfos.find(ti => ti.label === actualTest);
-                            if (!testInfo) {
-                                throw new Error(`Test info '${actualTest}' not found in suite: ${info.id}`);
-                            }
-                            const testDiffs = context.workspaceState.get(`diffs~${testInfo.id}`);
-                            resultDiffs.push({
-                                testId: testInfo.id,
-                                expectedStart: await expectedResult.getStart(testInfo.label),
-                                expectedEnd: await expectedResult.getEnd(testInfo.label),
-                                actualStart: await actualResult.getStart(testInfo.label),
-                                actualEnd: await actualResult.getEnd(testInfo.label),
-                                diffs: (testDiffs || []) as ply.Diff[]
-                            });
-                        }
-                    }
-
-//                     console.log("RESULT DIFFS: " + JSON.stringify(resultDiffs, null, 2));
-
                     const title = `${expectedLabel} ⟷ ${actualLabel}`;
                     const options: vscode.TextDocumentShowOptions = {
                         preserveFocus: false,
@@ -137,17 +114,35 @@ export async function activate(context: vscode.ExtensionContext) {
                     };
 
                     vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
-                        const expectedEditor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === expectedUri.toString());
-                        const actualEditor = vscode.window.visibleTextEditors.find((ed => ed.document.uri.toString() === actualUri.toString()));
+                        const expectedEditor = vscode.window.visibleTextEditors.find(editor => {
+                            return editor.document.uri.toString() === expectedUri.toString();
+                        });
+                        const actualEditor = vscode.window.visibleTextEditors.find(editor => {
+                            return editor.document.uri.toString() === actualUri.toString();
+                        });
 
-                        const decorator = new ResultDecorator(context);
                         if (expectedEditor && actualEditor) {
-                            decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
+                            const existingPairIdx = resultPairs.findIndex(pair => {
+                                return pair.expectedUri.toString() === expectedUri.toString() &&
+                                    pair.actualUri.toString() === actualUri.toString();
+                            });
+                            if (existingPairIdx >= 0) {
+                                resultPairs.splice(existingPairIdx, 1);
+                            }
+                            const pair: ResultPair = {
+                                infoId: info.id,
+                                testName: test?.name,
+                                expectedUri,
+                                expectedResult,
+                                actualUri,
+                                actualResult
+                            };
+                            resultPairs.push(pair);
+                            updateDiffDecorations(pair, expectedEditor, actualEditor);
                             // TODO set focus to expected
                             vscode.commands.executeCommand("revealLine", { lineNumber: 3, at: 'top' });
                         }
                     });
-
                 }
             }
         } catch (err) {
@@ -156,56 +151,109 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    const timeout: NodeJS.Timer | undefined = undefined;
+    async function updateDiffDecorations(resultPair: ResultPair, expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
-    function checkUpdateDecorations() {
+        const diffState = context.workspaceState.get('ply-diffs') || {} as any;
 
-        let plyExpectedEditor: vscode.TextEditor | undefined;
-        let plyActualEditor: vscode.TextEditor | undefined;
-        for (const editor of vscode.window.visibleTextEditors) {
-            if (!editor.viewColumn && editor.document.uri.scheme === 'file') {
-                // could be diff editor
-                // console.log("fsPath: " + editor.document.uri.fsPath);
-
+        const resultDiffs: ResultDiffs[] = [];
+        if (resultPair.testName) {
+            resultDiffs.push({
+                testId: resultPair.infoId,
+                expectedStart: await resultPair.expectedResult.getStart(),
+                expectedEnd: await resultPair.expectedResult.getEnd(),
+                actualStart: await resultPair.actualResult.getStart(),
+                actualEnd: await resultPair.actualResult.getEnd(),
+                diffs: (diffState[resultPair.infoId] || []) as ply.Diff[]
+            });
+        }
+        else {
+            const testInfos = plyRoots.getTestInfosForSuite(resultPair.infoId);
+            for (const actualTest of await resultPair.actualResult.includedTestNames()) {
+                const testInfo = testInfos.find(ti => ti.label === actualTest);
+                if (!testInfo) {
+                    throw new Error(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
+                }
+                resultDiffs.push({
+                    testId: testInfo.id,
+                    expectedStart: await resultPair.expectedResult.getStart(testInfo.label),
+                    expectedEnd: await resultPair.expectedResult.getEnd(testInfo.label),
+                    actualStart: await resultPair.actualResult.getStart(testInfo.label),
+                    actualEnd: await resultPair.actualResult.getEnd(testInfo.label),
+                    diffs: (diffState[testInfo.id] || []) as ply.Diff[]
+                });
             }
         }
 
-
-		// if (timeout) {
-		// 	clearTimeout(timeout);
-		// 	timeout = undefined;
-		// }
-		// timeout = setTimeout(updateDecorations, 500);
-	}
-
-    function updateDecorations() {
-
-        // const dec1 = { range: new vscode.Range(new vscode.Position(2, 10), new vscode.Position(2, 37)) };
-        // const dec2 = { range: new vscode.Range(new vscode.Position(2, 45), new vscode.Position(2, 53)) };
-
-        // plyActualEditor.setDecorations(Decorations.matchHighlight, [dec1, dec2]);
+        const decorator = new ResultDecorator(context);
+        decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
     }
 
-    // vscode.window.onDidChangeActiveTextEditor(editor => {
-    //     console.log("ED: " + editor);
-    // });
+    let timer: NodeJS.Timer | undefined = undefined;
+    function delay(ms: number) {
+        return new Promise(resolve => {
+            timer = setTimeout(resolve, ms);
+        });
+    }
 
-    vscode.window.onDidChangeVisibleTextEditors(() => {
-        checkUpdateDecorations();
-    });
+	async function checkUpdateDiffDecorations(editor: vscode.TextEditor) {
+        let resultPair: ResultPair | undefined = undefined;
+        let expectedEditor: vscode.TextEditor | undefined = undefined;
+        let actualEditor: vscode.TextEditor | undefined = undefined;
+        for (let i = 0; i < resultPairs.length; i++) {
+            const pair = resultPairs[i];
+            if (pair.expectedUri.toString() === editor.document.uri.toString()) {
+                expectedEditor = editor;
+                actualEditor = vscode.window.visibleTextEditors.find(ed => {
+                    return ed.document.uri.toString() === pair.actualUri.toString();
+                });
+                if (actualEditor) {
+                    resultPair = pair;
+                    break;
+                }
+            }
+            if (pair.actualUri.toString() === editor.document.uri.toString()) {
+                actualEditor = editor;
+                expectedEditor = vscode.window.visibleTextEditors.find(ed => {
+                    return ed.document.uri.toString() === pair.expectedUri.toString();
+                });
+                if (expectedEditor) {
+                    resultPair = pair;
+                    break;
+                }
+            }
+        }
+        if (resultPair && expectedEditor && actualEditor) {
+            if (timer) {
+                clearTimeout(timer);
+                timer = undefined;
+            }
+            await delay(500);
+            await updateDiffDecorations(resultPair, expectedEditor, actualEditor);
+        }
+    }
 
-    // vscode.workspace.onDidChangeTextDocument(event => {
-	// 	if (plyExpectedEditor && event.document === plyExpectedEditor.document) {
-	// 		triggerUpdateDecorations();
-	// 	}
-    // }, null, context.subscriptions);
 
-    vscode.workspace.onDidCloseTextDocument(document => {
+    let activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor) {
+        // checkUpdateDiffDecorations();
+    }
 
-    });
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		activeEditor = editor;
+		if (editor) {
+			checkUpdateDiffDecorations(editor);
+		}
+	}, null, context.subscriptions);
+
+	vscode.workspace.onDidChangeTextDocument(event => {
+		if (activeEditor && event.document === activeEditor.document) {
+            checkUpdateDiffDecorations(activeEditor);
+		}
+    }, null, context.subscriptions);
+
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-
+    // TODO remove diffs from workbench state
 }
