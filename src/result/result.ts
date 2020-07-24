@@ -54,7 +54,7 @@ export class Result {
     }
 
     /**
-     * TODO: load only once per instance
+     * TODO: memoize load only once per instance
      */
     private async load(): Promise<string | undefined> {
         if (fs.existsSync(this.plyResult.location.path) && this.isInWorkspace()) {
@@ -77,14 +77,27 @@ export class Result {
         }
     }
 
-    async getStart(testName: string): Promise<number> {
-        const yamlObj = (await this.loadYaml())[testName];
-        return yamlObj ? yamlObj.__start : 0;
+    async getStart(testName?: string): Promise<number> {
+        if (testName) {
+            const yaml = await this.loadYaml();
+            const yamlObj = yaml ? yaml[testName] : undefined;
+            return yamlObj ? yamlObj.__start : 0;
+        }
+        else {
+            return 0;
+        }
     }
 
-    async getEnd(testName: string): Promise<number> {
-        const yamlObj = (await this.loadYaml())[testName];
-        return yamlObj ? yamlObj.__end : 0;
+    async getEnd(testName?: string): Promise<number> {
+        if (testName) {
+            const yaml = await this.loadYaml();
+            const yamlObj = yaml ? yaml[testName] : undefined;
+            return yamlObj ? yamlObj.__end : 0;
+        }
+        else {
+            const contents = await this.load();
+            return ply.util.lines(contents || '').length;
+        }
     }
 
     /**
@@ -93,7 +106,7 @@ export class Result {
     async getResultContents(): Promise<ResultContents | undefined> {
         const contents = await this.load();
         if (contents) {
-            const lines = contents.split(/\r?\n/);
+            const lines = ply.util.lines(contents);
             if (this.testName) {
                 const yamlObj = (await this.loadYaml())[this.testName];
                 if (yamlObj) {

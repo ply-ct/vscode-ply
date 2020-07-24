@@ -84,22 +84,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     const actualTests = await actualResult.includedTestNames();
                     const actualUri = actualResult.toUri();
 
-                    let useFsUri = !test; // use (editable) file system uri for suite
                     if (test) {
-                        // other condition: expected actual test names are the same as actual
-                        if (expectedTests.length === actualTests.length) {
-                            useFsUri = expectedTests.every(expectedTest => actualTests.includes(expectedTest));
-                        }
-                    }
-
-                    if (useFsUri) {
-                        expectedUri = Result.convertUri(expectedUri);
-                        // actual uri stays virtual so as to be read-only
+                        // expected is read-only virtual file
+                        expectedLabel = `(read-only segment) ${expectedResult.plyResult.location.name}#${test?.name}`;
+                        actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
                     }
                     else {
-                        // expected is read-only virtual file
-                        expectedLabel = `(read only) ${expectedResult.plyResult.location.name}#${test?.name}`;
-                        actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
+                        expectedUri = Result.convertUri(expectedUri);
+                        // actual uri stays virtual so as to be read-only
                     }
                     if (!(await actualResult.exists())) {
                         actualLabel = `(not found) ${actualLabel}`;
@@ -108,14 +100,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     const resultDiffs: ResultDiffs[] = [];
                     if (test) {
                         const testDiffs = context.workspaceState.get(`diffs~${info.id}`);
-                        if (testDiffs) {
-                            resultDiffs.push({
-                                testId: info.id,
-                                start: useFsUri ? (await actualResult.getStart(info.label)) : 0,
-                                end: useFsUri ? (await actualResult.getEnd(info.label)) : 0, // TODO end is resultcontents end
-                                diffs: (testDiffs || []) as ply.Diff[]
-                            });
-                        }
+                        resultDiffs.push({
+                            testId: info.id,
+                            expectedStart: await expectedResult.getStart(),
+                            expectedEnd: await expectedResult.getEnd(),
+                            actualStart: await actualResult.getStart(),
+                            actualEnd: await actualResult.getEnd(),
+                            diffs: (testDiffs || []) as ply.Diff[]
+                        });
                     }
                     else {
                         const testInfos = plyRoots.getTestInfosForSuite(info.id);
@@ -127,8 +119,10 @@ export async function activate(context: vscode.ExtensionContext) {
                             const testDiffs = context.workspaceState.get(`diffs~${testInfo.id}`);
                             resultDiffs.push({
                                 testId: testInfo.id,
-                                start: await actualResult.getStart(testInfo.label),
-                                end: await actualResult.getEnd(testInfo.label),
+                                expectedStart: await expectedResult.getStart(testInfo.label),
+                                expectedEnd: await expectedResult.getEnd(testInfo.label),
+                                actualStart: await actualResult.getStart(testInfo.label),
+                                actualEnd: await actualResult.getEnd(testInfo.label),
                                 diffs: (testDiffs || []) as ply.Diff[]
                             });
                         }

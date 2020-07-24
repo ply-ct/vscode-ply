@@ -4,8 +4,10 @@ import { DiffComputer } from '../vscode/diffComputer';
 
 export type ResultDiffs = {
     testId: string;
-    start: number;  // TODO separate start for expected and actual
-    end: number;
+    expectedStart: number;
+    expectedEnd: number;
+    actualStart: number;
+    actualEnd: number;
     diffs: ply.Diff[];
 }
 
@@ -32,6 +34,8 @@ export class ResultDecorator {
     private readonly ignoredLineDecorator: vscode.TextEditorDecorationType;
     private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
 
+    // TODO set DecoratorOptions.hoverMessage to something
+
     constructor(context: vscode.ExtensionContext) {
         const bg = new vscode.ThemeColor('editor.background');
 
@@ -50,9 +54,12 @@ export class ResultDecorator {
 
         this.ignoredLineDecorator = vscode.window.createTextEditorDecorationType({
             isWholeLine: true,
-            backgroundColor: bg,
-            opacity: '1.0',
-            overviewRulerColor: bg
+            dark: {
+                gutterIconPath: context.asAbsolutePath('icons/check-dark.svg')
+            },
+            light: {
+                gutterIconPath: context.asAbsolutePath('icons/check-light.svg')
+            }
         });
 
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
@@ -69,71 +76,90 @@ export class ResultDecorator {
     }
 
     /**
-     * TODO handle removed without corresponding add, as well as just plain added
-     * TODO set DecoratorOptions.hoverMessage to be expression evaluation result
      * @param expectedEditor
      * @param actualEditor
      * @param resultDiffs
      */
     applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[]) {
 
-        const expectedLines = expectedEditor.document.getText().split(/\r?\n/);
-        const actualLines = actualEditor.document.getText().split(/\r?\n/);
+        const expectedAll = ply.util.lines(expectedEditor.document.getText());
+        const actualAll = ply.util.lines(actualEditor.document.getText());
 
         for (const resultDiff of resultDiffs) {
-            let line = resultDiff.start;
+            let expectedLineNo = resultDiff.expectedStart;
+            let actualLineNo = resultDiff.actualStart;
             if (resultDiff.diffs.length > 0) {
                 for (let i = 0; i < resultDiff.diffs.length; i++) {
                     const diff = resultDiff.diffs[i];
-                    const removedLines = expectedLines.slice(line, line + diff.count);
-                    const addedLines = actualLines.slice(line, line + diff.count);
+                    const expectedLines = expectedAll.slice(expectedLineNo, expectedLineNo + diff.count);
+                    const actualLines = actualAll.slice(actualLineNo, actualLineNo + diff.count);
                     // TODO: what if running line count is different for expected vs actual (see ply compare code)
                     if (diff.removed && i < resultDiff.diffs.length - 1) {
                         const nextDiff = resultDiff.diffs[i + 1];
                         if (nextDiff.added) {
+                            // has corresponding add
                             if (diff.ignored && nextDiff.ignored) {
-                                this.ignore(line, removedLines, addedLines);
+                                this.ignore(expectedLineNo, actualLineNo, expectedLines, actualLines);
                             }
                             else {
-                                this.legitimize(line, removedLines, addedLines);
+                                // diff not ignored
+                                this.legitimize(expectedLineNo, actualLineNo, expectedLines, actualLines);
                             }
                             i++; // skip corresponding add
+                            expectedLineNo += diff.count;
+                            actualLineNo += diff.count;
+                        }
+                        else {
+                            // straight removal
+                            this.legitimize(expectedLineNo, actualLineNo, expectedLines, []);
+                            expectedLineNo += diff.count;
                         }
                     }
-                    else if (!diff.added) {  // TODO: added without previous removed
-                        // ignore trailing comments on both sides
-                        const removedCodeLines = new ply.Code(removedLines, '#').lines;
-                        const addedCodeLines = new ply.Code(addedLines, '#').lines;
-                        for (let j = 0; j < removedCodeLines.length; j++) {
-                            if (addedCodeLines.length > j) {
-                                const removedCodeLine = removedCodeLines[j];
-                                const addedCodeLine = addedCodeLines[j];
-                                if (removedCodeLine.code === addedCodeLine.code) {
-                                    // the only differences are comments
-                                    this.ignore(
-                                        line + j,
-                                        [removedCodeLine.code + removedCodeLine.comment || ''],
-                                        [addedCodeLine.code + addedCodeLine.comment || '']
-                                    );
-                                }
-                                else {
-                                    this.legitimize(
-                                        line + j,
-                                        [removedCodeLine.code + removedCodeLine.comment || ''],
-                                        [addedCodeLine.code + addedCodeLine.comment || '']
-                                    );
+                    else {
+                        if (diff.added) {
+                            // added without previous remove
+                            this.legitimize(expectedLineNo, actualLineNo, [], actualLines);
+                            actualLineNo += diff.count;
+                        }
+                        else {
+                            // no diff could be because comments were ignored, do the same here
+                            // (ignore trailing comments on both sides)
+                            const expectedCodeLines = new ply.Code(expectedLines, '#').lines;
+                            const actualCodeLines = new ply.Code(actualLines, '#').lines;
+                            for (let j = 0; j < expectedCodeLines.length; j++) {
+                                if (actualCodeLines.length > j) {
+                                    const expectedCodeLine = expectedCodeLines[j];
+                                    const actualCodeLine = actualCodeLines[j];
+                                    if (expectedCodeLine.code === actualCodeLine.code) {
+                                        // the only differences are comments
+                                        this.ignore(
+                                            expectedLineNo + j,
+                                            actualLineNo + j,
+                                            [expectedCodeLine.code + expectedCodeLine.comment || ''],
+                                            [actualCodeLine.code + actualCodeLine.comment || '']
+                                        );
+                                    }
+                                    else {
+                                        this.legitimize(
+                                            expectedLineNo + j,
+                                            actualLineNo + j,
+                                            [expectedCodeLine.code + expectedCodeLine.comment || ''],
+                                            [actualCodeLine.code + actualCodeLine.comment || '']
+                                        );
+                                    }
                                 }
                             }
+                            expectedLineNo += diff.count;
+                            actualLineNo += diff.count;
                         }
                     }
-                    line += diff.count;
                 }
             }
             else {
                 // all diffs ignored
-                const removedLines = expectedLines.slice(line, resultDiff.end);
-                const addedLines = actualLines.slice(line, resultDiff.end);
-                this.ignore(line, removedLines, addedLines);
+                const expectedLines = expectedAll.slice(expectedLineNo, resultDiff.expectedEnd);
+                const actualLines = actualAll.slice(actualLineNo, resultDiff.actualEnd);
+                this.ignore(expectedLineNo, actualLineNo, expectedLines, actualLines);
             }
         }
 
@@ -151,9 +177,9 @@ export class ResultDecorator {
         }
     }
 
-    private ignore(line: number, removedLines: string[], addedLines: string[]) {
+    private ignore(expectedLineNo: number, actualLineNo: number, expectedLines: string[], actualLines: string[]) {
 
-        const diffComputer = new DiffComputer(removedLines, addedLines, {
+        const diffComputer = new DiffComputer(expectedLines, actualLines, {
             shouldComputeCharChanges: true,
             shouldPostProcessCharChanges: true,
             shouldIgnoreTrimWhitespace: true,
@@ -166,31 +192,36 @@ export class ResultDecorator {
         for (const change of changes) {
             if (change.charChanges) {
                 for (const charChange of change.charChanges) {
-                    // zero start/end column indicates changes are only on the other side
-                    if (charChange.originalStartColumn && charChange.originalEndColumn) {
-                        this.ignored.applyExpected(
-                            new vscode.Position(line + charChange.originalStartLineNumber - 1, charChange.originalStartColumn - 1),
-                            new vscode.Position(line + charChange.originalEndLineNumber - 1, charChange.originalEndColumn - 1)
-                        );
-                    }
-                    if (charChange.modifiedStartColumn && charChange.modifiedEndColumn) {
-                        this.ignored.applyActual(
-                            new vscode.Position(line + charChange.modifiedStartLineNumber - 1, charChange.modifiedStartColumn - 1),
-                            new vscode.Position(line + charChange.modifiedEndLineNumber - 1, charChange.modifiedEndColumn - 1)
-                        );
-                    }
+                    // zero line/column indicates changes are only on the other side (1-based)
+                    const originalStartLine = (charChange.originalStartLineNumber || charChange.modifiedStartLineNumber) || 1;
+                    const originalStartColumn = charChange.originalStartColumn || 1;
+                    const originalEndLine = (charChange.originalEndLineNumber || charChange.modifiedEndLineNumber) || 1;
+                    const originalEndColumn = charChange.originalEndColumn || 1;
+                    this.ignored.applyExpected(
+                        new vscode.Position(expectedLineNo + originalStartLine - 1, originalStartColumn - 1),
+                        new vscode.Position(expectedLineNo + originalEndLine - 1, originalEndColumn - 1)
+                    );
+
+                    const modifiedStartLine = (charChange.modifiedStartLineNumber || charChange.originalStartLineNumber) || 1;
+                    const modifiedStartColumn = charChange.modifiedStartColumn || 1;
+                    const modifiedEndLine = (charChange.modifiedEndLineNumber || charChange.originalEndLineNumber) || 1;
+                    const modifiedEndColumn = charChange.modifiedEndColumn || 1;
+                    this.ignored.applyActual(
+                        new vscode.Position(actualLineNo + modifiedStartLine - 1, modifiedStartColumn - 1),
+                        new vscode.Position(actualLineNo + modifiedEndLine - 1, modifiedEndColumn - 1)
+                    );
                 }
             }
         }
     }
 
-    legitimize(line: number, removedLines: string[], addedLines: string[]) {
+    legitimize(expectedLineNo: number, actualLineNo: number, removedLines: string[], addedLines: string[]) {
         removedLines.forEach((_, i) => {
-            this.legit.applyExpected(new vscode.Position(line + i, 0), new vscode.Position(line + i, 0));
+            this.legit.applyExpected(new vscode.Position(expectedLineNo + i, 0), new vscode.Position(expectedLineNo + i, 0));
         }, this);
 
         addedLines.forEach((_, i) => {
-            this.legit.applyActual(new vscode.Position(line + i, 0), new vscode.Position(line + i, 0));
+            this.legit.applyActual(new vscode.Position(actualLineNo + i, 0), new vscode.Position(actualLineNo + i, 0));
         });
     }
 }
