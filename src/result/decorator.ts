@@ -31,10 +31,8 @@ export class ResultDecorator {
     private legit = new Decorations();
 
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
-    private readonly ignoredLineDecorator: vscode.TextEditorDecorationType;
     private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
-
-    // TODO set DecoratorOptions.hoverMessage to something
+    private readonly noDiffStateDecorator: vscode.TextEditorDecorationType;
 
     constructor(context: vscode.ExtensionContext) {
         const bg = new vscode.ThemeColor('editor.background');
@@ -52,22 +50,24 @@ export class ResultDecorator {
             }
         });
 
-        this.ignoredLineDecorator = vscode.window.createTextEditorDecorationType({
-            isWholeLine: true,
-            dark: {
-                gutterIconPath: context.asAbsolutePath('icons/check-dark.svg')
-            },
-            light: {
-                gutterIconPath: context.asAbsolutePath('icons/check-light.svg')
-            }
-        });
-
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
             dark: {
                 gutterIconPath: context.asAbsolutePath('icons/error-dark.svg')
             },
             light: {
                 gutterIconPath: context.asAbsolutePath('icons/error-light.svg')
+            }
+        });
+
+        this.noDiffStateDecorator = vscode.window.createTextEditorDecorationType({
+            after: {
+                contentText: ' # NOTE: Run tests before comparing results'
+            },
+            dark: {
+                gutterIconPath: context.asAbsolutePath('icons/warning-dark.svg')
+            },
+            light: {
+                gutterIconPath: context.asAbsolutePath('icons/warning-light.svg')
             }
         });
     }
@@ -84,6 +84,15 @@ export class ResultDecorator {
 
         const expectedAll = ply.util.lines(expectedEditor.document.getText());
         const actualAll = ply.util.lines(actualEditor.document.getText());
+
+        if (expectedAll.length > 0) {
+            const warningDecorations = [];
+            if (resultDiffs.length === 0) {
+                const char = expectedAll[0].length;
+                warningDecorations.push({ range: new vscode.Range(new vscode.Position(0, char), new vscode.Position(0, char))});
+            }
+            expectedEditor.setDecorations(this.noDiffStateDecorator, warningDecorations);
+        }
 
         for (const resultDiff of resultDiffs) {
             let expectedLineNo = resultDiff.expectedStart;

@@ -152,12 +152,12 @@ export class PlyRunner {
                                 delete diffState[runningTest];
                             } else {
                                 const diffs = (message as any).diffs;
-                                if (runningTest && diffs) {
-                                    diffState[runningTest] = diffs;
+                                if (runningTest) {
+                                    diffState[runningTest] = diffs || [];
                                 }
                                 runningTest = undefined;
                             }
-                            this.workspaceState.update('ply-diffs', undefined);
+                            this.workspaceState.update('ply-diffs', diffState);
                         }
                     }
                     else if (this.runningTestProcess) {

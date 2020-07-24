@@ -20,6 +20,8 @@ interface ResultPair {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+    // clear previous diff state
+    context.workspaceState.update('ply-diffs', undefined);
 
     // get the Test Explorer extension
     const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
@@ -61,7 +63,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const resultPairs: ResultPair[] = [];
 
-    const diffCommand = vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
+    const decorator = new ResultDecorator(context);
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
             if (args.length) {
                 const node = args[0];
@@ -139,8 +143,6 @@ export async function activate(context: vscode.ExtensionContext) {
                             };
                             resultPairs.push(pair);
                             updateDiffDecorations(pair, expectedEditor, actualEditor);
-                            // TODO set focus to expected
-                            vscode.commands.executeCommand("revealLine", { lineNumber: 3, at: 'top' });
                         }
                     });
                 }
@@ -149,42 +151,53 @@ export async function activate(context: vscode.ExtensionContext) {
             console.error(err);
             vscode.window.showErrorMessage(`Error executing ply.diff: ${err.message}`);
         }
-    });
+    }));
 
-    async function updateDiffDecorations(resultPair: ResultPair, expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
+    /**
+     * Applies decorations only if diff state exists for the pair
+     */
+    async function updateDiffDecorations(resultPair: ResultPair,
+        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
         const diffState = context.workspaceState.get('ply-diffs') || {} as any;
 
+        let diffs: ply.Diff[];
         const resultDiffs: ResultDiffs[] = [];
         if (resultPair.testName) {
-            resultDiffs.push({
-                testId: resultPair.infoId,
-                expectedStart: await resultPair.expectedResult.getStart(),
-                expectedEnd: await resultPair.expectedResult.getEnd(),
-                actualStart: await resultPair.actualResult.getStart(),
-                actualEnd: await resultPair.actualResult.getEnd(),
-                diffs: (diffState[resultPair.infoId] || []) as ply.Diff[]
-            });
+            diffs = diffState[resultPair.infoId];
+            if (diffs) {
+                resultDiffs.push({
+                    testId: resultPair.infoId,
+                    expectedStart: await resultPair.expectedResult.getStart(),
+                    expectedEnd: await resultPair.expectedResult.getEnd(),
+                    actualStart: await resultPair.actualResult.getStart(),
+                    actualEnd: await resultPair.actualResult.getEnd(),
+                    diffs
+                });
+            }
         }
         else {
             const testInfos = plyRoots.getTestInfosForSuite(resultPair.infoId);
             for (const actualTest of await resultPair.actualResult.includedTestNames()) {
                 const testInfo = testInfos.find(ti => ti.label === actualTest);
                 if (!testInfo) {
-                    throw new Error(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
+                    vscode.window.showErrorMessage(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
+                    return;
                 }
-                resultDiffs.push({
-                    testId: testInfo.id,
-                    expectedStart: await resultPair.expectedResult.getStart(testInfo.label),
-                    expectedEnd: await resultPair.expectedResult.getEnd(testInfo.label),
-                    actualStart: await resultPair.actualResult.getStart(testInfo.label),
-                    actualEnd: await resultPair.actualResult.getEnd(testInfo.label),
-                    diffs: (diffState[testInfo.id] || []) as ply.Diff[]
-                });
+                diffs = diffState[testInfo.id];
+                if (diffs) {
+                    resultDiffs.push({
+                        testId: testInfo.id,
+                        expectedStart: await resultPair.expectedResult.getStart(testInfo.label),
+                        expectedEnd: await resultPair.expectedResult.getEnd(testInfo.label),
+                        actualStart: await resultPair.actualResult.getStart(testInfo.label),
+                        actualEnd: await resultPair.actualResult.getEnd(testInfo.label),
+                        diffs
+                    });
+                }
             }
         }
 
-        const decorator = new ResultDecorator(context);
         decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
     }
 
@@ -253,7 +266,5 @@ export async function activate(context: vscode.ExtensionContext) {
 
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {
-    // TODO remove diffs from workbench state
 }
