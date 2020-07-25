@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { WorkerArgs } from './args';
-import { PlyEvent, OutcomeEvent } from 'ply-ct';
+import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
 
 (async () => {
 
@@ -35,17 +35,24 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         const cwd = process.cwd();
         module.paths.push(cwd, path.join(cwd, 'node_modules'));
 
-        plier.on('start', (plyEvent: PlyEvent) => {
+        plier.on('suite', (suiteEvent: SuiteEvent) => {
+            sendMessage({
+                type: 'suite',
+                suite: getId(suiteEvent.plyee),
+                state: mapStatus(suiteEvent.status)
+            });
+        });
+        plier.on('test', (plyEvent: PlyEvent) => {
             sendMessage({
                 type: 'test',
-                test: getTestId(plyEvent.plyee),
+                test: getId(plyEvent.plyee),
                 state: 'running'
             });
         });
         plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
             sendMessage({
                 type: 'test',
-                test: getTestId(outcomeEvent.plyee),
+                test: getId(outcomeEvent.plyee),
                 state: mapStatus(outcomeEvent.outcome.status),
                 description: outcomeEvent.outcome.message,
                 diffs: outcomeEvent.outcome.diffs
@@ -86,8 +93,16 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
     }
 }
 
-function mapStatus(status: String | undefined): 'passed' | 'skipped' | 'failed' | 'errored' {
-    if (status === 'Passed') {
+function mapStatus(status: String | undefined):
+        'running' | 'completed' | 'passed' | 'skipped' | 'failed' | 'errored' {
+
+    if (status === 'Started') {
+        return 'running';
+    }
+    else if (status === 'Finished') {
+        return 'completed';
+    }
+    else if (status === 'Passed') {
         return 'passed';
     }
     else if (status === 'Not Verified') {
@@ -101,7 +116,7 @@ function mapStatus(status: String | undefined): 'passed' | 'skipped' | 'failed' 
     }
 }
 
-function getTestId(plyee: string) {
+function getId(plyee: string) {
     if (plyee.startsWith('https://') || plyee.startsWith('http://')) {
         return plyee;
     }

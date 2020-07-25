@@ -2,7 +2,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { ChildProcess, fork } from 'child_process';
-import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent } from 'vscode-test-adapter-api';
+import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, TestDecoration } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots} from './plyRoots';
 import { PlyConfig } from './config';
@@ -144,7 +144,18 @@ export class PlyRunner {
                         this.log.debug(`Received ${JSON.stringify(message)}`);
                     }
                     if (message.type !== 'finished') {
-                        this.testStatesEmitter.fire({ ...message as any, testRunId });
+                        const decorations: TestDecoration[] = [];
+                        if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {
+                            const testId = (typeof message.test === 'string') ? message.test : message.test.id;
+                            const test = this.plyRoots.getTest(testId);
+                            if (test) {
+                                decorations.push({
+                                    line: test.start || 0,
+                                    message: `${message.state.toLocaleUpperCase()}: ${message.description}`
+                                });
+                            }
+                        }
+                        this.testStatesEmitter.fire({ ...message as any, testRunId, decorations });
                         if (message.type === 'test') {
                             const diffState = this.workspaceState.get('ply-diffs') || {} as any;
                             if (message.state === 'running') {
