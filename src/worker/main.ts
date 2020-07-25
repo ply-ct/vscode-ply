@@ -20,6 +20,15 @@ import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
  */
 function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>, onFinished?: () => void): void {
 
+    const startTimes = new Map<string, number>();
+    function elapsed(id: string): string | undefined {
+        if (startTimes.has(id)) {
+            const elapsed = Date.now() - startTimes.get(id)!;
+            startTimes.delete(id);
+            return `${elapsed} ms`;
+        }
+    }
+
     try {
         process.chdir(args.cwd);
 
@@ -36,25 +45,34 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         module.paths.push(cwd, path.join(cwd, 'node_modules'));
 
         plier.on('suite', (suiteEvent: SuiteEvent) => {
+            const suiteId = `${suiteEvent.type}s|${getUri(suiteEvent.plyee)}`;
+            if (suiteEvent.status === 'Started') {
+                startTimes.set(suiteId, Date.now());
+            }
             sendMessage({
                 type: 'suite',
-                suite: getId(suiteEvent.plyee),
-                state: mapStatus(suiteEvent.status)
+                suite: suiteId,
+                state: mapStatus(suiteEvent.status),
+                description: ' '
             });
         });
         plier.on('test', (plyEvent: PlyEvent) => {
+            const testId = getUri(plyEvent.plyee);
+            startTimes.set(testId, Date.now());
             sendMessage({
                 type: 'test',
-                test: getId(plyEvent.plyee),
+                test: testId,
                 state: 'running'
             });
         });
         plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
+            const testId = getUri(outcomeEvent.plyee);
             sendMessage({
                 type: 'test',
-                test: getId(outcomeEvent.plyee),
+                test: testId,
                 state: mapStatus(outcomeEvent.outcome.status),
-                description: outcomeEvent.outcome.message,
+                message: outcomeEvent.outcome.message,
+                description: elapsed(testId),
                 diffs: outcomeEvent.outcome.diffs
             });
         });
@@ -116,7 +134,7 @@ function mapStatus(status: String | undefined):
     }
 }
 
-function getId(plyee: string) {
+function getUri(plyee: string) {
     if (plyee.startsWith('https://') || plyee.startsWith('http://')) {
         return plyee;
     }

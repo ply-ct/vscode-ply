@@ -166,7 +166,7 @@ export class PlyRoots {
     public readonly casesRoot: PlyRoot;
     public readonly rootSuite: TestSuiteInfo = {
         type: 'suite',
-        id: 'root',
+        id: 'root: Ply',
         label: 'Ply',
         children: []
     };

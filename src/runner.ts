@@ -79,6 +79,7 @@ export class PlyRunner {
             }
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
+
     }
 
     async runPlyees(plyees: string[], debug = false, runOptions?: object): Promise<void> {
@@ -170,9 +171,6 @@ export class PlyRunner {
                             }
                             this.workspaceState.update('ply-diffs', diffState);
                         }
-                    }
-                    else if (this.runningTestProcess) {
-                        this.runningTestProcess.kill();
                     }
                 }
             });
