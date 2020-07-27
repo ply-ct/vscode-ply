@@ -50,7 +50,12 @@ export class PlyRunner {
             }
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
-            this.fire(<TestSuiteEvent>{ type: 'suite', suite: 'requests', state: 'running', testRunId } );
+
+            // if we don't fire suite events for all ancestors, Test Explorer UI fails to update
+            const ancestors = this.getAncestorSuites(testInfos);
+            for (const ancestor of ancestors) {
+                this.fire(<TestSuiteEvent>{ type: 'suite', suite: ancestor.id, state: 'running', testRunId } );
+            }
 
             // convert to plyees
             const plyees = testInfos.map(testInfo => {
@@ -69,9 +74,12 @@ export class PlyRunner {
             if (this.log.enabled) {
                 this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
             }
+
             await this.runPlyees(plyees, debug, runOptions);
 
-            this.fire(<TestSuiteEvent>{ type: 'suite', suite: 'requests', state: 'completed', testRunId } );
+            for (const ancestor of ancestors) {
+                this.fire(<TestSuiteEvent>{ type: 'suite', suite: ancestor.id, state: 'completed', testRunId } );
+            }
             this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
         catch (err) {
@@ -81,7 +89,6 @@ export class PlyRunner {
             }
             this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
-
     }
 
     async runPlyees(plyees: string[], debug = false, runOptions?: object): Promise<void> {
@@ -321,6 +328,29 @@ export class PlyRunner {
         return result;
     }
 
+    /**
+     * Unique array of test parent suites (excluding direct parent).
+     */
+    getAncestorSuites(testInfos: TestInfo[]): TestSuiteInfo[] {
+        const ancestors: TestSuiteInfo[] = [];
+        for (const testInfo of testInfos) {
+            const parent = this.plyRoots.getParent(testInfo.id);
+            if (parent) {
+                let ancestor = this.plyRoots.getParent(parent.id);
+                while (ancestor) {
+                    if (!(ancestors.find(a => a.id === ancestor!.id))) {
+                        ancestors.push(ancestor);
+                    }
+                    ancestor = this.plyRoots.getParent(ancestor.id);
+                }
+            }
+        }
+        return ancestors;
+    }
+
+    /**
+     * Returns a flattened list of all test ids
+     */
     collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], ignore = false) {
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
