@@ -139,6 +139,20 @@ export class PlyRoot {
         }
     }
 
+    getParent(start: TestSuiteInfo, id: string): TestSuiteInfo | undefined {
+        for (const child of start.children) {
+            if (child.id === id) {
+                return start;
+            }
+            if (child.type === 'suite') {
+                const parent = this.getParent(child, id);
+                if (parent) {
+                    return parent;
+                }
+            }
+        }
+    }
+
     toString() {
         const indent = '    ';
         let str = this.label + '\n';
@@ -241,6 +255,18 @@ export class PlyRoots {
 
     getSuite(suiteId: string): Suite<Request|Case> | undefined {
         return this.suitesByTestOrSuiteId.get(suiteId);
+    }
+
+    getParent(testOrSuiteId: string): TestSuiteInfo | undefined {
+        for (const plyRoot of this.roots) {
+            if (plyRoot.id === testOrSuiteId) {
+                return this.rootSuite;
+            }
+            const parent = plyRoot.getParent(plyRoot.baseSuite, testOrSuiteId);
+            if (parent) {
+                return parent;
+            }
+        }
     }
 
     getSuiteInfo(suiteId: string): TestSuiteInfo | undefined {

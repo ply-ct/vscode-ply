@@ -14,7 +14,7 @@ export class PlyRunner {
     private runningTestProcess: ChildProcess | undefined;
 	private testRunId = 0;
 
-    private readonly workerScript = require.resolve('../out/worker/bundle.js');
+    private readonly workerScript = require.resolve('../../out/worker/bundle.js');
     private readonly config: PlyConfig;
 
     constructor(
@@ -49,7 +49,8 @@ export class PlyRunner {
                 runOptions.importCaseModulesFromBuilt = true;
             }
 
-            this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
+            this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
+            this.fire(<TestSuiteEvent>{ type: 'suite', suite: 'requests', state: 'running', testRunId } );
 
             // convert to plyees
             const plyees = testInfos.map(testInfo => {
@@ -70,14 +71,15 @@ export class PlyRunner {
             }
             await this.runPlyees(plyees, debug, runOptions);
 
-            this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
+            this.fire(<TestSuiteEvent>{ type: 'suite', suite: 'requests', state: 'completed', testRunId } );
+            this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
         catch (err) {
             console.error(err);
             if (this.log.enabled) {
                 this.log.error(`Error while running plyees: ${err.stack}`);
             }
-            this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
+            this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
 
     }
@@ -156,7 +158,7 @@ export class PlyRunner {
                                 });
                             }
                         }
-                        this.testStatesEmitter.fire({ ...message as any, testRunId, decorations });
+                        this.fire({ ...message as any, testRunId, decorations });
                         if (message.type === 'test') {
                             const diffState = this.workspaceState.get('ply-diffs') || {} as any;
                             if (message.state === 'running') {
@@ -180,7 +182,7 @@ export class PlyRunner {
                 this.outputChannel.append(data.toString());
 
                 if (runningTest) {
-                    this.testStatesEmitter.fire(<TestEvent>{
+                    this.fire(<TestEvent>{
                         type: 'test',
                         state: 'running',
                         test: runningTest,
@@ -201,7 +203,7 @@ export class PlyRunner {
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
                     childProcessFinished = true;
-                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
+                    this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
                     resolve();
                 }
             });
@@ -214,7 +216,7 @@ export class PlyRunner {
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
                     childProcessFinished = true;
-                    this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
+                    this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
                     resolve();
                 }
             });
@@ -228,7 +230,12 @@ export class PlyRunner {
             }
 			this.runningTestProcess.kill();
 		}
-	}
+    }
+
+    fire(event: TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent) {
+        console.debug(`TestEvent: ${JSON.stringify(event)}`);
+        this.testStatesEmitter.fire(event);
+    }
 
     /**
      * Check for missing expected result file(s).

@@ -38,7 +38,6 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
         }
 
         const Plier: typeof import('ply-ct').Plier = require(plyPath + '/index.js').Plier;
-        // const Plier: typeof import('ply-ct').Plier = (await import(plyPath + '/index.js')).Plier;
         const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();

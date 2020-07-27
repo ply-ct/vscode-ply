@@ -24,7 +24,11 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
+  "files": [
+    "out/src",
+    "out/worker"
+  ],
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -38,7 +42,7 @@
     "vscode": "^1.43.1"
   },
   "dependencies": {
-    "ply-ct": "^2.0.9",
+    "ply-ct": "^2.0.10",
     "tslib": "^1.10.0",
     "vscode-test-adapter-api": "^1.7.0",
     "vscode-test-adapter-util": "^0.7.0",
@@ -48,10 +52,12 @@
     "@babel/core": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/register": "^7.7.4",
+    "@types/chai": "^4.2.12",
     "@types/mocha": "^8.0.0",
     "@types/node": "^10.17.6",
     "@typescript-eslint/eslint-plugin": "^3.6.1",
     "@typescript-eslint/parser": "^3.6.1",
+    "chai": "^4.2.0",
     "eslint": "^7.4.0",
     "esm": "^3.2.25",
     "mocha": "^8.0.1",

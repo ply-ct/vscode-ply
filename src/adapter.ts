@@ -73,9 +73,15 @@ export class PlyAdapter implements TestAdapter {
         if (this.log.enabled) {
             this.log.info(`Running: ${JSON.stringify(testIds)}`);
         }
-        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
-            this.log, this.testStatesEmitter);
-        await this.runner.runTests(testIds);
+        try {
+            this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
+                this.log, this.testStatesEmitter);
+            await this.runner.runTests(testIds);
+        } catch (err) {
+            console.error(err);
+            this.log.error(err);
+            vscode.window.showErrorMessage(`Error running ply tests: ${err.message}`);
+        }
     }
 
     async debug(testIds: string[]): Promise<void> {
@@ -107,7 +113,13 @@ export class PlyAdapter implements TestAdapter {
 			subscription.dispose();
 		});
 
-		await testRunPromise;
+        try {
+            await testRunPromise;
+        } catch (err) {
+            console.error(err);
+            this.log.error(err);
+            vscode.window.showErrorMessage(`Error running ply tests: ${err.message}`);
+        }
     }
 
 	private async startDebugging(): Promise<vscode.DebugSession> {

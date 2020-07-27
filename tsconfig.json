@@ -2,17 +2,16 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2018",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
     "outDir": "out",
     "sourceMap": true,
-    "rootDir": "src",
     "strict": true,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
-    "node_modules",
-    ".vscode-test",
-    "test"
+    "out",
+    "node_modules"
   ]
 }

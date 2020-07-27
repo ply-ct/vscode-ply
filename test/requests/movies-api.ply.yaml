@@ -1,0 +1,116 @@
+# This file appears in .plyignore to indicate that these requests
+# are not to be run directly, but only through case file movieCrud.ply.ts.
+createMovie: # POST
+  url: '${baseUrl}'
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: ${authorization}
+  body: |-
+    {
+      "credits": [
+        {
+          "name": "Alan Crosland",
+          "role": "director"
+        },
+        {
+          "name": "Warren William",
+          "role": "actor"
+        },
+        {
+          "name": "Mary Astor",
+          "role": "actor"
+        },
+        {
+          "name": "Allen Jenkins",
+          "role": "actor"
+        },
+        {
+          "name": "Grant Mitchell",
+          "role": "actor"
+        },
+        {
+          "name": "Helen Trenholme",
+          "role": "actor"
+        }
+      ],
+      "poster": "cothd.jpg",
+      "title": "The Case of the Howling Dog",
+      "webRef": {
+        "ref": "tt0024958",
+        "site": "imdb.com"
+      },
+      "year": 1934
+    }
+
+updateMovie: # PATCH
+  url: '${baseUrl}/${id}'
+  method: PATCH
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: ${authorization}
+  body: |-
+    {
+      "rating": ${rating}
+    }
+
+retrieveMovie: # GET
+  url: '${baseUrl}/${id}'
+  method: GET
+  headers:
+    Accept: application/json
+
+deleteMovie: # DELETE
+  url: '${baseUrl}/${id}'
+  method: DELETE
+  headers:
+    Accept: application/json
+    Authorization: ${authorization}
+
+replaceMovie: # POST
+  url: '${baseUrl}/${id}'
+  method: PUT
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: ${authorization}
+  body: |-
+    {
+      "credits": [
+        {
+          "name": "Alan Crosland",
+          "role": "director"
+        },
+        {
+          "name": "Warren William",
+          "role": "actor"
+        },
+        {
+          "name": "Mary Astor",
+          "role": "actor"
+        },
+        {
+          "name": "Allen Jenkins",
+          "role": "actor"
+        },
+        {
+          "name": "Grant Mitchell",
+          "role": "actor"
+        },
+        {
+          "name": "Helen Trenholme",
+          "role": "actor"
+        }
+      ],
+      "id": "${id}",
+      "poster": "cothd.jpg",
+      "rating": ${rating},
+      "title": "The Case of the Howling Dog",
+      "webRef": {
+        "ref": "tt0024958",
+        "site": "imdb.com"
+      },
+      "year": 1934
+    }
