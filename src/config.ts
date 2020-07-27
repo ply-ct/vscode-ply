@@ -63,14 +63,14 @@ export class PlyConfig {
      */
     get plyOptions(): ply.PlyOptions {
 
-        const workspacePath = this.workspaceFolder.uri.fsPath.replace(/\\/g, '/');
+        const workspacePath = ply.util.fwdSlashes(this.workspaceFolder.uri.fsPath);
         let options = new ply.Config(new ply.Defaults(workspacePath)).options;
         const abs = (location: string) => {
             if (path.isAbsolute(location)) {
-                return path.normalize(location).replace(/\\/g, '/');
+                return ply.util.fwdSlashes(path.normalize(location));
             }
             else {
-                return path.normalize(workspacePath + '/' + location).replace(/\\/g, '/');
+                return ply.util.fwdSlashes(path.normalize(workspacePath + '/' + location));
             }
         };
         const val = (name: string, defaultVal: string): string => {

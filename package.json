@@ -34,7 +34,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "tslint -p ./",
-    "test": "mocha --require ts-node/register src/test/**/*.ts",
+    "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
     "build-worker": "rollup -c",
     "watch-worker": "rollup --watch -c"
   },

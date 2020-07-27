@@ -1,37 +1,54 @@
+import * as path from 'path';
 import * as assert from 'assert';
 import * as ply from 'ply-ct';
 import { URI as Uri } from 'vscode-uri';
 import { PlyRoots, PlyRoot } from '../src/plyRoots';
 import * as help from './help';
 
+const movieQueries = 'test/requests/movie-queries.ply.yaml';
+const movieQueriesUri = Uri.file(path.normalize(path.resolve(movieQueries))).toString();
+const moviesApi = 'test/requests/movies-api.ply.yaml';
+const moviesApiUri = Uri.file(path.normalize(path.resolve(moviesApi))).toString();
+
+const movieCrud = path.resolve('test/cases/movieCrud.ply.ts');
+const movieCrudUri = Uri.file(path.normalize(path.resolve(movieCrud))).toString();
+
 describe('ply roots', function () {
 
     it('should know parents', async () => {
-        const plyRoot = new PlyRoot(help.workspaceFolderUri, 'requests', 'Requests');
-        //        const p = new ply.Ply();
-    //    const plyRoots = new PlyRoots(Uri.file('.'));
-    //     const p = new ply.Ply();
-    //     const requestSuites = await p.loadRequests(
-    //         'test/requests/movie-queries.ply.yaml',
-    //         'test/requests/movies-api.ply.yaml'
-    //     );
-    //     const requests = new Map<Uri,ply.Suite<ply.Request>>();
-    //     requestSuites.forEach(requestSuite => {
-    //         requests.set(Uri.file(requestSuite.path), requestSuite);
-    //     });
+        const plyRoots = new PlyRoots(Uri.file('.'));
+        const p = new ply.Ply();
+        const requestSuites = await p.loadRequests(movieQueries, moviesApi);
+        const requests = new Map<Uri,ply.Suite<ply.Request>>();
+        requestSuites.forEach(requestSuite => {
+            requests.set(Uri.file(path.normalize(path.resolve(requestSuite.path))), requestSuite);
+        });
 
-    //     const caseSuites = await p.loadCases(
-    //         'test/cases/movieCrud.ply.ts'
-    //     );
-    //     const cases = new Map<Uri,ply.Suite<ply.Case>>();
-    //     caseSuites.forEach(caseSuite => {
-    //         cases.set(Uri.file(caseSuite.path), caseSuite);
-    //     });
+        const caseSuites = await p.loadCases(movieCrud);
+        const cases = new Map<Uri,ply.Suite<ply.Case>>();
+        caseSuites.forEach(caseSuite => {
+            cases.set(Uri.file(path.normalize(path.resolve(caseSuite.path))), caseSuite);
+        });
 
-    //     plyRoots.build(requests, cases);
-    //     assert.equal(plyRoots.requestsRoot.baseSuite.children.length, 1);
+        plyRoots.build(requests, cases);
 
-    //     // plyRoots.requestsRoot.find('file:///Users/donald/ply/ply/test/ply/requests/movie-queries.ply.yaml#moviesByYearAndRating')
+        const moviesByYearAndRating = plyRoots.requestsRoot.find(`${movieQueriesUri}#moviesByYearAndRating`);
+        assert.ok(moviesByYearAndRating);
+        let parent = plyRoots.getParent(moviesByYearAndRating!.id);
+        assert.ok(parent);
+        assert.equal(plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id, plyRoots.requestsRoot.id);
+
+        const createMovie = plyRoots.requestsRoot.find(`${moviesApiUri}#createMovie`);
+        assert.ok(createMovie);
+        parent = plyRoots.getParent(createMovie!.id);
+        assert.ok(parent);
+        assert.equal(plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id, plyRoots.requestsRoot.id);
+
+        const addNewMovie = plyRoots.casesRoot.find(`${movieCrudUri}#add new movie`);
+        assert.ok(addNewMovie);
+        parent = plyRoots.getParent(addNewMovie!.id);
+        assert.ok(parent);
+        assert.equal(plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id, plyRoots.casesRoot.id);
     });
 
     it('should be grouped', async () => {
