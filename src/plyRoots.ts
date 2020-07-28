@@ -20,7 +20,8 @@ export class PlyRoot {
         this.baseSuite = {
             type: 'suite',
             id: this.id,
-            label: this.label,
+            label: '',
+            description: this.label,
             children: []
         };
     }
@@ -30,7 +31,7 @@ export class PlyRoot {
      * Relies on Uris coming in already sorted by shortest segment count first, then alpha.
      * Within files requests/cases should be sorted by the order they appear in the file (TODO: or alpha?).
      */
-    build(testUris: [Uri, number][]) {
+    build(testUris: [Uri, number][], labeler?: (suiteId: string) => string) {
 
         // clear children in case reload
         this.baseSuite.children = [];
@@ -39,12 +40,12 @@ export class PlyRoot {
             const testUri = testUris[i][0];
             const testPath = this.relativize(testUri);
             const lastHash = testPath.lastIndexOf('#');
-            const requestName = testPath.substring(lastHash + 1);
+            const testName = testPath.substring(lastHash + 1);
 
             const test: TestInfo = {
                 type: 'test',
                 id: testUri.toString(true),
-                label: requestName,
+                label: testName,
                 file: testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true),
                 line: testUris[i][1]
             };
@@ -59,14 +60,18 @@ export class PlyRoot {
                 suite.children.push(test);
             }
             else {
+                const suiteId = this.formSuiteId(fileUri);
                 suite = {
                     type: 'suite',
-                    id: this.formSuiteId(fileUri),
-                    label: fileName,
+                    id: suiteId,
+                    label: labeler ? labeler(suiteId) : fileName,
                     file: fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true),
                     line: 0,
                     children: []
                 };
+                if (labeler) {
+                    suite.description = fileName;
+                }
                 suite.children.push(test);
 
                 // find parent suite (dir)
@@ -231,7 +236,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.casesRoot.build(caseUris);
+        this.casesRoot.build(caseUris, suiteId => this.suitesByTestOrSuiteId.get(suiteId)!.name);
 
         this.rootSuite.children = this.roots.map(root => root.baseSuite);
     }

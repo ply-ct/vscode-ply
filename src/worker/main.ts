@@ -51,8 +51,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>,
             sendMessage({
                 type: 'suite',
                 suite: suiteId,
-                state: mapStatus(suiteEvent.status),
-                description: ' '
+                state: mapStatus(suiteEvent.status)
             });
         });
         plier.on('test', (plyEvent: PlyEvent) => {

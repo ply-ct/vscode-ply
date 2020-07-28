@@ -20,18 +20,16 @@ export class PlyAdapter implements TestAdapter {
     get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
     private runner: PlyRunner | undefined;
-    private config: PlyConfig;
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly workspaceState: vscode.Memento,
         private readonly outputChannel: vscode.OutputChannel,
+        private readonly config: PlyConfig,
         private readonly plyRoots: PlyRoots,
         private readonly log: Log
     ) {
-        this.log.info('Initializing Ply...');
-        this.config = new PlyConfig(workspaceFolder, log);
-
+        this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.autorunEmitter);
@@ -74,8 +72,8 @@ export class PlyAdapter implements TestAdapter {
             this.log.info(`Running: ${JSON.stringify(testIds)}`);
         }
         try {
-            this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
-                this.log, this.testStatesEmitter);
+            this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
+                this.plyRoots, this.log, this.testStatesEmitter);
             await this.runner.runTests(testIds);
         } catch (err) {
             console.error(err);
@@ -90,8 +88,8 @@ export class PlyAdapter implements TestAdapter {
             this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
         }
 
-        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.plyRoots, this.outputChannel,
-            this.log, this.testStatesEmitter);
+        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
+            this.plyRoots, this.log, this.testStatesEmitter);
 		const testRunPromise = this.runner.runTests(testIds, true);
 
 		this.log.info('Starting debug session');

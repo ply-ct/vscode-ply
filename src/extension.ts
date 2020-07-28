@@ -3,11 +3,12 @@ import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import * as ply from 'ply-ct';
 import { PlyAdapter } from './adapter';
-import { ResultContentProvider } from './result/provider';
+import { ResultContentProvider } from './result/content';
 import { Result } from './result/result';
 import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
+import { ResultCodeLensProvider } from './result/codeLens';
 
 
 interface ResultPair {
@@ -20,8 +21,6 @@ interface ResultPair {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-    // clear previous diff state
-    context.workspaceState.update('ply-diffs', undefined);
 
     // get the Test Explorer extension
     const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
@@ -33,37 +32,43 @@ export async function activate(context: vscode.ExtensionContext) {
 
     console.log('vscode-ply is active');
 
-    // TODO handle multiple workspace folders
-    const workspaceFolder = (vscode.workspace.workspaceFolders || [])[0];
     const outputChannel = vscode.window.createOutputChannel('Ply Tests');
     const log = new Log('ply', undefined, 'Ply Invoker');
-
-    // TODO listen for workspace folder(s)
-    if (!workspaceFolder) {
-        log.info('No workspace folder to ply');
-        return;
-    }
-
-    const config = new PlyConfig(workspaceFolder, log);
-
     context.subscriptions.push(log);
 
-    const plyRoots = new PlyRoots(workspaceFolder.uri);
-    const testHub = testExplorerExtension.exports;
+    const workspacePlyRoots = new Map<vscode.WorkspaceFolder, PlyRoots>();
+    function getPlyRoots(uri: vscode.Uri): PlyRoots | undefined {
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+        if (workspaceFolder) {
+            return workspacePlyRoots.get(workspaceFolder);
+        }
+    }
+
     // register PlyAdapter for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
-        testHub,
-        workspaceFolder => new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, plyRoots, log),
+        testExplorerExtension.exports,
+        workspaceFolder => {
+            const config = new PlyConfig(workspaceFolder, log);
+            const plyRoots = new PlyRoots(workspaceFolder.uri);
+            workspacePlyRoots.set(workspaceFolder, plyRoots);
+            // clear previous diff state
+            context.workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined);
+            // listen for config changes
+            context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(config.onChange));
+            return new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, config, plyRoots, log);
+        },
         log
     ));
 
     // register for ply.result scheme
-    const resultContentProvider = new ResultContentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, resultContentProvider));
-
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, new ResultContentProvider()));
+    // codelens for results
+    // vscode.languages.registerCodeLensProvider({ scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
+    vscode.workspace.getConfiguration().update('ply.logpanel', true, vscode.ConfigurationTarget.WorkspaceFolder);
+    vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
+    // result diffs decorator
     const resultPairs: ResultPair[] = [];
-
-    const decorator = new ResultDecorator(context);
+    const decorator = new ResultDecorator(context.asAbsolutePath('.'));
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
@@ -72,10 +77,18 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (node.adapterIds) {
                     const id = node.adapterIds[0];  // suiteId is file uri
                     log.debug(`ply.diff item id: ${id}`);
+                    // TODO handle remote ids
+                    const plyRoots = getPlyRoots(PlyRoots.toUri(id));
+                    if (!plyRoots) {
+                        // could be a suite/test from another adapter (eg: mocha)
+                        log.warn(`Ply test info not found for id: ${id} (not a ply test?)`);
+                        return;
+                    }
 
                     const info = plyRoots.findTestOrSuiteInfo(id);
                     if (!info) {
-                        vscode.window.showErrorMessage(`Ply test info not found for id: ${id}`);
+                        // could be a suite/test from another adapter (eg: mocha)
+                        log.warn(`Ply test info not found for id: ${id} (not a ply test?)`);
                         return;
                     }
 
@@ -159,7 +172,8 @@ export async function activate(context: vscode.ExtensionContext) {
     async function updateDiffDecorations(resultPair: ResultPair,
         expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
-        const diffState = context.workspaceState.get('ply-diffs') || {} as any;
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(expectedEditor.document.uri);
+        const diffState = context.workspaceState.get(`ply-diffs:${workspaceFolder?.uri}`) || {} as any;
 
         let diffs: ply.Diff[];
         const resultDiffs: ResultDiffs[] = [];
@@ -177,23 +191,26 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
         else {
-            const testInfos = plyRoots.getTestInfosForSuite(resultPair.infoId);
-            for (const actualTest of await resultPair.actualResult.includedTestNames()) {
-                const testInfo = testInfos.find(ti => ti.label === actualTest);
-                if (!testInfo) {
-                    vscode.window.showErrorMessage(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
-                    return;
-                }
-                diffs = diffState[testInfo.id];
-                if (diffs) {
-                    resultDiffs.push({
-                        testId: testInfo.id,
-                        expectedStart: await resultPair.expectedResult.getStart(testInfo.label),
-                        expectedEnd: await resultPair.expectedResult.getEnd(testInfo.label),
-                        actualStart: await resultPair.actualResult.getStart(testInfo.label),
-                        actualEnd: await resultPair.actualResult.getEnd(testInfo.label),
-                        diffs
-                    });
+            const plyRoots = getPlyRoots(resultPair.expectedUri);
+            if (plyRoots) {
+                const testInfos = plyRoots.getTestInfosForSuite(resultPair.infoId);
+                for (const actualTest of await resultPair.actualResult.includedTestNames()) {
+                    const testInfo = testInfos.find(ti => ti.label === actualTest);
+                    if (!testInfo) {
+                        vscode.window.showErrorMessage(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
+                        return;
+                    }
+                    diffs = diffState[testInfo.id];
+                    if (diffs) {
+                        resultDiffs.push({
+                            testId: testInfo.id,
+                            expectedStart: await resultPair.expectedResult.getStart(testInfo.label),
+                            expectedEnd: await resultPair.expectedResult.getEnd(testInfo.label),
+                            actualStart: await resultPair.actualResult.getStart(testInfo.label),
+                            actualEnd: await resultPair.actualResult.getEnd(testInfo.label),
+                            diffs
+                        });
+                    }
                 }
             }
         }

@@ -15,17 +15,16 @@ export class PlyRunner {
 	private testRunId = 0;
 
     private readonly workerScript = require.resolve('../../out/worker/bundle.js');
-    private readonly config: PlyConfig;
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly workspaceState: vscode.Memento,
-        private readonly plyRoots: PlyRoots,
         private readonly outputChannel: vscode.OutputChannel,
+        private readonly config: PlyConfig,
+        private readonly plyRoots: PlyRoots,
         private readonly log: Log,
-        private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>) {
-            this.config = new PlyConfig(workspaceFolder, log);
-    }
+        private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
+    ) { }
 
     async runTests(testIds: string[], debug = false): Promise<void> {
         this.testRunId++;
@@ -167,7 +166,7 @@ export class PlyRunner {
                         }
                         this.fire({ ...message as any, testRunId, decorations });
                         if (message.type === 'test') {
-                            const diffState = this.workspaceState.get('ply-diffs') || {} as any;
+                            const diffState = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
                                 delete diffState[runningTest];
@@ -178,7 +177,7 @@ export class PlyRunner {
                                 }
                                 runningTest = undefined;
                             }
-                            this.workspaceState.update('ply-diffs', diffState);
+                            this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, diffState);
                         }
                     }
                 }

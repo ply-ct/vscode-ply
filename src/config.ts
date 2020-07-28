@@ -8,8 +8,16 @@ export class PlyConfig {
     constructor(private readonly workspaceFolder: vscode.WorkspaceFolder, private readonly log?: Log) {
     }
 
+    private getConfiguration(): vscode.WorkspaceConfiguration {
+        return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri);
+    }
+
+    async onChange(change: vscode.ConfigurationChangeEvent) {
+
+    }
+
     get plyPath(): string {
-        const plyPath = vscode.workspace.getConfiguration().get<string>('ply.plyPath');
+        const plyPath = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('plyPath');
         if (plyPath) {
             return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
@@ -18,7 +26,7 @@ export class PlyConfig {
     }
 
     async getNodePath(): Promise<string | undefined> {
-        let nodePath = vscode.workspace.getConfiguration().get<string>('ply.nodePath');
+        let nodePath = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('nodePath');
         if (!nodePath) {
             nodePath = await detectNodePath();
         }
@@ -30,7 +38,7 @@ export class PlyConfig {
 
     get cwd(): string {
         const dirname = this.workspaceFolder.uri.fsPath;
-        const configCwd = vscode.workspace.getConfiguration().get<string>('ply.cwd');
+        const configCwd = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('cwd');
         const cwd = configCwd ? path.resolve(dirname, configCwd) : dirname;
         if (this.log && this.log.enabled) {
             this.log.debug(`Working directory: ${cwd}`);
@@ -39,7 +47,7 @@ export class PlyConfig {
     }
 
     get debugPort(): number {
-        const debugPort = vscode.workspace.getConfiguration().get('ply.debugPort', 9229);
+        const debugPort = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get('debugPort', 9229);
         if (this.log && this.log.enabled) {
             this.log.debug(`Debug port: ${debugPort}`);
         }
@@ -47,7 +55,7 @@ export class PlyConfig {
     }
 
     get debugConfig(): string | undefined {
-        const debugConfig = vscode.workspace.getConfiguration().get<string>('ply.debugConfig');
+        const debugConfig = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('debugConfig');
         if (debugConfig && this.log && this.log.enabled) {
             this.log.debug(`Debug config: ${debugConfig}`);
         }
@@ -55,7 +63,7 @@ export class PlyConfig {
     }
 
     get importCaseModulesFromBuilt(): boolean {
-        return vscode.workspace.getConfiguration().get('ply.importCaseModulesFromBuilt', false);
+        return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get('importCaseModulesFromBuilt', false);
     }
 
     /**
@@ -74,17 +82,17 @@ export class PlyConfig {
             }
         };
         const val = (name: string, defaultVal: string): string => {
-            const val = vscode.workspace.getConfiguration().get(name, '');
+            const val = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get(name, '');
             return val ? val  : defaultVal;
         };
         options = Object.assign({}, options, {
-            testsLocation: abs(val('ply.testsLocation', options.testsLocation)),
-            requestFiles: val('ply.requestFiles', options.requestFiles),
-            caseFiles: val('ply.caseFiles', options.caseFiles),
-            excludes: val('ply.excludes', options.excludes),
-            expectedLocation: abs(val('ply.expectedLocation', options.expectedLocation)),
-            actualLocation: abs(val('ply.actualLocation', options.actualLocation)),
-            logLocation: abs(val('ply.logLocation', options.logLocation || options.actualLocation))
+            testsLocation: abs(val('testsLocation', options.testsLocation)),
+            requestFiles: val('requestFiles', options.requestFiles),
+            caseFiles: val('caseFiles', options.caseFiles),
+            excludes: val('excludes', options.excludes),
+            expectedLocation: abs(val('expectedLocation', options.expectedLocation)),
+            actualLocation: abs(val('actualLocation', options.actualLocation)),
+            logLocation: abs(val('logLocation', options.logLocation || options.actualLocation))
         });
 
         return options;

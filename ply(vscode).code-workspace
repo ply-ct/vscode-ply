@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "../ply"
+		},
+		{
+			"path": "../ply-demo"
 		}
 	],
 	"settings": {

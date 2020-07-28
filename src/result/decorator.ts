@@ -34,7 +34,7 @@ export class ResultDecorator {
     private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
     private readonly noDiffStateDecorator: vscode.TextEditorDecorationType;
 
-    constructor(context: vscode.ExtensionContext) {
+    constructor(contextPath: string) {
         const bg = new vscode.ThemeColor('editor.background');
 
         this.ignoredDiffDecorator = vscode.window.createTextEditorDecorationType({
@@ -43,19 +43,19 @@ export class ResultDecorator {
             opacity: '1.0',
             overviewRulerColor: bg,
             dark: {
-                gutterIconPath: context.asAbsolutePath('icons/check-dark.svg')
+                gutterIconPath: `${contextPath}/icons/check-dark.svg`
             },
             light: {
-                gutterIconPath: context.asAbsolutePath('icons/check-light.svg')
+                gutterIconPath: `${contextPath}/icons/check-light.svg`
             }
         });
 
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
             dark: {
-                gutterIconPath: context.asAbsolutePath('icons/error-dark.svg')
+                gutterIconPath: `${contextPath}/icons/error-dark.svg`
             },
             light: {
-                gutterIconPath: context.asAbsolutePath('icons/error-light.svg')
+                gutterIconPath: `${contextPath}/icons/error-light.svg`
             }
         });
 
@@ -64,10 +64,10 @@ export class ResultDecorator {
                 contentText: ' # NOTE: Run tests before comparing results'
             },
             dark: {
-                gutterIconPath: context.asAbsolutePath('icons/warning-dark.svg')
+                gutterIconPath: `${contextPath}/icons/warning-dark.svg`
             },
             light: {
-                gutterIconPath: context.asAbsolutePath('icons/warning-light.svg')
+                gutterIconPath: `${contextPath}/icons/warning-light.svg`
             }
         });
     }
