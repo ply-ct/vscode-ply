@@ -129,11 +129,7 @@
         },
         "ply.debugConfig": {
           "description": "Name of a launch configuration to use for debugging",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
+          "type": "string",
           "scope": "resource"
         },
         "ply.nodePath": {
@@ -143,6 +139,11 @@
         },
         "ply.plyPath": {
           "description": "Path to ply package (relative to workspace folder). Default is to use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
+          "type": "string",
+          "scope": "resource"
+        },
+        "ply.cwd": {
+          "description": "Working directory for Ply test execution (relative to workspace folder)",
           "type": "string",
           "scope": "resource"
         },

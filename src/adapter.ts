@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { inspect } from 'util';
-import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent } from 'vscode-test-adapter-api';
+import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { PlyLoader } from './loader';
 import { PlyRoots } from './plyRoots';
@@ -13,26 +13,33 @@ export class PlyAdapter implements TestAdapter {
 
     private readonly testsEmitter = new vscode.EventEmitter<TestLoadStartedEvent | TestLoadFinishedEvent>();
     private readonly testStatesEmitter = new vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>();
-    private readonly autorunEmitter = new vscode.EventEmitter<void>();
+    protected readonly retireEmitter = new vscode.EventEmitter<RetireEvent>();
 
     get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> { return this.testsEmitter.event; }
     get testStates(): vscode.Event<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent> { return this.testStatesEmitter.event; }
-    get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
+    get retire(): vscode.Event<RetireEvent> { return this.retireEmitter.event; }
 
+    private config: PlyConfig;
     private runner: PlyRunner | undefined;
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly workspaceState: vscode.Memento,
         private readonly outputChannel: vscode.OutputChannel,
-        private readonly config: PlyConfig,
         private readonly plyRoots: PlyRoots,
         private readonly log: Log
     ) {
         this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
-        this.disposables.push(this.autorunEmitter);
+        this.disposables.push(this.retireEmitter);
+        this.config = new PlyConfig(
+            workspaceFolder,
+            () => this.load(),
+            () => this.retireEmitter.fire(),
+            () => workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined),
+            log);
+        this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
     }
 
     async load(): Promise<void> {

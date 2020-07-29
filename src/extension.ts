@@ -5,7 +5,6 @@ import * as ply from 'ply-ct';
 import { PlyAdapter } from './adapter';
 import { ResultContentProvider } from './result/content';
 import { Result } from './result/result';
-import { PlyConfig } from './config';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
 import { ResultCodeLensProvider } from './result/codeLens';
@@ -48,14 +47,11 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new TestAdapterRegistrar(
         testExplorerExtension.exports,
         workspaceFolder => {
-            const config = new PlyConfig(workspaceFolder, log);
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             workspacePlyRoots.set(workspaceFolder, plyRoots);
             // clear previous diff state
             context.workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined);
-            // listen for config changes
-            context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(config.onChange));
-            return new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, config, plyRoots, log);
+            return new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, plyRoots, log);
         },
         log
     ));

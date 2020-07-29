@@ -3,21 +3,65 @@ import * as path from 'path';
 import { detectNodePath, Log } from 'vscode-test-adapter-util';
 import * as ply from 'ply-ct';
 
+enum Setting {
+    testsLocation = 'testsLocation',
+    requestFiles = 'requestFiles',
+    caseFiles = 'caseFiles',
+    excludes = 'excludes',
+    expectedLocation = 'expectedLocation',
+    actualLocation = 'actualLocation',
+    logLocation = 'logLocation',
+    logPanel = 'logPanel',
+    debugPort = 'debugPort',
+    debugConfig = 'debugConfig',
+    nodePath = 'nodePath',
+    plyPath = 'plyPath',
+    cwd = 'cwd',
+    importCaseModulesFromBuilt = 'importCaseModulesFromBuilt'
+}
+
 export class PlyConfig {
 
-    constructor(private readonly workspaceFolder: vscode.WorkspaceFolder, private readonly log?: Log) {
-    }
+    private _plyOptions: ply.PlyOptions | undefined;
+
+    constructor(
+        private readonly workspaceFolder: vscode.WorkspaceFolder,
+        private readonly reload: () => Promise<void>,
+        private readonly retire: () => void,
+        private readonly resetDiffs: () => void,
+        private readonly log: Log
+    ) { }
 
     private getConfiguration(): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri);
     }
 
     async onChange(change: vscode.ConfigurationChangeEvent) {
-
+        for (const setting of Object.values(Setting)) {
+            if (change.affectsConfiguration(`ply.${setting}`, this.workspaceFolder.uri)) {
+                if (setting === Setting.testsLocation
+                    || setting === Setting.requestFiles
+                    || setting === Setting.caseFiles
+                    || setting === Setting.excludes
+                    || setting === Setting.nodePath
+                    || setting === Setting.plyPath
+                    || setting === Setting.importCaseModulesFromBuilt) {
+                    this._plyOptions = undefined;
+                    this.reload();
+                    this.retire();
+                }
+                else if (setting === Setting.expectedLocation
+                    || setting === Setting.actualLocation) {
+                    this._plyOptions = undefined;
+                    this.resetDiffs();
+                    this.retire();
+                }
+            }
+        }
     }
 
     get plyPath(): string {
-        const plyPath = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('plyPath');
+        const plyPath = this.getConfiguration().get<string>(Setting.plyPath);
         if (plyPath) {
             return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
@@ -26,11 +70,11 @@ export class PlyConfig {
     }
 
     async getNodePath(): Promise<string | undefined> {
-        let nodePath = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('nodePath');
+        let nodePath = this.getConfiguration().get<string>(Setting.nodePath);
         if (!nodePath) {
             nodePath = await detectNodePath();
         }
-        if (this.log && this.log.enabled) {
+        if (this.log.enabled) {
             this.log.debug(`Node path: ${nodePath}`);
         }
         return nodePath;
@@ -38,63 +82,69 @@ export class PlyConfig {
 
     get cwd(): string {
         const dirname = this.workspaceFolder.uri.fsPath;
-        const configCwd = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('cwd');
+        const configCwd = this.getConfiguration().get<string>(Setting.cwd);
         const cwd = configCwd ? path.resolve(dirname, configCwd) : dirname;
-        if (this.log && this.log.enabled) {
+        if (this.log.enabled) {
             this.log.debug(`Working directory: ${cwd}`);
         }
         return cwd;
     }
 
     get debugPort(): number {
-        const debugPort = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get('debugPort', 9229);
-        if (this.log && this.log.enabled) {
+        const debugPort = this.getConfiguration().get(Setting.debugPort, 9229);
+        if (this.log.enabled) {
             this.log.debug(`Debug port: ${debugPort}`);
         }
         return debugPort;
     }
 
     get debugConfig(): string | undefined {
-        const debugConfig = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get<string>('debugConfig');
-        if (debugConfig && this.log && this.log.enabled) {
+        const debugConfig = this.getConfiguration().get(Setting.debugConfig, '');
+        if (debugConfig && this.log.enabled) {
             this.log.debug(`Debug config: ${debugConfig}`);
         }
-        return debugConfig;
+        return debugConfig ? debugConfig : undefined;
     }
 
     get importCaseModulesFromBuilt(): boolean {
-        return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get('importCaseModulesFromBuilt', false);
+        return this.getConfiguration().get(Setting.importCaseModulesFromBuilt, false);
     }
 
     /**
      * All locations are made normalized, absolute where relative is relative to workspace folder.
+     * PlyOptions are cached.
      */
     get plyOptions(): ply.PlyOptions {
-
-        const workspacePath = ply.util.fwdSlashes(this.workspaceFolder.uri.fsPath);
-        let options = new ply.Config(new ply.Defaults(workspacePath)).options;
-        const abs = (location: string) => {
-            if (path.isAbsolute(location)) {
-                return ply.util.fwdSlashes(path.normalize(location));
+        if (!this._plyOptions) {
+            const workspacePath = ply.util.fwdSlashes(this.workspaceFolder.uri.fsPath);
+            let options = new ply.Config(new ply.Defaults(workspacePath)).options;
+            const abs = (location: string) => {
+                if (path.isAbsolute(location)) {
+                    return ply.util.fwdSlashes(path.normalize(location));
+                }
+                else {
+                    return ply.util.fwdSlashes(path.normalize(workspacePath + '/' + location));
+                }
+            };
+            const val = (name: string, defaultVal: string): string => {
+                const val = this.getConfiguration().get(name, '');
+                return val ? val  : defaultVal;
+            };
+            options = Object.assign({}, options, {
+                testsLocation: abs(val('testsLocation', options.testsLocation)),
+                requestFiles: val('requestFiles', options.requestFiles),
+                caseFiles: val('caseFiles', options.caseFiles),
+                excludes: val('excludes', options.excludes),
+                expectedLocation: abs(val('expectedLocation', options.expectedLocation)),
+                actualLocation: abs(val('actualLocation', options.actualLocation)),
+                logLocation: abs(val('logLocation', options.logLocation || options.actualLocation))
+            });
+            if (this.log.enabled) {
+                this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
             }
-            else {
-                return ply.util.fwdSlashes(path.normalize(workspacePath + '/' + location));
-            }
-        };
-        const val = (name: string, defaultVal: string): string => {
-            const val = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).get(name, '');
-            return val ? val  : defaultVal;
-        };
-        options = Object.assign({}, options, {
-            testsLocation: abs(val('testsLocation', options.testsLocation)),
-            requestFiles: val('requestFiles', options.requestFiles),
-            caseFiles: val('caseFiles', options.caseFiles),
-            excludes: val('excludes', options.excludes),
-            expectedLocation: abs(val('expectedLocation', options.expectedLocation)),
-            actualLocation: abs(val('actualLocation', options.actualLocation)),
-            logLocation: abs(val('logLocation', options.logLocation || options.actualLocation))
-        });
+            this._plyOptions = options;
+        }
 
-        return options;
+        return this._plyOptions!;
     }
 }
