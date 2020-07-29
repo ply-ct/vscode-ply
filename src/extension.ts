@@ -75,10 +75,11 @@ export async function activate(context: vscode.ExtensionContext) {
             if (args.length) {
                 const node = args[0];
                 if (node.adapterIds) {
-                    const id = node.adapterIds[0];  // suiteId is file uri
+                    const id = node.adapterIds[0];
                     log.debug(`ply.diff item id: ${id}`);
                     // TODO handle remote ids
-                    const plyRoots = getPlyRoots(PlyRoots.toUri(id));
+                    const testOrSuiteUri = PlyRoots.toUri(id);
+                    const plyRoots = getPlyRoots(testOrSuiteUri);
                     if (!plyRoots) {
                         // could be a suite/test from another adapter (eg: mocha)
                         log.warn(`Ply test info not found for id: ${id} (not a ply test?)`);
@@ -146,6 +147,7 @@ export async function activate(context: vscode.ExtensionContext) {
                             if (existingPairIdx >= 0) {
                                 resultPairs.splice(existingPairIdx, 1);
                             }
+
                             const pair: ResultPair = {
                                 infoId: info.id,
                                 testName: test?.name,
@@ -172,7 +174,7 @@ export async function activate(context: vscode.ExtensionContext) {
     async function updateDiffDecorations(resultPair: ResultPair,
         expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(expectedEditor.document.uri);
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(PlyRoots.toUri(resultPair.infoId));
         const diffState = context.workspaceState.get(`ply-diffs:${workspaceFolder?.uri}`) || {} as any;
 
         let diffs: ply.Diff[];
@@ -191,7 +193,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
         else {
-            const plyRoots = getPlyRoots(resultPair.expectedUri);
+            const plyRoots = getPlyRoots(PlyRoots.toUri(resultPair.infoId));
             if (plyRoots) {
                 const testInfos = plyRoots.getTestInfosForSuite(resultPair.infoId);
                 for (const actualTest of await resultPair.actualResult.includedTestNames()) {
