@@ -8,6 +8,7 @@ import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
 import { ResultCodeLensProvider } from './result/codeLens';
+import { Setting } from './config';
 
 
 interface ResultPair {
@@ -47,6 +48,11 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new TestAdapterRegistrar(
         testExplorerExtension.exports,
         workspaceFolder => {
+            const codelensDiff = vscode.workspace.getConfiguration('diffEditor', workspaceFolder.uri).get('codeLens');
+
+            vscode.workspace.getConfiguration('ply', workspaceFolder.uri).update('logpanel', true, vscode.ConfigurationTarget.WorkspaceFolder);
+            // vscode.workspace.getConfiguration().update('diffEditor.codeLens', true, vscode.ConfigurationTarget.WorkspaceFolder);
+
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             workspacePlyRoots.set(workspaceFolder, plyRoots);
             // clear previous diff state
@@ -59,8 +65,9 @@ export async function activate(context: vscode.ExtensionContext) {
     // register for ply.result scheme
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, new ResultContentProvider()));
     // codelens for results
-    // vscode.languages.registerCodeLensProvider({ scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
-    vscode.workspace.getConfiguration().update('ply.logpanel', true, vscode.ConfigurationTarget.WorkspaceFolder);
+    //vscode.workspace.getConfiguration().update('ply.logpanel', true, vscode.ConfigurationTarget.Workspace);
+    //vscode.workspace.getConfiguration().update('diffEditor.codeLens', true, vscode.ConfigurationTarget.Workspace);
+
     vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
     // result diffs decorator
     const resultPairs: ResultPair[] = [];
@@ -164,14 +171,42 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }));
 
+    async function checkEnableDiffEditorCodeLens(workspaceFolder: vscode.WorkspaceFolder) {
+        const diffEdSettings = vscode.workspace.getConfiguration('diffEditor', workspaceFolder.uri);
+        if (!diffEdSettings.get('codeLens')) {
+            const plySettings = vscode.workspace.getConfiguration('ply');
+            let diffCodeLensSetting = plySettings.get('enableDiffEditorCodeLens', 'Prompt');
+            if (diffCodeLensSetting === 'Prompt') {
+                let response = await vscode.window.showInformationMessage(
+                    'Ply result comparisons work best with vscode\'s \'diffEditor.codeLens\' setting. Enable?',
+                    'Yes', 'No', 'Don\'t ask again'
+                );
+                if (response && response !== 'No') {
+                    response = response === 'Yes' ? 'Always' : 'Never'; // convert to valid enum
+                    if (response !== diffCodeLensSetting) {
+                        diffCodeLensSetting = response;
+                        await plySettings.update('enableDiffEditorCodeLens', diffCodeLensSetting, vscode.ConfigurationTarget.Global);
+                    }
+                }
+            }
+            if (diffCodeLensSetting === 'Always') {
+                await diffEdSettings.update('codeLens', true, vscode.ConfigurationTarget.WorkspaceFolder);
+            }
+        }
+    }
+
     /**
      * Applies decorations only if diff state exists for the pair
      */
     async function updateDiffDecorations(resultPair: ResultPair,
         expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
+        let diffState: any = {};
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(PlyRoots.toUri(resultPair.infoId));
-        const diffState = context.workspaceState.get(`ply-diffs:${workspaceFolder?.uri}`) || {} as any;
+        if (workspaceFolder) {
+            await checkEnableDiffEditorCodeLens(workspaceFolder);
+            diffState = context.workspaceState.get(`ply-diffs:${workspaceFolder.uri}`) || {};
+        }
 
         let diffs: ply.Diff[];
         const resultDiffs: ResultDiffs[] = [];

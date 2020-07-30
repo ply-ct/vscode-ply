@@ -3,7 +3,7 @@ import * as path from 'path';
 import { detectNodePath, Log } from 'vscode-test-adapter-util';
 import * as ply from 'ply-ct';
 
-enum Setting {
+export enum Setting {
     testsLocation = 'testsLocation',
     requestFiles = 'requestFiles',
     caseFiles = 'caseFiles',
