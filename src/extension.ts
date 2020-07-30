@@ -46,10 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new TestAdapterRegistrar(
         testExplorerExtension.exports,
         workspaceFolder => {
-            const codelensDiff = vscode.workspace.getConfiguration('diffEditor', workspaceFolder.uri).get('codeLens');
-
             vscode.workspace.getConfiguration('ply', workspaceFolder.uri).update('logpanel', true, vscode.ConfigurationTarget.WorkspaceFolder);
-            // vscode.workspace.getConfiguration().update('diffEditor.codeLens', true, vscode.ConfigurationTarget.WorkspaceFolder);
 
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             workspacePlyRoots.set(workspaceFolder, plyRoots);
@@ -62,11 +59,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register for ply.result scheme
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, new ResultContentProvider()));
+
     // result diffs decorator
     const resultPairs: ResultPair[] = [];
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
+
     // codelens for results
-    vscode.languages.registerCodeLensProvider( { language: '*' }, new ResultCodeLensProvider());
+    vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
@@ -129,35 +128,34 @@ export async function activate(context: vscode.ExtensionContext) {
                         preview: true
                     };
 
-                    vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options).then(() => {
-                        const expectedEditor = vscode.window.visibleTextEditors.find(editor => {
-                            return editor.document.uri.toString() === expectedUri.toString();
-                        });
-                        const actualEditor = vscode.window.visibleTextEditors.find(editor => {
-                            return editor.document.uri.toString() === actualUri.toString();
-                        });
-
-                        if (expectedEditor && actualEditor) {
-                            const existingPairIdx = resultPairs.findIndex(pair => {
-                                return pair.expectedUri.toString() === expectedUri.toString() &&
-                                    pair.actualUri.toString() === actualUri.toString();
-                            });
-                            if (existingPairIdx >= 0) {
-                                resultPairs.splice(existingPairIdx, 1);
-                            }
-
-                            const pair: ResultPair = {
-                                infoId: info.id,
-                                testName: test?.name,
-                                expectedUri,
-                                expectedResult,
-                                actualUri,
-                                actualResult
-                            };
-                            resultPairs.push(pair);
-                            updateDiffDecorations(pair, expectedEditor, actualEditor);
-                        }
+                    await vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options);
+                    const expectedEditor = vscode.window.visibleTextEditors.find(editor => {
+                        return editor.document.uri.toString() === expectedUri.toString();
                     });
+                    const actualEditor = vscode.window.visibleTextEditors.find(editor => {
+                        return editor.document.uri.toString() === actualUri.toString();
+                    });
+
+                    if (expectedEditor && actualEditor) {
+                        const existingPairIdx = resultPairs.findIndex(pair => {
+                            return pair.expectedUri.toString() === expectedUri.toString() &&
+                                pair.actualUri.toString() === actualUri.toString();
+                        });
+                        if (existingPairIdx >= 0) {
+                            resultPairs.splice(existingPairIdx, 1);
+                        }
+
+                        const pair: ResultPair = {
+                            infoId: info.id,
+                            testName: test?.name,
+                            expectedUri,
+                            expectedResult,
+                            actualUri,
+                            actualResult
+                        };
+                        resultPairs.push(pair);
+                        updateDiffDecorations(pair, expectedEditor, actualEditor);
+                    }
                 }
             }
         } catch (err) {
@@ -167,7 +165,21 @@ export async function activate(context: vscode.ExtensionContext) {
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', async (...args: any[]) => {
-        console.log("ARGS: " + JSON.stringify(args, null, 2));
+        const plyResultUri = args[0] as vscode.Uri;
+        const fileUri = Result.convertUri(plyResultUri);
+        await vscode.commands.executeCommand('vscode.open', fileUri);
+        if (plyResultUri.fragment) {
+            // go to line number
+            const editor = vscode.window.visibleTextEditors.find(editor => {
+                return editor.document.uri.toString() === fileUri.toString();
+            });
+            if (editor) {
+                const plyResult = Result.fromUri(plyResultUri);
+                const lineNumber = await plyResult.getStart(plyResult.testName);
+                vscode.commands.executeCommand("revealLine", { lineNumber, at: 'top' });
+            }
+        }
+
     }));
 
     async function checkEnableDiffEditorCodeLens(workspaceFolder: vscode.WorkspaceFolder) {
