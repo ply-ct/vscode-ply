@@ -10,7 +10,7 @@ export class ResultContentProvider implements vscode.TextDocumentContentProvider
     dispose() {
     }
 
-    async provideTextDocumentContent(uri: vscode.Uri): Promise<string | null> {
+    async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const result = Result.fromUri(uri);
         if (await result.plyResult.exists) {
             const resultContents = await result.getResultContents();

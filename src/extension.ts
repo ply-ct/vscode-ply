@@ -8,8 +8,6 @@ import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
 import { ResultCodeLensProvider } from './result/codeLens';
-import { Setting } from './config';
-
 
 interface ResultPair {
     infoId: string; // test or suite id
@@ -64,14 +62,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register for ply.result scheme
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, new ResultContentProvider()));
-    // codelens for results
-    //vscode.workspace.getConfiguration().update('ply.logpanel', true, vscode.ConfigurationTarget.Workspace);
-    //vscode.workspace.getConfiguration().update('diffEditor.codeLens', true, vscode.ConfigurationTarget.Workspace);
-
-    vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
     // result diffs decorator
     const resultPairs: ResultPair[] = [];
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
+    // codelens for results
+    vscode.languages.registerCodeLensProvider( { language: '*' }, new ResultCodeLensProvider());
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
         try {
@@ -169,6 +164,10 @@ export async function activate(context: vscode.ExtensionContext) {
             console.error(err);
             vscode.window.showErrorMessage(`Error executing ply.diff: ${err.message}`);
         }
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', async (...args: any[]) => {
+        console.log("ARGS: " + JSON.stringify(args, null, 2));
     }));
 
     async function checkEnableDiffEditorCodeLens(workspaceFolder: vscode.WorkspaceFolder) {

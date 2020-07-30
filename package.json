@@ -170,6 +170,10 @@
           "dark": "./icons/diff-dark.svg",
           "light": "./icons/diff-light.svg"
         }
+      },
+      {
+        "command": "ply.openResult",
+        "title": "Open result file"
       }
     ],
     "menus": {
