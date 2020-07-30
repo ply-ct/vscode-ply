@@ -46,8 +46,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new TestAdapterRegistrar(
         testExplorerExtension.exports,
         workspaceFolder => {
-            vscode.workspace.getConfiguration('ply', workspaceFolder.uri).update('logpanel', true, vscode.ConfigurationTarget.WorkspaceFolder);
-
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             workspacePlyRoots.set(workspaceFolder, plyRoots);
             // clear previous diff state

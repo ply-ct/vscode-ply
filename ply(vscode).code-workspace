@@ -8,7 +8,6 @@
 		}
 	],
 	"settings": {
-		"ply.excludes": "test/ply/requests/bad-requests.ply.yaml",
 		"diffEditor.codeLens": true
 	}
 }
