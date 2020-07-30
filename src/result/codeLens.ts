@@ -11,7 +11,7 @@ export class ResultCodeLensProvider implements vscode.CodeLensProvider {
         const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
         this.codeLenses.push(new vscode.CodeLens(range,
             {
-                title: 'Open results file',
+                title: 'Show in result file',
                 command: 'ply.openResult',
                 arguments: [document.uri]
             }

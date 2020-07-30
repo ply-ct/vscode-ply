@@ -189,7 +189,7 @@ export async function activate(context: vscode.ExtensionContext) {
             let diffCodeLensSetting = plySettings.get('enableDiffEditorCodeLens', 'Prompt');
             if (diffCodeLensSetting === 'Prompt') {
                 let response = await vscode.window.showInformationMessage(
-                    'Ply result comparisons work best with vscode\'s \'diffEditor.codeLens\' setting. Enable?',
+                    'Ply result comparisons work best with vscode\'s \'diffEditor.codeLens\' setting. Enable for this workspace?',
                     'Yes', 'No', 'Don\'t ask again'
                 );
                 if (response && response !== 'No') {
@@ -201,7 +201,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
             }
             if (diffCodeLensSetting === 'Always') {
-                await diffEdSettings.update('codeLens', true, vscode.ConfigurationTarget.WorkspaceFolder);
+                await diffEdSettings.update('codeLens', true, vscode.ConfigurationTarget.Workspace);
             }
         }
     }
