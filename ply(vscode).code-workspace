@@ -1,9 +1,11 @@
 {
 	"folders": [
 		{
+			"name": "ply",
 			"path": "../ply"
 		},
 		{
+			"name": "ply-demo",
 			"path": "../ply-demo"
 		}
 	],

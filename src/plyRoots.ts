@@ -242,6 +242,9 @@ export class PlyRoots {
     }
 
     findTestOrSuiteInfo(testId: string): TestSuiteInfo | TestInfo | undefined {
+        if (testId === this.rootSuite.id) {
+            return this.rootSuite;
+        }
         for (const plyRoot of this.roots) {
             const testOrSuite = plyRoot.find(testId);
             if (testOrSuite) {
@@ -263,6 +266,9 @@ export class PlyRoots {
     }
 
     getParent(testOrSuiteId: string): TestSuiteInfo | undefined {
+        if (testOrSuiteId === this.rootSuite.id) {
+            return undefined;
+        }
         for (const plyRoot of this.roots) {
             if (plyRoot.id === testOrSuiteId) {
                 return this.rootSuite;

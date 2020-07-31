@@ -118,6 +118,12 @@
           "default": false,
           "scope": "resource"
         },
+        "ply.verbose": {
+          "type": "boolean",
+          "description": "Verbose (debug) output from ply.",
+          "default": false,
+          "scope": "resource"
+        },
         "ply.debugPort": {
           "type": "number",
           "description": "Port to use for debug connections",

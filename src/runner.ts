@@ -65,8 +65,7 @@ export class PlyRunner {
                         path += '#' + uri.fragment;
                     }
                     return path;
-                }
-                else {
+                } else {
                     return uri.toString(true);
                 }
             });
@@ -108,6 +107,9 @@ export class PlyRunner {
         }
 
         const options = this.config.plyOptions;
+        if (this.log.enabled) {
+            this.log.debug(`options: ${JSON.stringify(options, null, 2)}`);
+        }
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
@@ -147,8 +149,7 @@ export class PlyRunner {
                     if (this.log.enabled) {
                         this.log.debug(`Worker: ${message}`);
                     }
-                }
-                else {
+                } else {
                     if (this.log.enabled) {
                         this.log.debug(`Received ${JSON.stringify(message)}`);
                     }
@@ -198,8 +199,8 @@ export class PlyRunner {
                 }
             };
 
-            this.runningTestProcess.stdout.on('data', processOutput);
-            this.runningTestProcess.stderr.on('data', processOutput);
+            this.runningTestProcess.stdout!.on('data', processOutput);
+            this.runningTestProcess.stderr!.on('data', processOutput);
 
             this.runningTestProcess.on('exit', () => {
                 if (this.log.enabled) {

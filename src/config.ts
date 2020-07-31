@@ -117,7 +117,7 @@ export class PlyConfig {
     get plyOptions(): ply.PlyOptions {
         if (!this._plyOptions) {
             const workspacePath = ply.util.fwdSlashes(this.workspaceFolder.uri.fsPath);
-            let options = new ply.Config(new ply.Defaults(workspacePath)).options;
+            let options = new ply.Config(new ply.Defaults(workspacePath), false).options;
             const abs = (location: string) => {
                 if (path.isAbsolute(location)) {
                     return ply.util.fwdSlashes(path.normalize(location));
@@ -130,6 +130,10 @@ export class PlyConfig {
                 const val = this.getConfiguration().get(name, '');
                 return val ? val  : defaultVal;
             };
+            const bool = (name: string, defaultValue: boolean): boolean => {
+                const bool = this.getConfiguration().get(name, undefined);
+                return typeof bool === 'undefined' ? defaultValue : bool as boolean;
+            };
             options = Object.assign({}, options, {
                 testsLocation: abs(val('testsLocation', options.testsLocation)),
                 requestFiles: val('requestFiles', options.requestFiles),
@@ -137,7 +141,8 @@ export class PlyConfig {
                 excludes: val('excludes', options.excludes),
                 expectedLocation: abs(val('expectedLocation', options.expectedLocation)),
                 actualLocation: abs(val('actualLocation', options.actualLocation)),
-                logLocation: abs(val('logLocation', options.logLocation || options.actualLocation))
+                logLocation: abs(val('logLocation', options.logLocation || options.actualLocation)),
+                verbose: bool('verbose', options.verbose)
             });
             if (this.log.enabled) {
                 this.log.debug(`plyOptions: ${JSON.stringify(options)}`);

@@ -18,7 +18,7 @@ import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
 /**
  * Console output from here goes to Ply Tests output channel.
  */
-function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<void>, onFinished?: () => void): void {
+function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolean | void>, onFinished?: () => void): void {
 
     const startTimes = new Map<string, number>();
     function elapsed(id: string): string | undefined {

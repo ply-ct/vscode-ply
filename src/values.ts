@@ -13,8 +13,8 @@ export class PlyValues {
 
     // TODO baseLoc and files are hardcoded
     async getValues(): Promise<object> {
-        var values = {};
-        let valuesLoc = this.baseLoc + '/values/';
+        let values = {};
+        const valuesLoc = this.baseLoc + '/values/';
         values = Object.assign(values, await this.loadValues(valuesLoc + 'localhost.values.json'));
         // values = Object.assign(values, await this.loadValues(valuesLoc + 'ply-ct.com.values.json'));
         // values = Object.assign(values, await this.loadValues(valuesLoc + 'main.values.json'));
