@@ -109,12 +109,12 @@
         },
         "ply.logLocation": {
           "type": "string",
-          "description": "Log file base dir (actualLocation).",
+          "description": "Ply log file base dir (actualLocation).",
           "scope": "resource"
         },
         "ply.logpanel": {
           "type": "boolean",
-          "description": "Write detailed log output to the Ply Invoker output panel.",
+          "description": "Write detailed vscode-ply output to the Ply Invoker output panel.",
           "default": false,
           "scope": "resource"
         },

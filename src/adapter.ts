@@ -40,12 +40,13 @@ export class PlyAdapter implements TestAdapter {
             () => workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined),
             log);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
+        // this.disposables.push(vscode.workspace.onDidSaveTextDocument(async document => {
+
+        // }));
     }
 
     async load(): Promise<void> {
-        if (this.log.enabled) {
-            this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
-        }
+        this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
 
         try {
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
@@ -67,17 +68,13 @@ export class PlyAdapter implements TestAdapter {
         }
         catch (err) {
             console.log(err);
-            if (this.log.enabled) {
-                this.log.error('Error loading ply tests: ' + err, err);
-            }
+            this.log.error('Error loading ply tests: ' + err, err);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', errorMessage: inspect(err) });
         }
     }
 
     async run(testIds: string[]): Promise<void> {
-        if (this.log.enabled) {
-            this.log.info(`Running: ${JSON.stringify(testIds)}`);
-        }
+        this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
                 this.plyRoots, this.log, this.testStatesEmitter);
@@ -91,9 +88,7 @@ export class PlyAdapter implements TestAdapter {
 
     async debug(testIds: string[]): Promise<void> {
         // start a test run in a child process and attach the debugger to it...
-        if (this.log.enabled) {
-            this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
-        }
+        this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
         this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
             this.plyRoots, this.log, this.testStatesEmitter);

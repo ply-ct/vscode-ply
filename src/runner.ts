@@ -69,9 +69,7 @@ export class PlyRunner {
                     return uri.toString(true);
                 }
             });
-            if (this.log.enabled) {
-                this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
-            }
+            this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
 
             await this.runPlyees(plyees, debug, runOptions);
 
@@ -82,9 +80,7 @@ export class PlyRunner {
         }
         catch (err) {
             console.error(err);
-            if (this.log.enabled) {
-                this.log.error(`Error while running plyees: ${err.stack}`);
-            }
+            this.log.error(`Error while running plyees: ${err.stack}`);
             this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
     }
@@ -107,9 +103,7 @@ export class PlyRunner {
         }
 
         const options = this.config.plyOptions;
-        if (this.log.enabled) {
-            this.log.debug(`options: ${JSON.stringify(options, null, 2)}`);
-        }
+        this.log.debug(`options: ${JSON.stringify(options, null, 2)}`);
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
@@ -146,13 +140,9 @@ export class PlyRunner {
             this.runningTestProcess.on('message', (message: string | TestSuiteEvent | TestEvent | TestRunFinishedEvent) => {
 
                 if (typeof message === 'string') {
-                    if (this.log.enabled) {
-                        this.log.debug(`Worker: ${message}`);
-                    }
+                    this.log.debug(`Worker: ${message}`);
                 } else {
-                    if (this.log.enabled) {
-                        this.log.debug(`Received ${JSON.stringify(message)}`);
-                    }
+                    this.log.debug(`Received ${JSON.stringify(message)}`);
                     if (message.type !== 'finished') {
                         const decorations: TestDecoration[] = [];
                         if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {
@@ -203,9 +193,7 @@ export class PlyRunner {
             this.runningTestProcess.stderr!.on('data', processOutput);
 
             this.runningTestProcess.on('exit', () => {
-                if (this.log.enabled) {
-                    this.log.info('Worker finished');
-                }
+                this.log.info('Worker finished');
                 runningTest = undefined;
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
@@ -216,9 +204,7 @@ export class PlyRunner {
             });
 
             this.runningTestProcess.on('error', err => {
-                if (this.log.enabled) {
-                    this.log.error(`Error from child process: ${err}`);
-                }
+                this.log.error(`Error from child process: ${err}`);
                 runningTest = undefined;
                 this.runningTestProcess = undefined;
                 if (!childProcessFinished) {
@@ -232,9 +218,7 @@ export class PlyRunner {
 
     cancel(): void {
 		if (this.runningTestProcess) {
-            if (this.log.enabled) {
-                this.log.info('Killing running test process');
-            }
+            this.log.info('Killing running test process');
 			this.runningTestProcess.kill();
 		}
     }

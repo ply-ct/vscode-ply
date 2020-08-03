@@ -37,8 +37,10 @@ export class PlyConfig {
     }
 
     async onChange(change: vscode.ConfigurationChangeEvent) {
+        this.log.info('config change');
         for (const setting of Object.values(Setting)) {
             if (change.affectsConfiguration(`ply.${setting}`, this.workspaceFolder.uri)) {
+                this.log.info(`config change affects ply.${setting}`);
                 if (setting === Setting.testsLocation
                     || setting === Setting.requestFiles
                     || setting === Setting.caseFiles
@@ -74,9 +76,7 @@ export class PlyConfig {
         if (!nodePath) {
             nodePath = await detectNodePath();
         }
-        if (this.log.enabled) {
-            this.log.debug(`Node path: ${nodePath}`);
-        }
+        this.log.debug(`Node path: ${nodePath}`);
         return nodePath;
     }
 
@@ -84,25 +84,19 @@ export class PlyConfig {
         const dirname = this.workspaceFolder.uri.fsPath;
         const configCwd = this.getConfiguration().get<string>(Setting.cwd);
         const cwd = configCwd ? path.resolve(dirname, configCwd) : dirname;
-        if (this.log.enabled) {
-            this.log.debug(`Working directory: ${cwd}`);
-        }
+        this.log.debug(`Working directory: ${cwd}`);
         return cwd;
     }
 
     get debugPort(): number {
         const debugPort = this.getConfiguration().get(Setting.debugPort, 9229);
-        if (this.log.enabled) {
-            this.log.debug(`Debug port: ${debugPort}`);
-        }
+        this.log.debug(`Debug port: ${debugPort}`);
         return debugPort;
     }
 
     get debugConfig(): string | undefined {
         const debugConfig = this.getConfiguration().get(Setting.debugConfig, '');
-        if (debugConfig && this.log.enabled) {
-            this.log.debug(`Debug config: ${debugConfig}`);
-        }
+        this.log.debug(`Debug config: ${debugConfig}`);
         return debugConfig ? debugConfig : undefined;
     }
 
@@ -144,9 +138,7 @@ export class PlyConfig {
                 logLocation: abs(val('logLocation', options.logLocation || options.actualLocation)),
                 verbose: bool('verbose', options.verbose)
             });
-            if (this.log.enabled) {
-                this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
-            }
+            this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;
         }
 
