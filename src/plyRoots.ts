@@ -2,6 +2,8 @@ import { URI as Uri } from 'vscode-uri';
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
 import { Suite, Request, Case, Test } from 'ply-ct';
 
+type Info = TestInfo | TestSuiteInfo;
+
 /**
  * A root test suite for plyees.
  * Child suites all have ids of the form <root-id>|<file-or-folder-uri>.
@@ -126,22 +128,39 @@ export class PlyRoot {
     }
 
     // find suite or test with id
-    find(id: string): TestSuiteInfo | TestInfo | undefined {
-        return this.findFrom(this.baseSuite, id);
+    find(test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
+        return this.findFrom(this.baseSuite, test);
     }
 
-    findFrom(start: TestSuiteInfo | TestInfo, id: string): TestSuiteInfo | TestInfo | undefined {
-        if (start.id === id) {
+    findFrom(start: Info, test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
+        if (test(start)) {
             return start;
         }
         else if (start.type === 'suite') {
             for (const child of start.children) {
-                const found = this.findFrom(child, id);
+                const found = this.findFrom(child, test);
                 if (found) {
                     return found;
                 }
             }
         }
+    }
+
+    filter(test: (testOrSuiteInfo: Info) => boolean): Info[] {
+        return this.filterFrom(this.baseSuite, test);
+    }
+
+    filterFrom(start: Info, test: (testOrSuiteInfo: Info) => boolean): Info[] {
+        let infos: Info[] = [];
+        if (test(start)) {
+            infos.push(start);
+        }
+        else if (start.type === 'suite') {
+            for (const child of start.children) {
+                infos = infos.concat(this.filterFrom(child, test));
+            }
+        }
+        return infos;
     }
 
     getParent(start: TestSuiteInfo, id: string): TestSuiteInfo | undefined {
@@ -192,6 +211,7 @@ export class PlyRoots {
 
     private readonly testsById = new Map<string,Test>();
     private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
+    private readonly suiteIdsByExpectedResultUri = new Map<Uri,string>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
@@ -204,13 +224,19 @@ export class PlyRoots {
     }
 
     build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>) {
+        this.testsById.clear();
+        this.suitesByTestOrSuiteId.clear();
+        this.suiteIdsByExpectedResultUri.clear();
+
         // requests
         const requestSuiteUris = Array.from(requestSuites.keys());
         const requestUris: [Uri, number][] = [];
         for (const requestSuiteUri of requestSuiteUris) {
             const suite = requestSuites.get(requestSuiteUri);
             if (suite) {
-                this.suitesByTestOrSuiteId.set(this.requestsRoot.formSuiteId(requestSuiteUri), suite);
+                const suiteId = this.requestsRoot.formSuiteId(requestSuiteUri);
+                this.suitesByTestOrSuiteId.set(suiteId, suite);
+                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute), suiteId);
                 for (const request of suite) {
                     const testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
@@ -241,12 +267,35 @@ export class PlyRoots {
         this.rootSuite.children = this.roots.map(root => root.baseSuite);
     }
 
-    findTestOrSuiteInfo(testId: string): TestSuiteInfo | TestInfo | undefined {
-        if (testId === this.rootSuite.id) {
+    find(test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
+        if (test(this.rootSuite)) {
             return this.rootSuite;
         }
         for (const plyRoot of this.roots) {
-            const testOrSuite = plyRoot.find(testId);
+            const testOrSuite = plyRoot.find(test);
+            if (testOrSuite) {
+                return testOrSuite;
+            }
+        }
+    }
+
+    filter(test: (testOrSuiteInfo: Info) => boolean): Info[] {
+        let infos: Info[] = [];
+        if (test(this.rootSuite)) {
+            infos.push(this.rootSuite);
+        }
+        for (const plyRoot of this.roots) {
+            infos = infos.concat(plyRoot.filter(test));
+        }
+        return infos;
+    }
+
+    findInfo(id: string): Info | undefined {
+        if (id === this.rootSuite.id) {
+            return this.rootSuite;
+        }
+        for (const plyRoot of this.roots) {
+            const testOrSuite = plyRoot.find(t => t.id === id);
             if (testOrSuite) {
                 return testOrSuite;
             }
@@ -265,6 +314,10 @@ export class PlyRoots {
         return this.suitesByTestOrSuiteId.get(suiteId);
     }
 
+    getSuiteIdForExpectedResult(resultUri: Uri): string | undefined {
+        return this.suiteIdsByExpectedResultUri.get(resultUri);
+    }
+
     getParent(testOrSuiteId: string): TestSuiteInfo | undefined {
         if (testOrSuiteId === this.rootSuite.id) {
             return undefined;
@@ -281,7 +334,7 @@ export class PlyRoots {
     }
 
     getSuiteInfo(suiteId: string): TestSuiteInfo | undefined {
-        const testOrSuite = this.findTestOrSuiteInfo(suiteId);
+        const testOrSuite = this.find(i => i.id === suiteId);
         if (testOrSuite && testOrSuite.type === 'suite') {
             return testOrSuite;
         }

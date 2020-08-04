@@ -33,7 +33,7 @@ export class PlyRunner {
         try {
             const testInfos: TestInfo[] = [];
             for (const testId of testIds) {
-                const testOrSuite = this.plyRoots.findTestOrSuiteInfo(testId);
+                const testOrSuite = this.plyRoots.find(i => i.id === testId);
                 if (testOrSuite) {
                     this.collectTests(testOrSuite, testInfos);
                 }

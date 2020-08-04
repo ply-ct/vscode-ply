@@ -81,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         return;
                     }
 
-                    const info = plyRoots.findTestOrSuiteInfo(id);
+                    const info = plyRoots.findInfo(id);
                     if (!info) {
                         // could be a suite/test from another adapter (eg: mocha)
                         log.warn(`Ply test info not found for id: ${id} (not a ply test?)`);

@@ -40,9 +40,7 @@ export class PlyAdapter implements TestAdapter {
             () => workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined),
             log);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
-        // this.disposables.push(vscode.workspace.onDidSaveTextDocument(async document => {
-
-        // }));
+        this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
     }
 
     async load(): Promise<void> {
@@ -165,7 +163,42 @@ export class PlyAdapter implements TestAdapter {
 
     private onDidTerminateDebugSession(cb: (session: vscode.DebugSession) => any): vscode.Disposable {
 		return vscode.debug.onDidTerminateDebugSession(cb);
-	}
+    }
+
+    private onSave(document: vscode.TextDocument) {
+        this.log.debug(`saved: ${document.uri}`);
+        if (document.uri.scheme === 'file' && document.uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
+            if (PlyConfig.isPlyConfig(document.uri.fsPath)) {
+                this.config.clearPlyOptions();
+                this.load();
+            } else {
+                const file = document.uri.fsPath;
+                const info = this.plyRoots.find(i => i.file === file);
+                if (info && info.type === 'suite') {
+                    const testIds = info.children.map(i => i.id);
+                    // TODO only reload affected files and diff state -- issue #14
+                    this.load();
+                    this.retireEmitter.fire({ tests: testIds });
+                    this.removeDiffStates(testIds);
+                } else if (document.languageId === 'yaml') {
+                    const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
+                    if (affectedSuiteId) {
+                        const testIds = this.plyRoots.getTestInfosForSuite(affectedSuiteId).map(ti => ti.id);
+                        this.retireEmitter.fire({ tests: testIds });
+                        this.removeDiffStates(testIds);
+                    }
+                } else if (document.languageId === 'json') {
+                    // TODO check if values changed and fire retire event & remove diff state
+                }
+            }
+        }
+    }
+
+    private removeDiffStates(testIds: string[]) {
+        const diffState = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
+        testIds.forEach(testId => delete diffState[testId]);
+        this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, diffState);
+    }
 
     cancel(): void {
         this.runner?.cancel();

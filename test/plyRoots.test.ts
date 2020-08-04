@@ -32,19 +32,19 @@ describe('ply roots', function () {
 
         plyRoots.build(requests, cases);
 
-        const moviesByYearAndRating = plyRoots.requestsRoot.find(`${movieQueriesUri}#moviesByYearAndRating`);
+        const moviesByYearAndRating = plyRoots.requestsRoot.find(t => t.id === `${movieQueriesUri}#moviesByYearAndRating`);
         assert.ok(moviesByYearAndRating);
         let parent = plyRoots.getParent(moviesByYearAndRating!.id);
         assert.ok(parent);
         assert.equal(plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id, plyRoots.requestsRoot.id);
 
-        const createMovie = plyRoots.requestsRoot.find(`${moviesApiUri}#createMovie`);
+        const createMovie = plyRoots.requestsRoot.find(t => t.id === `${moviesApiUri}#createMovie`);
         assert.ok(createMovie);
         parent = plyRoots.getParent(createMovie!.id);
         assert.ok(parent);
         assert.equal(plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id, plyRoots.requestsRoot.id);
 
-        const addNewMovie = plyRoots.casesRoot.find(`${movieCrudUri}#add new movie`);
+        const addNewMovie = plyRoots.casesRoot.find(t => t.id === `${movieCrudUri}#add new movie`);
         assert.ok(addNewMovie);
         parent = plyRoots.getParent(addNewMovie!.id);
         assert.ok(parent);

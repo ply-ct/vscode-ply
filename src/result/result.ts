@@ -54,10 +54,10 @@ export class Result {
     }
 
     /**
-     * TODO: memoize load only once per instance
+     * TODO: memoize: load only once per instance?
      */
     private async load(): Promise<string | undefined> {
-        if (fs.existsSync(this.plyResult.location.path) && this.isInWorkspace()) {
+        if (fs.existsSync(this.plyResult.location.path) && this.getWorkspaceFolderUri()) {
             const document = await vscode.workspace.openTextDocument(Result.convertUri(this.toUri()));
             return document.getText();
         }
@@ -136,15 +136,10 @@ export class Result {
         return !this.testName;
     }
 
-    isInWorkspace(): boolean {
-        // TODO handle multiple workspace folders
-        const workspaceDir = vscode.workspace.workspaceFolders![0].uri.fsPath;
-        const location = this.plyResult.location;
-        if (location.isUrl) {
-            return false;
-        }
-        else {
-            return location.isChildOf(workspaceDir);
+    getWorkspaceFolderUri(): vscode.Uri | undefined {
+        const uri = Result.convertUri(this.toUri());
+        if (uri.fsPath) {
+            return vscode.workspace.getWorkspaceFolder(uri)?.uri;
         }
     }
 
@@ -155,12 +150,10 @@ export class Result {
 
     get label(): string {
         let path;
-        if (this.isInWorkspace()) {
-            // TODO handle multiple workspace folders
-            const workspaceDir = vscode.workspace.workspaceFolders![0].uri.fsPath;
-            path = this.plyResult.location.relativeTo(workspaceDir);
-        }
-        else {
+        const workspaceFolderUri = this.getWorkspaceFolderUri();
+        if (workspaceFolderUri) {
+            path = this.plyResult.location.relativeTo(workspaceFolderUri.fsPath);
+        } else {
             path = this.plyResult.location.path;
         }
         return this.testName ? `${path}#${this.testName}` : path;

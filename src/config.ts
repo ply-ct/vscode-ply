@@ -144,4 +144,12 @@ export class PlyConfig {
 
         return this._plyOptions!;
     }
+
+    clearPlyOptions() {
+        this._plyOptions = undefined;
+    }
+
+    static isPlyConfig(file: string) {
+        return ['.plyrc.yaml', '.plyrc.yml', '.plyrc.json'].includes(path.basename(file));
+    }
 }
