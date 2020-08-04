@@ -10,18 +10,36 @@ export class ResultContentProvider implements vscode.TextDocumentContentProvider
      * maps file uri string to ply-result uris
      */
     private resultUris = new Map<string,string[]>();
-    private subscription = vscode.workspace.onDidCloseTextDocument(doc => this.resultUris.delete(doc.uri.toString()));
+    private subscription = vscode.workspace.onDidCloseTextDocument(doc => {
+        if (doc.uri.scheme === Result.URI_SCHEME) {
+            const fileUri = Result.convertUri(doc.uri).toString();
+            const plyUris = this.resultUris.get(fileUri);
+            if (plyUris) {
+                const plyUri = doc.uri.toString();
+                const i = plyUris.indexOf(plyUri);
+                if (i >= 0) {
+                    plyUris.splice(i, 1);
+                }
+                if (plyUris.length === 0) {
+                    this.resultUris.delete(fileUri);
+                }
+            }
+
+        } else {
+            this.resultUris.delete(doc.uri.toString());
+        }
+    });
 
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const result = Result.fromUri(uri);
         if (await result.plyResult.exists) {
             const fileUri = Result.convertUri(uri).toString();
-            const plyUri = uri.toString();
             let plyUris = this.resultUris.get(fileUri);
             if (!plyUris) {
                 plyUris = [];
                 this.resultUris.set(fileUri, plyUris);
             }
+            const plyUri = uri.toString();
             if (!plyUris.includes(plyUri)) {
                 plyUris.push(plyUri);
             }
