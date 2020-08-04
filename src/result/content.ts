@@ -3,21 +3,47 @@ import { Result } from './result';
 
 export class ResultContentProvider implements vscode.TextDocumentContentProvider {
 
-    constructor() {
+    private onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    get onDidChange() { return this.onDidChangeEmitter.event; }
 
-    }
-
-    dispose() {
-    }
+    /**
+     * maps file uri string to ply-result uris
+     */
+    private resultUris = new Map<string,string[]>();
+    private subscription = vscode.workspace.onDidCloseTextDocument(doc => this.resultUris.delete(doc.uri.toString()));
 
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const result = Result.fromUri(uri);
         if (await result.plyResult.exists) {
+            const fileUri = Result.convertUri(uri).toString();
+            const plyUri = uri.toString();
+            let plyUris = this.resultUris.get(fileUri);
+            if (!plyUris) {
+                plyUris = [];
+                this.resultUris.set(fileUri, plyUris);
+            }
+            if (!plyUris.includes(plyUri)) {
+                plyUris.push(plyUri);
+            }
             const resultContents = await result.getResultContents();
             return resultContents ? resultContents.contents : '';
         }
         else {
             return ''; // return empty string for purposes of comparison
         }
+    }
+
+    update(fileUri: vscode.Uri) {
+        const plyUris = this.resultUris.get(fileUri.toString());
+        if (plyUris) {
+            for (const plyUri of plyUris) {
+                this.onDidChangeEmitter.fire(vscode.Uri.parse(plyUri));
+            }
+        }
+    }
+
+    dispose() {
+        this.resultUris.clear();
+        this.subscription.dispose();
     }
 }

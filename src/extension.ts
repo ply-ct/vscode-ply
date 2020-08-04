@@ -56,7 +56,9 @@ export async function activate(context: vscode.ExtensionContext) {
     ));
 
     // register for ply.result scheme
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, new ResultContentProvider()));
+    const contentProvider = new ResultContentProvider();
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, contentProvider));
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(change => contentProvider.update(change.document.uri)));
 
     // result diffs decorator
     const resultPairs: ResultPair[] = [];

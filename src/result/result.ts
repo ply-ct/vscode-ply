@@ -20,6 +20,9 @@ export class Result {
         readonly testName?: string
     ) { }
 
+    /**
+     * uri with ply-result schema
+     */
     toUri(): vscode.Uri {
         const path = this.plyResult.location.path;
         const scheme = Result.URI_SCHEME;
