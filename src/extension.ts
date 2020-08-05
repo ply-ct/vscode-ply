@@ -8,6 +8,7 @@ import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
+import { DiffState } from './result/diff';
 
 interface ResultPair {
     infoId: string; // test or suite id
@@ -48,9 +49,9 @@ export async function activate(context: vscode.ExtensionContext) {
         workspaceFolder => {
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             workspacePlyRoots.set(workspaceFolder, plyRoots);
-            // clear previous diff state
-            context.workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined);
-            return new PlyAdapter(workspaceFolder, context.workspaceState, outputChannel, plyRoots, log);
+            const diffState = new DiffState(workspaceFolder, context.workspaceState);
+            diffState.clearState();
+            return new PlyAdapter(workspaceFolder, diffState, outputChannel, plyRoots, log);
         },
         log
     ));
@@ -212,13 +213,13 @@ export async function activate(context: vscode.ExtensionContext) {
      * Applies decorations only if diff state exists for the pair
      */
     async function updateDiffDecorations(resultPair: ResultPair,
-        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
+        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, clearDiffState = false) {
 
         let diffState: any = {};
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(PlyRoots.toUri(resultPair.infoId));
         if (workspaceFolder) {
+            diffState = new DiffState(workspaceFolder, context.workspaceState).state || {};
             await checkEnableDiffEditorCodeLens(workspaceFolder);
-            diffState = context.workspaceState.get(`ply-diffs:${workspaceFolder.uri}`) || {};
         }
 
         let diffs: ply.Diff[];

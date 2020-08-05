@@ -8,6 +8,7 @@ import { PlyRoots} from './plyRoots';
 import { PlyConfig } from './config';
 import { PlyValues } from './values';
 import { WorkerArgs } from './worker/args';
+import { DiffState } from './result/diff';
 
 export class PlyRunner {
 
@@ -18,7 +19,7 @@ export class PlyRunner {
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly workspaceState: vscode.Memento,
+        private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
         private readonly config: PlyConfig,
         private readonly plyRoots: PlyRoots,
@@ -157,18 +158,15 @@ export class PlyRunner {
                         }
                         this.fire({ ...message as any, testRunId, decorations });
                         if (message.type === 'test') {
-                            const diffState = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
-                                delete diffState[runningTest];
+                                this.diffState.clearDiffs(runningTest);
                             } else {
-                                const diffs = (message as any).diffs;
                                 if (runningTest) {
-                                    diffState[runningTest] = diffs || [];
+                                    this.diffState.updateDiffs(runningTest, (message as any).diffs || []);
                                 }
                                 runningTest = undefined;
                             }
-                            this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, diffState);
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import { PlyLoader } from './loader';
 import { PlyRoots } from './plyRoots';
 import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
+import { DiffState } from './result/diff';
 
 export class PlyAdapter implements TestAdapter {
 
@@ -24,7 +25,7 @@ export class PlyAdapter implements TestAdapter {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly workspaceState: vscode.Memento,
+        private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
         private readonly plyRoots: PlyRoots,
         private readonly log: Log
@@ -37,7 +38,7 @@ export class PlyAdapter implements TestAdapter {
             workspaceFolder,
             () => this.load(),
             () => this.retireEmitter.fire(),
-            () => workspaceState.update(`ply-diffs:${workspaceFolder.uri}`, undefined),
+            () => this.diffState.clearState(),
             log);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
@@ -74,7 +75,7 @@ export class PlyAdapter implements TestAdapter {
     async run(testIds: string[]): Promise<void> {
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
-            this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
+            this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
                 this.plyRoots, this.log, this.testStatesEmitter);
             await this.runner.runTests(testIds);
         } catch (err) {
@@ -88,7 +89,7 @@ export class PlyAdapter implements TestAdapter {
         // start a test run in a child process and attach the debugger to it...
         this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
-        this.runner = new PlyRunner(this.workspaceFolder, this.workspaceState, this.outputChannel, this.config,
+        this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
             this.plyRoots, this.log, this.testStatesEmitter);
 		const testRunPromise = this.runner.runTests(testIds, true);
 
@@ -179,25 +180,19 @@ export class PlyAdapter implements TestAdapter {
                     // TODO only reload affected files and diff state -- issue #14
                     this.load();
                     this.retireEmitter.fire({ tests: testIds });
-                    this.removeDiffStates(testIds);
+                    this.diffState.clearDiffs(testIds);
                 } else if (document.languageId === 'yaml') {
                     const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
                     if (affectedSuiteId) {
                         const testIds = this.plyRoots.getTestInfosForSuite(affectedSuiteId).map(ti => ti.id);
                         this.retireEmitter.fire({ tests: testIds });
-                        this.removeDiffStates(testIds);
+                        this.diffState.clearDiffs(testIds);
                     }
                 } else if (document.languageId === 'json') {
                     // TODO check if values changed and fire retire event & remove diff state
                 }
             }
         }
-    }
-
-    private removeDiffStates(testIds: string[]) {
-        const diffState = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
-        testIds.forEach(testId => delete diffState[testId]);
-        this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, diffState);
     }
 
     cancel(): void {
