@@ -42,17 +42,20 @@ export class Result {
     }
 
     /**
-     * Converts ply-result uri to file or http/s uri.
+     * Convert ply-result uri to file or http/s uri.
      */
     static convertUri(plyResultUri: vscode.Uri): vscode.Uri {
         const scheme = plyResultUri.query?.substring(7) || 'file';
         return plyResultUri.with({scheme, query: '', fragment: ''});
     }
 
-    static fromUri(plyResultUri: vscode.Uri): Result {
-        const uri = Result.convertUri(plyResultUri);
-        const path = uri.scheme === 'file' ? uri.fsPath : uri.toString();
-        const testName = plyResultUri.fragment ? decodeURIComponent(plyResultUri.fragment) : undefined;
+    /**
+     * Create result from location or ply-result uri.
+     */
+    static fromUri(uri: vscode.Uri): Result {
+        const locUri = uri.scheme === Result.URI_SCHEME ? Result.convertUri(uri) : uri;
+        const path = locUri.scheme === 'file' ? locUri.fsPath : locUri.toString();
+        const testName = uri.fragment ? decodeURIComponent(uri.fragment) : undefined;
         return new Result(new ply.Retrieval(path), testName);
     }
 

@@ -7,7 +7,7 @@ import { ResultContentProvider } from './result/content';
 import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
 import { ResultDiffs, ResultDecorator } from './result/decorator';
-import { ResultCodeLensProvider } from './result/codeLens';
+import { SegmentCodeLensProvider } from './result/codeLens';
 
 interface ResultPair {
     infoId: string; // test or suite id
@@ -65,9 +65,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
 
     // codelens for results
-    vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new ResultCodeLensProvider());
+    vscode.languages.registerCodeLensProvider( { scheme: Result.URI_SCHEME }, new SegmentCodeLensProvider());
 
-    context.subscriptions.push(vscode.commands.registerCommand('ply.diff', async (...args: any[]) => {
+    const diffCommand = async (...args: any[]) => {
         try {
             if (args.length) {
                 const node = args[0];
@@ -162,24 +162,26 @@ export async function activate(context: vscode.ExtensionContext) {
             console.error(err);
             vscode.window.showErrorMessage(`Error executing ply.diff: ${err.message}`);
         }
-    }));
+    };
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff', diffCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment', diffCommand));
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', async (...args: any[]) => {
-        const plyResultUri = args[0] as vscode.Uri;
-        const fileUri = Result.convertUri(plyResultUri);
-        await vscode.commands.executeCommand('vscode.open', fileUri);
-        if (plyResultUri.fragment) {
+        const uri = args[0] as vscode.Uri;
+        if (uri.scheme === Result.URI_SCHEME && uri.fragment) {
+            const fileUri = Result.convertUri(uri);
+            const plyResult = Result.fromUri(uri);
+            const lineNumber = await plyResult.getStart(plyResult.testName);
+            await vscode.commands.executeCommand('vscode.open', fileUri);
             // go to line number
             const editor = vscode.window.visibleTextEditors.find(editor => {
                 return editor.document.uri.toString() === fileUri.toString();
             });
             if (editor) {
-                const plyResult = Result.fromUri(plyResultUri);
-                const lineNumber = await plyResult.getStart(plyResult.testName);
                 vscode.commands.executeCommand("revealLine", { lineNumber, at: 'top' });
             }
         }
-
     }));
 
     async function checkEnableDiffEditorCodeLens(workspaceFolder: vscode.WorkspaceFolder) {

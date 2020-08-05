@@ -212,6 +212,7 @@ export class PlyRoots {
     private readonly testsById = new Map<string,Test>();
     private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
     private readonly suiteIdsByExpectedResultUri = new Map<Uri,string>();
+    private readonly suiteIdsByActualResultUri = new Map<Uri,string>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
@@ -227,6 +228,7 @@ export class PlyRoots {
         this.testsById.clear();
         this.suitesByTestOrSuiteId.clear();
         this.suiteIdsByExpectedResultUri.clear();
+        this.suiteIdsByActualResultUri.clear();
 
         // requests
         const requestSuiteUris = Array.from(requestSuites.keys());
@@ -237,6 +239,7 @@ export class PlyRoots {
                 const suiteId = this.requestsRoot.formSuiteId(requestSuiteUri);
                 this.suitesByTestOrSuiteId.set(suiteId, suite);
                 this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute), suiteId);
+                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute), suiteId);
                 for (const request of suite) {
                     const testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
@@ -316,6 +319,10 @@ export class PlyRoots {
 
     getSuiteIdForExpectedResult(resultUri: Uri): string | undefined {
         return this.suiteIdsByExpectedResultUri.get(resultUri);
+    }
+
+    getSuiteIdForActualResult(resultUri: Uri): string | undefined {
+        return this.suiteIdsByActualResultUri.get(resultUri);
     }
 
     getParent(testOrSuiteId: string): TestSuiteInfo | undefined {

@@ -179,6 +179,14 @@
         }
       },
       {
+        "command": "ply.diff.fragment",
+        "title": "Compare result fragments",
+        "icon": {
+          "dark": "./icons/diff-dark.svg",
+          "light": "./icons/diff-light.svg"
+        }
+      },
+      {
         "command": "ply.openResult",
         "title": "Open result file"
       }
@@ -196,13 +204,13 @@
           "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
         },
         {
-          "command": "ply.diff",
-          "group": "inline@4",
+          "command": "ply.diff.fragment",
+          "group": "inline@5",
           "when": "view == test-explorer && viewItem == testWithSource"
         },
         {
-          "command": "ply.diff",
-          "group": "inline@4",
+          "command": "ply.diff.fragment",
+          "group": "inline@5",
           "when": "view == test-explorer && viewItem == debuggableTestWithSource"
         }
       ]
