@@ -360,12 +360,22 @@ export class PlyRoots {
         return testInfos;
     }
 
-    static toUri(testId: string): Uri {
-        const pipe = testId.indexOf('|');
+    dispose() {
+        this.testsById.clear();
+        this.suitesByTestOrSuiteId.clear();
+        this.suiteIdsByExpectedResultUri.clear();
+        this.suiteIdsByActualResultUri.clear();
+        for (const root of this.roots) {
+            root.baseSuite.children = [];
+        }
+    }
+
+    static toUri(infoId: string): Uri {
+        const pipe = infoId.indexOf('|');
         if (pipe > 0) {
             // ply root designator
-            testId = testId.substring(pipe + 1);
+            infoId = infoId.substring(pipe + 1);
         }
-        return Uri.parse(testId);
+        return Uri.parse(infoId);
     }
 }

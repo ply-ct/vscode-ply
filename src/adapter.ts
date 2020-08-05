@@ -25,9 +25,9 @@ export class PlyAdapter implements TestAdapter {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
+        private readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
-        private readonly plyRoots: PlyRoots,
         private readonly log: Log
     ) {
         this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
@@ -40,6 +40,7 @@ export class PlyAdapter implements TestAdapter {
             () => this.retireEmitter.fire(),
             () => this.diffState.clearState(),
             log);
+        this.disposables.push(this.config);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
     }
@@ -180,13 +181,11 @@ export class PlyAdapter implements TestAdapter {
                     // TODO only reload affected files and diff state -- issue #14
                     this.load();
                     this.retireEmitter.fire({ tests: testIds });
-                    this.diffState.clearDiffs(testIds);
                 } else if (document.languageId === 'yaml') {
                     const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
                     if (affectedSuiteId) {
                         const testIds = this.plyRoots.getTestInfosForSuite(affectedSuiteId).map(ti => ti.id);
                         this.retireEmitter.fire({ tests: testIds });
-                        this.diffState.clearDiffs(testIds);
                     }
                 } else if (document.languageId === 'json') {
                     // TODO check if values changed and fire retire event & remove diff state

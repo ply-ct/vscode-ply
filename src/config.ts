@@ -146,6 +146,11 @@ export class PlyConfig {
     }
 
     clearPlyOptions() {
+        this.resetDiffs();
+        this._plyOptions = undefined;
+    }
+
+    dispose() {
         this._plyOptions = undefined;
     }
 

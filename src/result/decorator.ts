@@ -74,6 +74,8 @@ class Decorations {
 
 export class ResultDecorator {
 
+    private disposables: { dispose(): void }[] = [];
+
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
     private readonly legitDiffDecorator: vscode.TextEditorDecorationType;
     private readonly noDiffStateDecorator: vscode.TextEditorDecorationType;
@@ -93,6 +95,7 @@ export class ResultDecorator {
                 gutterIconPath: `${contextPath}/icons/check-light.svg`
             }
         });
+        this.disposables.push(this.ignoredDiffDecorator);
 
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
             dark: {
@@ -102,6 +105,7 @@ export class ResultDecorator {
                 gutterIconPath: `${contextPath}/icons/error-light.svg`
             }
         });
+        this.disposables.push(this.legitDiffDecorator);
 
         this.noDiffStateDecorator = vscode.window.createTextEditorDecorationType({
             after: {
@@ -114,9 +118,14 @@ export class ResultDecorator {
                 gutterIconPath: `${contextPath}/icons/warning-light.svg`
             }
         });
+        this.disposables.push(this.noDiffStateDecorator);
     }
 
     dispose() {
+        for (const disposable of this.disposables) {
+            disposable.dispose();
+        }
+        this.disposables = [];
     }
 
     /**
