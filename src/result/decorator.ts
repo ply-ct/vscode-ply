@@ -227,17 +227,9 @@ export class ResultDecorator {
             }
         }
 
-        if (ignoredDecorations.expected.length > 0) {
-            expectedEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.expected);
-        }
-        if (ignoredDecorations.actual.length > 0) {
-            actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.actual);
-        }
-        if (legitDecorations.expected.length > 0) {
-            expectedEditor.setDecorations(this.legitDiffDecorator, legitDecorations.expected);
-        }
-        if (legitDecorations.actual.length > 0) {
-            actualEditor.setDecorations(this.legitDiffDecorator, legitDecorations.actual);
-        }
+        expectedEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.expected);
+        actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.actual);
+        expectedEditor.setDecorations(this.legitDiffDecorator, legitDecorations.expected);
+        actualEditor.setDecorations(this.legitDiffDecorator, legitDecorations.actual);
     }
 }
