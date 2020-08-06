@@ -41,11 +41,13 @@ export async function activate(context: vscode.ExtensionContext) {
             const plyRoots = new PlyRoots(workspaceFolder.uri);
             context.subscriptions.push(plyRoots);
             const diffState = new DiffState(workspaceFolder, context.workspaceState);
-            diffState.clearState();
-            const diffHandler = new DiffHandler(workspaceFolder, plyRoots, diffState, decorator, log);
+            let adapter: PlyAdapter | undefined = undefined;
+            const retire = (testIds: string[]) => adapter?.retireIds(testIds);
+            const diffHandler = new DiffHandler(workspaceFolder, plyRoots, diffState, decorator, retire, log);
             context.subscriptions.push(diffHandler);
             diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
-            return new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
+            adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
+            return adapter;
         },
         log
     ));

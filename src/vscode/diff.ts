@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DiffChange } from './diffChange';
-import { Constants } from '../result/constants';
+import { Constants } from './constants';
 
 export function stringHash(s: string, hashVal: number) {
 	hashVal = numberHash(149417, hashVal);

@@ -211,8 +211,8 @@ export class PlyRoots {
 
     private readonly testsById = new Map<string,Test>();
     private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
-    private readonly suiteIdsByExpectedResultUri = new Map<Uri,string>();
-    private readonly suiteIdsByActualResultUri = new Map<Uri,string>();
+    private readonly suiteIdsByExpectedResultUri = new Map<string,string>();
+    private readonly suiteIdsByActualResultUri = new Map<string,string>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
@@ -238,8 +238,8 @@ export class PlyRoots {
             if (suite) {
                 const suiteId = this.requestsRoot.formSuiteId(requestSuiteUri);
                 this.suitesByTestOrSuiteId.set(suiteId, suite);
-                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute), suiteId);
-                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute), suiteId);
+                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
+                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
                 for (const request of suite) {
                     const testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
@@ -318,11 +318,11 @@ export class PlyRoots {
     }
 
     getSuiteIdForExpectedResult(resultUri: Uri): string | undefined {
-        return this.suiteIdsByExpectedResultUri.get(resultUri);
+        return this.suiteIdsByExpectedResultUri.get(resultUri.toString());
     }
 
     getSuiteIdForActualResult(resultUri: Uri): string | undefined {
-        return this.suiteIdsByActualResultUri.get(resultUri);
+        return this.suiteIdsByActualResultUri.get(resultUri.toString());
     }
 
     getParent(testOrSuiteId: string): TestSuiteInfo | undefined {
@@ -338,6 +338,26 @@ export class PlyRoots {
                 return parent;
             }
         }
+    }
+
+    /**
+     * Unique array of test parent suites (excluding direct parent).
+     */
+    getAncestorSuites(testInfos: TestInfo[]): TestSuiteInfo[] {
+        const ancestors: TestSuiteInfo[] = [];
+        for (const testInfo of testInfos) {
+            const parent = this.getParent(testInfo.id);
+            if (parent) {
+                let ancestor = this.getParent(parent.id);
+                while (ancestor) {
+                    if (!(ancestors.find(a => a.id === ancestor!.id))) {
+                        ancestors.push(ancestor);
+                    }
+                    ancestor = this.getParent(ancestor.id);
+                }
+            }
+        }
+        return ancestors;
     }
 
     getSuiteInfo(suiteId: string): TestSuiteInfo | undefined {

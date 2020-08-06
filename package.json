@@ -172,7 +172,7 @@
     "commands": [
       {
         "command": "ply.diff",
-        "title": "Compare results",
+        "title": "Compare result files",
         "icon": {
           "dark": "./icons/diff-dark.svg",
           "light": "./icons/diff-light.svg"

@@ -5,7 +5,13 @@ import { PlyRoots } from '../plyRoots';
 import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
 
+/**
+ * Write-through cached diff state.
+ * TODO: see lucky #13
+ */
 export class DiffState {
+
+    _state: any;
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
@@ -13,32 +19,51 @@ export class DiffState {
     ) {}
 
     get state(): any {
-        return this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
+        if (!this._state) {
+            this._state = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
+        }
+        return this._state;
     }
 
     set state(value: any) {
-        this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, value);
+        this._state = value;
+        this.workspaceState.update(`ply-diffs:${this.workspaceFolder.uri}`, this._state);
     }
 
     getDiffs(testId: string): ply.Diff[] {
         return this.state[testId] || [];
     }
 
+    /**
+     * Writes regardless of cache mismatch
+     */
     updateDiffs(testId: string, diffs: ply.Diff[]) {
         this.state = { [testId]: diffs, ...this.state };
+        console.log(`updated diff state for: ${testId} to: ${diffs}`);
     }
 
-    clearDiffs(testId: string): void;
-    clearDiffs(testIds: string[]): void;
-    clearDiffs(testIds: string | string[]) {
+    clearDiffs(testId: string): boolean;
+    clearDiffs(testIds: string[]): boolean;
+    clearDiffs(testIds: string | string[]): boolean {
         const ids = typeof testIds === 'string' ? [testIds] : testIds;
         const diffState = this.state;
-        ids.forEach(id => delete diffState[id]);
-        this.state = diffState;
+        let isChanged = false;
+        for (const id of ids) {
+            if (diffState[id]) {
+                delete diffState[id];
+                isChanged = true;
+            }
+        }
+        if (isChanged) {
+            this.state = diffState;
+            console.debug(`cleared diff state for: ${testIds}`);
+        }
+        return isChanged;
     }
 
     clearState() {
         this.state = undefined;
+        console.debug(`cleared all diff state for: ${this.workspaceFolder.uri}`);
     }
 }
 
@@ -54,6 +79,7 @@ interface ResultPair {
 export class DiffHandler {
 
     private disposables: { dispose(): void }[] = [];
+    // TODO: remove from resultPairs on diff editor close
     private resultPairs: ResultPair[] = [];
     private timer: NodeJS.Timer | undefined = undefined;
     private activeEditor: vscode.TextEditor | undefined = undefined;
@@ -63,18 +89,20 @@ export class DiffHandler {
         private readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly decorator: ResultDecorator,
+        private readonly retire: (testIds: string[]) => void,
         private readonly log: Log
     ) {
 
         this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+            this.activeEditor = undefined;
             if (editor) {
                 let uri = editor.document.uri;
                 if (uri.scheme === Result.URI_SCHEME) {
                     uri = Result.convertUri(uri);
                 }
-                this.activeEditor = vscode.workspace.getWorkspaceFolder(uri) === this.workspaceFolder ? editor : undefined;
-            } else {
-                this.activeEditor = undefined;
+                if (uri.scheme === 'file' && uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
+                    this.activeEditor = editor;
+                }
             }
             if (this.activeEditor) {
                 this.checkUpdateDiffDecorations(this.activeEditor);
@@ -82,10 +110,25 @@ export class DiffHandler {
         }));
 
         this.disposables.push(vscode.workspace.onDidChangeTextDocument(event => {
-            // TODO clear suite diff state on first result edit
-            // if (this.activeEditor && event.document === this.activeEditor.document) {
-            //     this.checkUpdateDiffDecorations(this.activeEditor);
-            // }
+            const uri = event.document.uri;
+            if (uri.scheme === 'file' && uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
+                const suiteId = this.plyRoots.getSuiteIdForExpectedResult(uri);
+                if (suiteId) {
+                    const testIds = this.plyRoots.getSuiteInfo(suiteId)?.children.map(c => c.id) || [];
+                    // expected: only update decorations the first time (if diff state changed)
+                    if (this.diffState.clearDiffs(testIds)) {
+                        this.retire(testIds);
+                        if (this.activeEditor) {
+                            this.checkUpdateDiffDecorations(this.activeEditor);
+                        }
+                    }
+                } else if (this.plyRoots.getSuiteIdForActualResult(uri)) {
+                    // actual: update decorations regardless sinces it's probably due to rerun
+                    if (this.activeEditor) {
+                        this.checkUpdateDiffDecorations(this.activeEditor);
+                    }
+                }
+            }
         }));
     }
 
@@ -173,7 +216,7 @@ export class DiffHandler {
      * Applies decorations only if diff state exists for the pair
      */
     async updateDiffDecorations(resultPair: ResultPair,
-        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, clearDiffState = false) {
+        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
 
         const diffState = this.diffState.state || {};
         await this.checkEnableDiffEditorCodeLens();
@@ -252,6 +295,7 @@ export class DiffHandler {
         let resultPair: ResultPair | undefined = undefined;
         let expectedEditor: vscode.TextEditor | undefined = undefined;
         let actualEditor: vscode.TextEditor | undefined = undefined;
+
         for (let i = 0; i < this.resultPairs.length; i++) {
             const pair = this.resultPairs[i];
             if (pair.expectedUri.toString() === editor.document.uri.toString()) {

@@ -52,7 +52,7 @@ export class PlyRunner {
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
             // if we don't fire suite events for all ancestors, Test Explorer UI fails to update
-            const ancestors = this.getAncestorSuites(testInfos);
+            const ancestors = this.plyRoots.getAncestorSuites(testInfos);
             for (const ancestor of ancestors) {
                 this.fire(<TestSuiteEvent>{ type: 'suite', suite: ancestor.id, state: 'running', testRunId } );
             }
@@ -222,7 +222,7 @@ export class PlyRunner {
     }
 
     fire(event: TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent) {
-        console.debug(`TestEvent: ${JSON.stringify(event)}`);
+        // console.debug(`TestEvent: ${JSON.stringify(event)}`);
         this.testStatesEmitter.fire(event);
     }
 
@@ -308,26 +308,6 @@ export class PlyRunner {
             }
         }
         return result;
-    }
-
-    /**
-     * Unique array of test parent suites (excluding direct parent).
-     */
-    getAncestorSuites(testInfos: TestInfo[]): TestSuiteInfo[] {
-        const ancestors: TestSuiteInfo[] = [];
-        for (const testInfo of testInfos) {
-            const parent = this.plyRoots.getParent(testInfo.id);
-            if (parent) {
-                let ancestor = this.plyRoots.getParent(parent.id);
-                while (ancestor) {
-                    if (!(ancestors.find(a => a.id === ancestor!.id))) {
-                        ancestors.push(ancestor);
-                    }
-                    ancestor = this.plyRoots.getParent(ancestor.id);
-                }
-            }
-        }
-        return ancestors;
     }
 
     /**

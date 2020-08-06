@@ -151,7 +151,7 @@ export class PlyConfig {
     }
 
     dispose() {
-        this._plyOptions = undefined;
+        this.clearPlyOptions();
     }
 
     static isPlyConfig(file: string) {

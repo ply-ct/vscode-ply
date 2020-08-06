@@ -14,11 +14,12 @@ export class PlyAdapter implements TestAdapter {
 
     private readonly testsEmitter = new vscode.EventEmitter<TestLoadStartedEvent | TestLoadFinishedEvent>();
     private readonly testStatesEmitter = new vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>();
-    protected readonly retireEmitter = new vscode.EventEmitter<RetireEvent>();
+    private readonly retireEmitter = new vscode.EventEmitter<RetireEvent>();
 
     get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> { return this.testsEmitter.event; }
     get testStates(): vscode.Event<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent> { return this.testStatesEmitter.event; }
     get retire(): vscode.Event<RetireEvent> { return this.retireEmitter.event; }
+    retireIds(testIds: string[]) { this.retireEmitter.fire({ tests: testIds }); }
 
     private config: PlyConfig;
     private runner: PlyRunner | undefined;
@@ -39,13 +40,16 @@ export class PlyAdapter implements TestAdapter {
             () => this.load(),
             () => this.retireEmitter.fire(),
             () => this.diffState.clearState(),
-            log);
+            log
+        );
         this.disposables.push(this.config);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
     }
 
     async load(): Promise<void> {
+        this.retireEmitter.fire();
+        this.diffState.clearState();
         this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
 
         try {
