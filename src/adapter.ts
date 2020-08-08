@@ -56,13 +56,8 @@ export class PlyAdapter implements TestAdapter {
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
             const loader = new PlyLoader(this.workspaceFolder, this.config, this.log);
-
-            const requestFiles = this.config.plyOptions.requestFiles;
-            const excludes = this.config.plyOptions.excludes;
-            const requests = await loader.loadRequests(requestFiles, excludes);
-
-            const caseFiles = this.config.plyOptions.caseFiles;
-            const cases = await loader.loadCases(caseFiles, excludes);
+            const requests = await loader.loadRequests();
+            const cases = await loader.loadCases();
 
             this.plyRoots.build(requests, cases);
             this.log.debug('requestsRoot: ' + this.plyRoots.requestsRoot.toString());

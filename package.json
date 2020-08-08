@@ -39,7 +39,7 @@
     "watch-worker": "rollup --watch -c"
   },
   "engines": {
-    "vscode": "^1.47.3"
+    "vscode": "^1.48.0"
   },
   "dependencies": {
     "ply-ct": "^2.0.9",
@@ -79,22 +79,22 @@
       "properties": {
         "ply.testsLocation": {
           "type": "string",
-          "description": "Base directory (absolute or relative to workspace root) for all Ply request and case files.  Defaults to value from .plyrc.yml if present, otherwise '.'",
+          "description": "Base directory (absolute or relative to workspace folder) for all Ply request and case files.  Defaults from plyrc if present, otherwise '.'",
           "scope": "resource"
         },
         "ply.requestFiles": {
           "type": "string",
-          "description": "Glob pattern for Ply request files ('**/*.{ply.yaml,ply.yml}').",
+          "description": "Glob pattern for Ply request files, relative to testsLocation ('**/*.{ply.yaml,ply.yml}').",
           "scope": "resource"
         },
         "ply.caseFiles": {
           "type": "string",
-          "description": "Glob pattern for Ply case files ('**/*.ply.ts').",
+          "description": "Glob pattern for Ply case files, relative to testsLocation ('**/*.ply.ts').",
           "scope": "resource"
         },
         "ply.excludes": {
           "type": "string",
-          "description": "Glob pattern for places to exclude ('**/{node_modules,bin,dist,out}/**').",
+          "description": "Glob pattern for places to exclude, relative to testsLocation ('**/{node_modules,bin,dist,out}/**').",
           "scope": "resource"
         },
         "ply.expectedLocation": {

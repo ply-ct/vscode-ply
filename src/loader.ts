@@ -14,9 +14,11 @@ export class PlyLoader {
      * Loads ply requests.
      * @returns a Map of location to Array of Requests
      */
-    async loadRequests(filePattern: string, excludes: string): Promise<Map<Uri,Suite<Request>>> {
+    async loadRequests(): Promise<Map<Uri,Suite<Request>>> {
+        const testsLocation = this.config.plyOptions.testsLocation;
         const requestFileUris = await vscode.workspace.findFiles(
-            new vscode.RelativePattern(this.workspaceFolder, filePattern), excludes);
+            new vscode.RelativePattern(testsLocation, this.config.plyOptions.requestFiles),
+            new vscode.RelativePattern(testsLocation, this.config.plyOptions.excludes));
         const requests = new Map<Uri,Suite<Request>>();
         const requestSuites = await new Ply(this.config.plyOptions).loadRequests(requestFileUris.map(fileUri => fileUri.fsPath));
         requestSuites.forEach(requestSuite => {
@@ -28,9 +30,11 @@ export class PlyLoader {
     /**
      * Loads ply cases.
      */
-    async loadCases(filePattern: string, excludes: string): Promise<Map<Uri,Suite<Case>>> {
-        const caseFileUris = await vscode.workspace.findFiles(new vscode.RelativePattern(
-            this.workspaceFolder, filePattern), excludes);
+    async loadCases(): Promise<Map<Uri,Suite<Case>>> {
+        const testsLocation = this.config.plyOptions.testsLocation;
+        const caseFileUris = await vscode.workspace.findFiles(
+            new vscode.RelativePattern(testsLocation, this.config.plyOptions.requestFiles),
+            new vscode.RelativePattern(testsLocation, this.config.plyOptions.excludes));
         const cases = new Map<Uri,Suite<Case>>();
         if (caseFileUris.length > 0) {
             const caseSuites = await new Ply(this.config.plyOptions).loadCases(caseFileUris.map(fileUri => fileUri.fsPath));

@@ -111,7 +111,7 @@ export class PlyConfig {
     get plyOptions(): ply.PlyOptions {
         if (!this._plyOptions) {
             const workspacePath = ply.util.fwdSlashes(this.workspaceFolder.uri.fsPath);
-            let options = new ply.Config(new ply.Defaults(workspacePath), false).options;
+            let options = new ply.Config(new ply.Defaults(workspacePath)).options;
             const abs = (location: string) => {
                 if (path.isAbsolute(location)) {
                     return ply.util.fwdSlashes(path.normalize(location));
