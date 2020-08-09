@@ -15,7 +15,7 @@ export class PlyValues {
     async getValues(): Promise<object> {
         let values = {};
         const valuesLoc = this.baseLoc + '/values/';
-        values = Object.assign(values, await this.loadValues(valuesLoc + 'localhost.values.json'));
+        values = Object.assign(values, await this.loadValues(valuesLoc + 'localhost.json'));
         // values = Object.assign(values, await this.loadValues(valuesLoc + 'ply-ct.com.values.json'));
         // values = Object.assign(values, await this.loadValues(valuesLoc + 'main.values.json'));
         // values = Object.assign(values, await this.loadValues(valuesLoc + 'auth.values.json'));
