@@ -235,7 +235,7 @@ export class PlyRunner {
         for (const testInfo of testInfos) {
             const suite = this.plyRoots.getSuiteForTest(testInfo.id);
             if (suite) {
-                if (!suite.ignored) {
+                if (!suite.skip) {
                     const expectedExists = await suite.runtime.results.expected.exists;
                     if (!expectedExists && !suitesWithMissingResults.find(s => s.path === suite?.path)) {
                         suitesWithMissingResults.push(suite);
@@ -313,15 +313,15 @@ export class PlyRunner {
     /**
      * Returns a flattened list of all test ids
      */
-    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], ignore = false) {
+    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], skip = false) {
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
-                // honor .plyignores when executing from parent suite (not explicitly running test or suite)
-                const shouldIgnore = ignore || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.ignored);
-                this.collectTests(child, testInfos, shouldIgnore);
+                // honor skip when executing from parent suite (not explicitly running test or suite)
+                const shouldSkip = skip || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.skip);
+                this.collectTests(child, testInfos, shouldSkip);
             }
         } else {
-            if (!ignore) {
+            if (!skip) {
                 testInfos.push(testOrSuite);
             }
         }

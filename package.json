@@ -92,9 +92,14 @@
           "description": "Glob pattern for Ply case files, relative to testsLocation ('**/*.ply.ts').",
           "scope": "resource"
         },
-        "ply.excludes": {
+        "ply.ignore": {
           "type": "string",
-          "description": "Glob pattern for places to exclude, relative to testsLocation ('**/{node_modules,bin,dist,out}/**').",
+          "description": "Glob pattern for places to ignore, relative to testsLocation ('**/{node_modules,bin,dist,out}/**').",
+          "scope": "resource"
+        },
+        "ply.skip": {
+          "type": "string",
+          "description": "Glob pattern for tests to skip, relative to testsLocation ('').",
           "scope": "resource"
         },
         "ply.expectedLocation": {
