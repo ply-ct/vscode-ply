@@ -104,6 +104,16 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.importCaseModulesFromBuilt, false);
     }
 
+    val(name: string, defaultVal: string): string {
+        const val = this.getConfiguration().get(name, '');
+        return val ? val  : defaultVal;
+    }
+
+    bool (name: string, defaultValue: boolean): boolean {
+        const bool = this.getConfiguration().get(name, undefined);
+        return typeof bool === 'undefined' ? defaultValue : bool as boolean;
+    }
+
     /**
      * All locations are made normalized, absolute where relative is relative to workspace folder.
      * PlyOptions are cached.
@@ -120,24 +130,16 @@ export class PlyConfig {
                     return ply.util.fwdSlashes(path.normalize(workspacePath + '/' + location));
                 }
             };
-            const val = (name: string, defaultVal: string): string => {
-                const val = this.getConfiguration().get(name, '');
-                return val ? val  : defaultVal;
-            };
-            const bool = (name: string, defaultValue: boolean): boolean => {
-                const bool = this.getConfiguration().get(name, undefined);
-                return typeof bool === 'undefined' ? defaultValue : bool as boolean;
-            };
             options = Object.assign({}, options, {
-                testsLocation: abs(val('testsLocation', options.testsLocation)),
-                requestFiles: val('requestFiles', options.requestFiles),
-                caseFiles: val('caseFiles', options.caseFiles),
-                ignore: val('ignore', options.ignore),
-                skip: val('skip', options.skip),
-                expectedLocation: abs(val('expectedLocation', options.expectedLocation)),
-                actualLocation: abs(val('actualLocation', options.actualLocation)),
-                logLocation: abs(val('logLocation', options.logLocation || options.actualLocation)),
-                verbose: bool('verbose', options.verbose)
+                testsLocation: abs(this.val('testsLocation', options.testsLocation)),
+                requestFiles: this.val('requestFiles', options.requestFiles),
+                caseFiles: this.val('caseFiles', options.caseFiles),
+                ignore: this.val('ignore', options.ignore),
+                skip: this.val('skip', options.skip),
+                expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
+                actualLocation: abs(this.val('actualLocation', options.actualLocation)),
+                logLocation: abs(this.val('logLocation', options.logLocation || options.actualLocation)),
+                verbose: this.bool('verbose', options.verbose)
             });
             this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;
@@ -156,6 +158,6 @@ export class PlyConfig {
     }
 
     static isPlyConfig(file: string) {
-        return ['.plyrc.yaml', '.plyrc.yml', '.plyrc.json'].includes(path.basename(file));
+        return ply.PLY_CONFIGS.includes(path.basename(file));
     }
 }
