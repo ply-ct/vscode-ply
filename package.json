@@ -42,7 +42,7 @@
     "vscode": "^1.48.0"
   },
   "dependencies": {
-    "ply-ct": "^2.0.9",
+    "ply-ct": "^2.1.0",
     "tslib": "^1.10.0",
     "vscode-test-adapter-api": "^1.7.0",
     "vscode-test-adapter-util": "^0.7.0",
