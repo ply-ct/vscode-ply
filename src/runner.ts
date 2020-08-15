@@ -6,7 +6,6 @@ import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, Tes
 import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots} from './plyRoots';
 import { PlyConfig } from './config';
-import { PlyValues } from './values';
 import { WorkerArgs } from './worker/args';
 import { DiffState } from './result/diff';
 
@@ -91,7 +90,7 @@ export class PlyRunner {
         let childProcessFinished = false;
 
         const nodePath = await this.config.getNodePath();
-        const plyValues = await new PlyValues(this.config.plyOptions.testsLocation).getValues();
+        const plyValues = {}; // currently vscode-ply doesn't add any extra values
 
         this.outputChannel.clear();
         this.outputChannel.show(true);
@@ -104,7 +103,6 @@ export class PlyRunner {
         }
 
         const options = this.config.plyOptions;
-        this.log.debug(`options: ${JSON.stringify(options, null, 2)}`);
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,

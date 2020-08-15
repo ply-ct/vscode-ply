@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { WorkerArgs } from './args';
+// events API must stay compatible
 import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
 
 (async () => {
@@ -37,7 +38,9 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
             sendMessage(`Using ply package at ${plyPath}`);
         }
 
-        const Plier: typeof import('ply-ct').Plier = require(plyPath + '/index.js').Plier;
+        // actual execution uses ply on specified path
+        const ply = require(plyPath + '/index.js');
+        const Plier: typeof import('ply-ct').Plier = ply.Plier;
         const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();

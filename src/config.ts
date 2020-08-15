@@ -106,12 +106,12 @@ export class PlyConfig {
 
     val(name: string, defaultVal: string): string {
         const val = this.getConfiguration().get(name, '');
-        return val ? val  : defaultVal;
+        return val ? val : defaultVal;
     }
 
-    bool (name: string, defaultValue: boolean): boolean {
-        const bool = this.getConfiguration().get(name, undefined);
-        return typeof bool === 'undefined' ? defaultValue : bool as boolean;
+    arr(name: string, defaultValue: string[]): string[] {
+        const arr = this.getConfiguration().get(name, []);
+        return arr.length ? arr : defaultValue;
     }
 
     /**
@@ -131,6 +131,7 @@ export class PlyConfig {
                 }
             };
             options = Object.assign({}, options, {
+                // these are the options overridable by settings
                 testsLocation: abs(this.val('testsLocation', options.testsLocation)),
                 requestFiles: this.val('requestFiles', options.requestFiles),
                 caseFiles: this.val('caseFiles', options.caseFiles),
@@ -139,7 +140,7 @@ export class PlyConfig {
                 expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
                 actualLocation: abs(this.val('actualLocation', options.actualLocation)),
                 logLocation: abs(this.val('logLocation', options.logLocation || options.actualLocation)),
-                verbose: this.bool('verbose', options.verbose)
+                valuesFiles: this.arr('valuesFiles', options.valuesFiles).map(vf => abs(vf))
             });
             this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;

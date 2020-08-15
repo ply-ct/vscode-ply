@@ -123,10 +123,9 @@
           "default": false,
           "scope": "resource"
         },
-        "ply.verbose": {
-          "type": "boolean",
-          "description": "Verbose (debug) output from ply.",
-          "default": false,
+        "ply.valuesFiles": {
+          "type": "array",
+          "description": "JSON files containing Ply values.",
           "scope": "resource"
         },
         "ply.debugPort": {
@@ -153,12 +152,6 @@
         "ply.cwd": {
           "description": "Working directory for Ply test execution (relative to workspace folder)",
           "type": "string",
-          "scope": "resource"
-        },
-        "ply.importCaseModulesFromBuilt": {
-          "description": "Import case suite modules from generated .js instead of .ts source.  This same runOption needs to be set in your case's calls to Suite.run.",
-          "type": "boolean",
-          "default": false,
           "scope": "resource"
         },
         "ply.enableDiffEditorCodeLens": {
