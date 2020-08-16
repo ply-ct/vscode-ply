@@ -165,7 +165,7 @@ export class DiffHandler {
 
         if (test) {
             // expected is read-only virtual file
-            expectedLabel = `(read-only segment) ${expectedResult.plyResult.location.name}#${test?.name}`;
+            expectedLabel = `(read-only fragment) ${expectedResult.plyResult.location.name}#${test?.name}`;
             actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
         }
         else {
