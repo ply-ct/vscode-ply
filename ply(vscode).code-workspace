@@ -1,16 +1,10 @@
 {
 	"folders": [
 		{
-			"name": "ply",
 			"path": "../ply"
 		},
 		{
-			"name": "ply-demo",
 			"path": "../ply-demo"
 		}
-	],
-	"settings": {
-		"diffEditor.codeLens": true,
-		"ply.logpanel": true
-	}
+	]
 }

@@ -1,4 +1,3 @@
-import * as os from 'os';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { ChildProcess, fork } from 'child_process';
@@ -39,13 +38,12 @@ export class PlyRunner {
                 }
             }
 
-            const noExpectedDispensation = await this.checkMissingExpectedResults(testInfos);
-            if (!noExpectedDispensation) {
-                return;
+            const runOptions = await this.checkMissingExpectedResults(testInfos);
+            if (!runOptions) {
+                return; // canceled dispensation
             }
-            const runOptions: ply.RunOptions = { noExpectedResult: noExpectedDispensation };
-            if (this.config.importCaseModulesFromBuilt) {
-                runOptions.importCaseModulesFromBuilt = true;
+            if (this.config.useDist) {
+                runOptions.useDist = true;
             }
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
@@ -226,9 +224,10 @@ export class PlyRunner {
 
     /**
      * Check for missing expected result file(s).
-     * @return dispensation: undefined if run is canceled; Proceed if no missing expected results
+     * @return If expected result file missing: runOptions with dispensation if selected; undefined if run is canceled.
+     * If expected result file exists: empty runOptions object.
      */
-    private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.NoExpectedResultDispensation | undefined> {
+    private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.RunOptions | undefined> {
         const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case>[] = [];
         for (const testInfo of testInfos) {
             const suite = this.plyRoots.getSuiteForTest(testInfo.id);
@@ -258,11 +257,11 @@ export class PlyRunner {
             items.push(proceed);
             const noVerify = { label: 'Run without verifying', description: 'ad hoc execution' };
             items.push(noVerify);
-            const addToIgnore = { label: 'Add to .plyignore', description: 'execution will never be attempted'};
+            const addToSkip = { label: 'Add to "ply.skip" setting', description: 'exclude suite from bulk runs'};
             const createExpected = { label: 'Create expected result', description: 'from actual' };
             if (suitesWithMissingResults.reduce((accum, suite) => accum && !suite.runtime.results.expected.location.isUrl, true)) {
                 // no suites are loaded from urls
-                items.push(addToIgnore);
+                items.push(addToSkip);
                 items.push(createExpected);
             }
             const options = {
@@ -273,28 +272,34 @@ export class PlyRunner {
             const res = await vscode.window.showQuickPick(items, options);
             if (res) {
                 if (res === noVerify) {
-                    return ply.NoExpectedResultDispensation.NoVerify;
-                } else if (res === addToIgnore) {
-                    // add suite file to .plyignore
+                    return { noVerify: true };
+                } else if (res === addToSkip) {
+                    // add suite file to ply.skip setting
                     for (const suite of suitesWithMissingResults) {
-                        const suiteLoc = new ply.Location(this.config.plyOptions.testsLocation + '/' + suite.path);
-                        const plyIgnore = new ply.Storage(suiteLoc.parent + '/.plyignore');
-                        let contents = plyIgnore.read() || '';
-                        if (contents && !contents.endsWith('\n')) {
-                            contents += os.EOL;
+                        let skip = this.config.plyOptions.skip;
+                        if (typeof skip === 'string' && skip.trim().length > 0) {
+                            // TODO: better handling of existing
+                            if (skip.startsWith('{')) {
+                                const closing = skip.indexOf('}');
+                                skip = skip.substring(0, closing) + ',' + suite.path + skip.substring(closing, skip.length);
+                            } else {
+                                skip = '{' + skip + ',' + suite.path + '}';
+                            }
+                        } else {
+                            skip = '{' + suite.path + '}';
                         }
-                        contents += suiteLoc.name;
-                        plyIgnore.write(contents);
+                        vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).update('skip', skip);
+                        this.config.clearPlyOptions();
                     }
                     return;
                 } else if (res === createExpected) {
-                    return ply.NoExpectedResultDispensation.CreateExpected;
+                    return { createExpected: true };
                 }
             } else {
                 return;
             }
         }
-        return ply.NoExpectedResultDispensation.Proceed;
+        return {};
     }
 
     private stringsOnly(env: { [envVar: string]: string | null | undefined }): { [envVar: string]: string } {

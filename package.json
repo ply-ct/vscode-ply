@@ -154,6 +154,12 @@
           "type": "string",
           "scope": "resource"
         },
+        "ply.useDist": {
+          "description": "Import case suite modules from generated .js instead of .ts source.  This same runOption needs to be set in your case's calls to Suite.run.",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
         "ply.enableDiffEditorCodeLens": {
           "descripton": "How to handle when vscode setting 'diffEditor.codeLens' is not enabled for a workspace folder that contains ply tests",
           "type": "string",

@@ -17,7 +17,7 @@ export enum Setting {
     nodePath = 'nodePath',
     plyPath = 'plyPath',
     cwd = 'cwd',
-    importCaseModulesFromBuilt = 'importCaseModulesFromBuilt'
+    useDist = 'useDist'
 }
 
 export class PlyConfig {
@@ -46,8 +46,7 @@ export class PlyConfig {
                     || setting === Setting.caseFiles
                     || setting === Setting.excludes
                     || setting === Setting.nodePath
-                    || setting === Setting.plyPath
-                    || setting === Setting.importCaseModulesFromBuilt) {
+                    || setting === Setting.plyPath) {
                     this._plyOptions = undefined;
                     this.reload();
                     this.retire();
@@ -100,8 +99,8 @@ export class PlyConfig {
         return debugConfig ? debugConfig : undefined;
     }
 
-    get importCaseModulesFromBuilt(): boolean {
-        return this.getConfiguration().get(Setting.importCaseModulesFromBuilt, false);
+    get useDist(): boolean {
+        return this.getConfiguration().get(Setting.useDist, false);
     }
 
     val(name: string, defaultVal: string): string {
