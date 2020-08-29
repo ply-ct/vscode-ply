@@ -38,7 +38,7 @@ export class PlyAdapter implements TestAdapter {
         this.config = new PlyConfig(
             workspaceFolder,
             () => this.load(),
-            () => this.retireEmitter.fire(),
+            () => this.retireEmitter.fire({}),
             () => this.diffState.clearState(),
             log
         );
@@ -48,7 +48,7 @@ export class PlyAdapter implements TestAdapter {
     }
 
     async load(): Promise<void> {
-        this.retireEmitter.fire();
+        this.retireEmitter.fire({});
         this.diffState.clearState();
         this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
 

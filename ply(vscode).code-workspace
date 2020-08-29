@@ -6,5 +6,8 @@
 		{
 			"path": "../ply-demo"
 		}
-	]
+	],
+	"settings": {
+		"diffEditor.codeLens": true
+	}
 }

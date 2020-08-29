@@ -76,12 +76,12 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (!diffHandler) {
                         throw new Error(`No diff handler found for workspace folder: ${workspaceFolder.uri}`);
                     }
-                    diffHandler.doDiff(id);
+                    await diffHandler.doDiff(id);
                 }
             }
         } catch (err) {
             console.error(err);
-            vscode.window.showErrorMessage(`Error executing ply.diff: ${err.message}`);
+            vscode.window.showErrorMessage(err.message);
         }
     };
 

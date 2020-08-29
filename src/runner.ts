@@ -143,7 +143,8 @@ export class PlyRunner {
                     if (message.type !== 'finished') {
                         const decorations: TestDecoration[] = [];
                         if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {
-                            const testId = (typeof message.test === 'string') ? message.test : message.test.id;
+                            const msgTest = (message as TestEvent).message;
+                            const testId = (typeof msgTest === 'string') ? msgTest : (msgTest as any).id;
                             const test = this.plyRoots.getTest(testId);
                             if (test) {
                                 decorations.push({

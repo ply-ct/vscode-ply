@@ -153,8 +153,9 @@ export class DiffHandler {
         const expected = suite.runtime.results.expected;
         const expectedResult = new Result(expected, test?.name);
         let expectedLabel = expectedResult.label;
-        if (!(await expectedResult.exists())) {
-            throw new Error(`Expected result not found: ${expectedLabel}`);
+        if (!(await expected.exists)) {
+            // even the suite file doesn't exist
+            throw new Error(`Expected result file not found: ${expected.location}`);
         }
         let expectedUri = expectedResult.toUri();
 
