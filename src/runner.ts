@@ -273,7 +273,7 @@ export class PlyRunner {
             const res = await vscode.window.showQuickPick(items, options);
             if (res) {
                 if (res === noVerify) {
-                    return { noVerify: true };
+                    return { noVerifyIfExpectedMissing: true };
                 } else if (res === addToSkip) {
                     // add suite file to ply.skip setting
                     for (const suite of suitesWithMissingResults) {
@@ -294,7 +294,7 @@ export class PlyRunner {
                     }
                     return;
                 } else if (res === createExpected) {
-                    return { createExpected: true };
+                    return { createExpectedIfMissing: true };
                 }
             } else {
                 return;
