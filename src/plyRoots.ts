@@ -157,7 +157,7 @@ export class PlyRoot {
         }
         else if (start.type === 'suite') {
             for (const child of start.children) {
-                infos = infos.concat(this.filterFrom(child, test));
+                infos = [...infos, ...this.filterFrom(child, test)];
             }
         }
         return infos;
@@ -288,7 +288,7 @@ export class PlyRoots {
             infos.push(this.rootSuite);
         }
         for (const plyRoot of this.roots) {
-            infos = infos.concat(plyRoot.filter(test));
+            infos = [...infos, ...plyRoot.filter(test)];
         }
         return infos;
     }
