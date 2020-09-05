@@ -398,4 +398,9 @@ export class PlyRoots {
         }
         return Uri.parse(infoId);
     }
+
+    static fromUri(uri: Uri) {
+        const rootId = uri.path.endsWith('.ts') ? 'cases' : 'requests';
+        return `${rootId}|${uri.toString(true)}`;
+    }
 }

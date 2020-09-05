@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as ply from 'ply-ct';
-import { PlyRoots } from '../plyRoots';
 
 export class SegmentCodeLensProvider implements vscode.CodeLensProvider {
 
@@ -11,7 +9,12 @@ export class SegmentCodeLensProvider implements vscode.CodeLensProvider {
         if (document.uri.fragment) {
             const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
             this.codeLenses.push(new vscode.CodeLens(range, {
-                title: 'Show in result file',
+                title: 'Compare result files',
+                command: 'ply.openResult',
+                arguments: [document.uri, true]
+            }));
+            this.codeLenses.push(new vscode.CodeLens(range, {
+                title: 'Open result file',
                 command: 'ply.openResult',
                 arguments: [document.uri]
             }));

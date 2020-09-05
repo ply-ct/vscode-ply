@@ -177,8 +177,8 @@
         "command": "ply.diff",
         "title": "Compare result files",
         "icon": {
-          "dark": "./icons/diff-dark.svg",
-          "light": "./icons/diff-light.svg"
+          "dark": "./icons/fdiff-dark.svg",
+          "light": "./icons/fdiff-light.svg"
         }
       },
       {
@@ -190,8 +190,12 @@
         }
       },
       {
-        "command": "ply.openResult",
-        "title": "Open result file"
+        "command": "ply.import.postman",
+        "title": "Import from Postman",
+        "icon": {
+          "dark": "./icons/json-dark.svg",
+          "light": "./icons/json-light.svg"
+        }
       }
     ],
     "menus": {

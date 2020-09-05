@@ -85,8 +85,8 @@ export class DiffHandler {
     private activeEditor: vscode.TextEditor | undefined = undefined;
 
     constructor(
-        private readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly plyRoots: PlyRoots,
+        readonly workspaceFolder: vscode.WorkspaceFolder,
+        readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly decorator: ResultDecorator,
         private readonly retire: (testIds: string[]) => void,

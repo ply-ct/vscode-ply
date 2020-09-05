@@ -62,20 +62,43 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const diffCommand = async (...args: any[]) => {
         try {
-            if (args.length) {
+            let uri: vscode.Uri | undefined = undefined;
+            let id: string | undefined = undefined;
+            if (args && args.length > 0) {
                 const node = args[0];
-                if (node.adapterIds) {
-                    const id = node.adapterIds[0];
-                    log.debug(`ply.diff item id: ${id}`);
-                    const uri = PlyRoots.toUri(id);
-                    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-                    if (!workspaceFolder) {
-                        throw new Error(`No workspace folder found for URI: ${uri}`);
+                if (node.adapterIds && node.adapterIds.length > 0) {
+                    id = node.adapterIds[0];
+                    if (id) {
+                        uri = PlyRoots.toUri(id);
                     }
-                    const diffHandler = diffHandlers.get(workspaceFolder.uri.toString());
-                    if (!diffHandler) {
-                        throw new Error(`No diff handler found for workspace folder: ${workspaceFolder.uri}`);
-                    }
+                }
+            } else {
+                const uris = await vscode.window.showOpenDialog({
+                    openLabel: 'Select',
+                    canSelectMany: false,
+                    filters: {
+                        'Ply Requests': ['yaml', 'yml'],
+                        'Ply Cases': ['ts']
+                    },
+                    title: 'Select Ply suite'
+                });
+                if (uris && uris.length > 0) {
+                    uri = uris[0];
+                    id = PlyRoots.fromUri(uri);
+                }
+            }
+
+            log.debug(`ply.diff item uri: ${uri}`);
+            if (uri) {
+                const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+                if (!workspaceFolder) {
+                    throw new Error(`No workspace folder found for URI: ${uri}`);
+                }
+                const diffHandler = diffHandlers.get(workspaceFolder.uri.toString());
+                if (!diffHandler) {
+                    throw new Error(`No diff handler found for workspace folder: ${workspaceFolder.uri}`);
+                }
+                if (id) {  // id must be assigned if uri is
                     await diffHandler.doDiff(id);
                 }
             }
@@ -89,21 +112,59 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment', diffCommand));
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', async (...args: any[]) => {
-        const uri = args[0] as vscode.Uri;
-        if (uri.scheme === Result.URI_SCHEME && uri.fragment) {
-            const fileUri = Result.convertUri(uri);
-            const plyResult = Result.fromUri(uri);
-            const lineNumber = await plyResult.getStart(plyResult.testName);
-            await vscode.commands.executeCommand('vscode.open', fileUri);
-            // go to line number
-            const editor = vscode.window.visibleTextEditors.find(editor => {
-                return editor.document.uri.toString() === fileUri.toString();
-            });
-            if (editor) {
-                vscode.commands.executeCommand("revealLine", { lineNumber, at: 'top' });
+        try {
+            const uri = args[0] as vscode.Uri;
+            if (uri && uri.scheme === Result.URI_SCHEME && uri.fragment) {
+                const fileUri = Result.convertUri(uri);
+                const plyResult = Result.fromUri(uri);
+                const lineNumber = await plyResult.getStart(plyResult.testName);
+                if (args.length > 0 && args[1] === true) {
+                    const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileUri);
+                    if (workspaceFolder) {
+                        const diffHandler = diffHandlers.get(workspaceFolder.uri.toString());
+                        if (diffHandler) {
+                            let suiteId = diffHandler.plyRoots.getSuiteIdForExpectedResult(fileUri);
+                            if (!suiteId) {
+                                suiteId = diffHandler.plyRoots.getSuiteIdForActualResult(fileUri);
+                            }
+                            if (suiteId) {
+                                await diffHandler.doDiff(suiteId);
+                            }
+                        }
+                    }
+                } else {
+                    await vscode.commands.executeCommand('vscode.open', fileUri);
+                }
+                // go to line number
+                const editor = vscode.window.visibleTextEditors.find(editor => {
+                    let docUri = editor.document.uri;
+                    if (docUri.scheme === Result.URI_SCHEME) {
+                        // when codelens is 'Compare result files' clicked in actual, scheme is ply-result;
+                        // so convert to file uri
+                        docUri = Result.convertUri(editor.document.uri);
+                    }
+                    return docUri.toString() === fileUri.toString();
+                });
+                if (editor) {
+                    await vscode.commands.executeCommand("revealLine", { lineNumber, at: 'top' });
+                }
             }
+        } catch (err) {
+            console.error(err);
+            vscode.window.showErrorMessage(err.message);
         }
     }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', async (...args: any[]) => {
+        try {
+            vscode.window.showInformationMessage('Import Postman');
+        } catch (err) {
+            console.error(err);
+            vscode.window.showErrorMessage(err.message);
+        }
+
+    }));
+
 }
 
 export function deactivate() {
