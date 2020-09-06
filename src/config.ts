@@ -26,10 +26,10 @@ export class PlyConfig {
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly reload: () => Promise<void>,
-        private readonly retire: () => void,
-        private readonly resetDiffs: () => void,
-        private readonly log: Log
+        private readonly log: Log,
+        private readonly reload: () => Promise<void> = async () => {},
+        private readonly retire: () => void = () => {},
+        private readonly resetDiffs: () => void = () => {},
     ) { }
 
     private getConfiguration(): vscode.WorkspaceConfiguration {

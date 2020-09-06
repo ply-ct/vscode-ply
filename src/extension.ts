@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as ply from 'ply-ct';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { PlyAdapter } from './adapter';
@@ -8,6 +9,7 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
+import { PlyConfig } from './config';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -157,14 +159,53 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', async (...args: any[]) => {
         try {
-            vscode.window.showInformationMessage('Import Postman');
+            let workspaceFolder: vscode.WorkspaceFolder | undefined = undefined;
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length === 1) {
+                workspaceFolder = workspaceFolders[0];
+            }
+
+            if (args && args.length > 0 && args[0].adapterIds && args[0].adapterIds.length > 0) {
+                const id = args[0].adapterIds[0];
+                if (id.startsWith('Ply:')) {
+                    workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(id.substring(4)));
+                }
+            }
+
+            if (!workspaceFolder) {
+                workspaceFolder = await vscode.window.showWorkspaceFolderPick({
+                    placeHolder: 'Select destination workspace folder',
+                    ignoreFocusOut: true
+                });
+            }
+
+            if (workspaceFolder) {
+                const uris = await vscode.window.showOpenDialog({
+                    openLabel: 'Import',
+                    canSelectMany: true,
+                    filters: {
+                        'Postman Files': ['json', 'postman']
+                    },
+                    title: 'Select Postman files'
+                });
+                if (uris && uris.length > 0) {
+                    const plyOptions = new PlyConfig(workspaceFolder, log).plyOptions;
+                    const importer = new ply.Import('postman', plyOptions.testsLocation, plyOptions.prettyIndent, log);
+                    for (const uri of uris) {
+                        log.info(`Importing postman file ${uri.fsPath}`);
+                        importer.doImport(new ply.Retrieval(uri.fsPath));
+                    }
+                    // TODO: can get rid of this once we watch for file system changes:
+                    // https://github.com/ply-ct/vscode-ply/issues/15
+                    await vscode.commands.executeCommand("test-explorer.reload");
+                }
+            }
+
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
         }
-
     }));
-
 }
 
 export function deactivate() {

@@ -202,12 +202,7 @@ export class PlyRoots {
     public readonly roots: PlyRoot[] = [];
     public readonly requestsRoot: PlyRoot;
     public readonly casesRoot: PlyRoot;
-    public readonly rootSuite: TestSuiteInfo = {
-        type: 'suite',
-        id: 'root: Ply',
-        label: 'Ply',
-        children: []
-    };
+    public readonly rootSuite: TestSuiteInfo;
 
     private readonly testsById = new Map<string,Test>();
     private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
@@ -218,6 +213,12 @@ export class PlyRoots {
      * @param uri workspaceFolder uri for local fs; url for remote
      */
     constructor(public readonly uri: Uri) {
+        this.rootSuite = {
+            type: 'suite',
+            id: `Ply:${uri.toString(true)}`,
+            label: 'Ply',
+            children: []
+        };
         this.requestsRoot = new PlyRoot(uri, 'requests', 'Requests');
         this.roots.push(this.requestsRoot);
         this.casesRoot = new PlyRoot(uri, 'cases', 'Cases');

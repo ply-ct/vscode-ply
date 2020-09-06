@@ -175,7 +175,7 @@
     "commands": [
       {
         "command": "ply.diff",
-        "title": "Compare result files",
+        "title": "Ply: Compare Result Files",
         "icon": {
           "dark": "./icons/fdiff-dark.svg",
           "light": "./icons/fdiff-light.svg"
@@ -183,7 +183,7 @@
       },
       {
         "command": "ply.diff.fragment",
-        "title": "Compare result fragments",
+        "title": "Ply: Compare Result Fragments",
         "icon": {
           "dark": "./icons/diff-dark.svg",
           "light": "./icons/diff-light.svg"
@@ -191,7 +191,7 @@
       },
       {
         "command": "ply.import.postman",
-        "title": "Import from Postman",
+        "title": "Ply: Import from Postman",
         "icon": {
           "dark": "./icons/json-dark.svg",
           "light": "./icons/json-light.svg"
@@ -199,7 +199,19 @@
       }
     ],
     "menus": {
+      "view/title": [
+        {
+          "command": "ply.import.postman",
+          "group": "4_import@5",
+          "when": "view == test-explorer"
+        }
+      ],
       "view/item/context": [
+        {
+          "command": "ply.import.postman",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == collection"
+        },
         {
           "command": "ply.diff",
           "group": "inline@4",
@@ -219,6 +231,11 @@
           "command": "ply.diff.fragment",
           "group": "inline@5",
           "when": "view == test-explorer && viewItem == debuggableTestWithSource"
+        },
+        {
+          "command": "ply.import.postman",
+          "group": "6_postman",
+          "when": "view == test-explorer && viewItem == collection"
         }
       ]
     }

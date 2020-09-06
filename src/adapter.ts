@@ -37,10 +37,10 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(this.retireEmitter);
         this.config = new PlyConfig(
             workspaceFolder,
+            log,
             () => this.load(),
             () => this.retireEmitter.fire({}),
-            () => this.diffState.clearState(),
-            log
+            () => this.diffState.clearState()
         );
         this.disposables.push(this.config);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
