@@ -11,6 +11,12 @@ import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
 
+interface Item {
+    id: string;
+    uri: vscode.Uri;
+    workspaceFolder: vscode.WorkspaceFolder;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
 
     // get the Test Explorer extension
@@ -57,9 +63,42 @@ export async function activate(context: vscode.ExtensionContext) {
         log
     ));
 
+    // codelens for tests
+    const testCodeLensProvider = <vscode.CodeLensProvider> {
+        provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
+            const codeLenses: vscode.CodeLens[] = [];
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+            if (workspaceFolder) {
+                const adapter = testAdapters.get(workspaceFolder.uri.toString());
+                if (adapter) {
+                    const suiteInfo = adapter.plyRoots.getSuiteInfo(PlyRoots.fromUri(document.uri));
+                    if (suiteInfo) {
+                        for (const child of suiteInfo.children) {
+                            if (child.type === 'test' && typeof child.line === 'number') {
+                                const range = new vscode.Range(new vscode.Position(child.line, 0), new vscode.Position(child.line, 0));
+                                codeLenses.push(new vscode.CodeLens(range, {
+                                    title: 'Submit',
+                                    command: 'ply.submit',
+                                    arguments: [{ id: child.id, uri: document.uri, workspaceFolder }]
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
+            return codeLenses;
+        }
+    };
+
+    vscode.languages.registerCodeLensProvider({ language: 'yaml' }, testCodeLensProvider);
+    vscode.languages.registerCodeLensProvider({ language: 'typescript' }, testCodeLensProvider);
+
     const submitCommand = async (...args: any[]) => {
         try {
-            const item = await getItem(...args);
+            let item = args.length === 1 && (args[0] as Item) ? args[0] : undefined;
+            if (!item) {
+                item = await getItem(...args);
+            }
             log.debug('ply.submit item: ' + JSON.stringify(item));
             if (item) {
                 const adapter = testAdapters.get(item.workspaceFolder.uri.toString());
@@ -73,6 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(err.message);
         }
     };
+
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
@@ -207,7 +247,7 @@ export async function activate(context: vscode.ExtensionContext) {
     /**
      * Returns a test/suite item.
      */
-    async function getItem(...args: any[]): Promise<{id: string, uri: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder} | undefined > {
+    async function getItem(...args: any[]): Promise<Item | undefined > {
         let uri: vscode.Uri | undefined = undefined;
         let id: string | undefined = undefined;
         if (args && args.length > 0) {
@@ -223,8 +263,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 openLabel: 'Select',
                 canSelectMany: false,
                 filters: {
-                    'Ply Requests': ['yaml', 'yml'],
-                    'Ply Cases': ['ts']
+                    'Ply Requests/Cases': ['yaml', 'yml', 'ts']
                 },
                 title: 'Select Ply suite'
             });
