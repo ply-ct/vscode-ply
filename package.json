@@ -174,7 +174,23 @@
     },
     "commands": [
       {
+        "command": "ply.submit",
+        "title": "Ply: Submit"
+      },
+      {
+        "command": "ply.submit-item",
+        "title": "Submit (No Verify)",
+        "icon": {
+          "dark": "./icons/submit-dark.svg",
+          "light": "./icons/submit-light.svg"
+        }
+      },
+      {
         "command": "ply.diff",
+        "title": "Ply: Compare Result Files"
+      },
+      {
+        "command": "ply.diff-item",
         "title": "Ply: Compare Result Files",
         "icon": {
           "dark": "./icons/fdiff-dark.svg",
@@ -182,8 +198,8 @@
         }
       },
       {
-        "command": "ply.diff.fragment",
-        "title": "Ply: Compare Result Fragments",
+        "command": "ply.diff.fragment-item",
+        "title": "Compare Result Fragments",
         "icon": {
           "dark": "./icons/diff-dark.svg",
           "light": "./icons/diff-light.svg"
@@ -191,7 +207,11 @@
       },
       {
         "command": "ply.import.postman",
-        "title": "Ply: Import from Postman",
+        "title": "Ply: Import from Postman"
+      },
+      {
+        "command": "ply.import.postman-item",
+        "title": "Import from Postman",
         "icon": {
           "dark": "./icons/json-dark.svg",
           "light": "./icons/json-light.svg"
@@ -201,41 +221,79 @@
     "menus": {
       "view/title": [
         {
-          "command": "ply.import.postman",
+          "command": "ply.import.postman-item",
           "group": "4_import@5",
           "when": "view == test-explorer"
         }
       ],
       "view/item/context": [
         {
-          "command": "ply.import.postman",
+          "command": "ply.import.postman-item",
           "group": "inline@3",
           "when": "view == test-explorer && viewItem == collection"
         },
         {
-          "command": "ply.diff",
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
+        },
+        {
+          "command": "ply.diff-item",
           "group": "inline@4",
           "when": "view == test-explorer && viewItem == suiteWithSource"
         },
         {
-          "command": "ply.diff",
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
+        },
+        {
+          "command": "ply.diff-item",
           "group": "inline@4",
           "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
         },
         {
-          "command": "ply.diff.fragment",
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == testWithSource"
+        },
+        {
+          "command": "ply.diff.fragment-item",
           "group": "inline@5",
           "when": "view == test-explorer && viewItem == testWithSource"
         },
         {
-          "command": "ply.diff.fragment",
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableTestWithSource"
+        },
+        {
+          "command": "ply.diff.fragment-item",
           "group": "inline@5",
           "when": "view == test-explorer && viewItem == debuggableTestWithSource"
         },
         {
-          "command": "ply.import.postman",
+          "command": "ply.import.postman-item",
           "group": "6_postman",
           "when": "view == test-explorer && viewItem == collection"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ply.import.postman-item",
+          "when": "false"
+        },
+        {
+          "command": "ply.submit-item",
+          "when": "false"
+        },
+        {
+          "command": "ply.diff-item",
+          "when": "false"
+        },
+        {
+          "command": "ply.diff.fragment-item",
+          "when": "false"
         }
       ]
     }

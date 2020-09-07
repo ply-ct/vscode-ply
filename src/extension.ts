@@ -32,7 +32,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
     context.subscriptions.push(decorator);
 
-    // workspace folder uri to PlyRoots
+    // workspace folder uri to test adapter
+    const testAdapters = new Map<string, PlyAdapter>();
+    // workspace folder uri to diff handler
     const diffHandlers = new Map<string, DiffHandler>();
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
@@ -49,10 +51,30 @@ export async function activate(context: vscode.ExtensionContext) {
             context.subscriptions.push(diffHandler);
             diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
             adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
+            testAdapters.set(workspaceFolder.uri.toString(), adapter);
             return adapter;
         },
         log
     ));
+
+    const submitCommand = async (...args: any[]) => {
+        try {
+            const item = await getItem(...args);
+            log.debug('ply.submit item: ' + JSON.stringify(item));
+            if (item) {
+                const adapter = testAdapters.get(item.workspaceFolder.uri.toString());
+                if (!adapter) {
+                    throw new Error(`No test adapter found for workspace folder: ${item.workspaceFolder.uri}`);
+                }
+                await adapter.run([item.id], { noVerify: true });
+            }
+        } catch (err) {
+            console.error(err);
+            vscode.window.showErrorMessage(err.message);
+        }
+    };
+    context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
     // register for ply.result scheme
     const contentProvider = new ResultContentProvider();
@@ -64,45 +86,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const diffCommand = async (...args: any[]) => {
         try {
-            let uri: vscode.Uri | undefined = undefined;
-            let id: string | undefined = undefined;
-            if (args && args.length > 0) {
-                const node = args[0];
-                if (node.adapterIds && node.adapterIds.length > 0) {
-                    id = node.adapterIds[0];
-                    if (id) {
-                        uri = PlyRoots.toUri(id);
-                    }
-                }
-            } else {
-                const uris = await vscode.window.showOpenDialog({
-                    openLabel: 'Select',
-                    canSelectMany: false,
-                    filters: {
-                        'Ply Requests': ['yaml', 'yml'],
-                        'Ply Cases': ['ts']
-                    },
-                    title: 'Select Ply suite'
-                });
-                if (uris && uris.length > 0) {
-                    uri = uris[0];
-                    id = PlyRoots.fromUri(uri);
-                }
-            }
-
-            log.debug(`ply.diff item uri: ${uri}`);
-            if (uri) {
-                const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-                if (!workspaceFolder) {
-                    throw new Error(`No workspace folder found for URI: ${uri}`);
-                }
-                const diffHandler = diffHandlers.get(workspaceFolder.uri.toString());
+            const item = await getItem(...args);
+            log.debug('ply.diff item: ' + JSON.stringify(item));
+            if (item) {
+                const diffHandler = diffHandlers.get(item.workspaceFolder.uri.toString());
                 if (!diffHandler) {
-                    throw new Error(`No diff handler found for workspace folder: ${workspaceFolder.uri}`);
+                    throw new Error(`No diff handler found for workspace folder: ${item.workspaceFolder.uri}`);
                 }
-                if (id) {  // id must be assigned if uri is
-                    await diffHandler.doDiff(id);
-                }
+                await diffHandler.doDiff(item.id);
             }
         } catch (err) {
             console.error(err);
@@ -111,9 +102,10 @@ export async function activate(context: vscode.ExtensionContext) {
     };
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', diffCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment', diffCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff-item', diffCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment-item', diffCommand));
 
-    context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', async (...args: any[]) => {
+    const openResultCommand = async (...args: any[]) => {
         try {
             const uri = args[0] as vscode.Uri;
             if (uri && uri.scheme === Result.URI_SCHEME && uri.fragment) {
@@ -155,9 +147,11 @@ export async function activate(context: vscode.ExtensionContext) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
         }
-    }));
+    };
 
-    context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', async (...args: any[]) => {
+    context.subscriptions.push(vscode.commands.registerCommand('ply.openResult', openResultCommand));
+
+    const importPostmanCommand =  async (...args: any[]) => {
         try {
             let workspaceFolder: vscode.WorkspaceFolder | undefined = undefined;
             const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -205,7 +199,48 @@ export async function activate(context: vscode.ExtensionContext) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
         }
-    }));
+    };
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', importPostmanCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand));
+
+    /**
+     * Returns a test/suite item.
+     */
+    async function getItem(...args: any[]): Promise<{id: string, uri: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder} | undefined > {
+        let uri: vscode.Uri | undefined = undefined;
+        let id: string | undefined = undefined;
+        if (args && args.length > 0) {
+            const node = args[0];
+            if (node.adapterIds && node.adapterIds.length > 0) {
+                id = node.adapterIds[0];
+                if (id) {
+                    uri = PlyRoots.toUri(id);
+                }
+            }
+        } else {
+            const uris = await vscode.window.showOpenDialog({
+                openLabel: 'Select',
+                canSelectMany: false,
+                filters: {
+                    'Ply Requests': ['yaml', 'yml'],
+                    'Ply Cases': ['ts']
+                },
+                title: 'Select Ply suite'
+            });
+            if (uris && uris.length > 0) {
+                uri = uris[0];
+                id = PlyRoots.fromUri(uri);
+            }
+        }
+        if (id && uri) {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+            if (!workspaceFolder) {
+                throw new Error(`No workspace folder found for URI: ${uri}`);
+            }
+            return { id, uri, workspaceFolder };
+        }
+    }
 }
 
 export function deactivate() {

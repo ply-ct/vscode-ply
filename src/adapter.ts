@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as ply from 'ply-ct';
 import { inspect } from 'util';
 import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
@@ -26,7 +27,7 @@ export class PlyAdapter implements TestAdapter {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly plyRoots: PlyRoots,
+        readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
         private readonly log: Log
@@ -72,12 +73,12 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
-    async run(testIds: string[]): Promise<void> {
+    async run(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
                 this.plyRoots, this.log, this.testStatesEmitter);
-            await this.runner.runTests(testIds);
+            await this.runner.runTests(testIds, false, runOptions);
         } catch (err) {
             console.error(err);
             this.log.error(err);

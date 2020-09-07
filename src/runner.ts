@@ -25,7 +25,7 @@ export class PlyRunner {
         private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
     ) { }
 
-    async runTests(testIds: string[], debug = false): Promise<void> {
+    async runTests(testIds: string[], debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
 
@@ -38,7 +38,10 @@ export class PlyRunner {
                 }
             }
 
-            const runOptions = await this.checkMissingExpectedResults(testInfos);
+
+            if (!runOptions) {
+                runOptions = await this.checkMissingExpectedResults(testInfos);
+            }
             if (!runOptions) {
                 return; // canceled dispensation
             }
