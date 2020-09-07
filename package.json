@@ -179,7 +179,7 @@
       },
       {
         "command": "ply.submit-item",
-        "title": "Submit (No Verify)",
+        "title": "Submit",
         "icon": {
           "dark": "./icons/submit-dark.svg",
           "light": "./icons/submit-light.svg"

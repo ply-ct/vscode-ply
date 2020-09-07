@@ -124,7 +124,7 @@ function mapStatus(status: String | undefined):
     else if (status === 'Passed') {
         return 'passed';
     }
-    else if (status === 'Not Verified') {
+    else if (status === 'Submitted') {
         return 'skipped';
     }
     else if (status === 'Failed') {

@@ -259,7 +259,7 @@ export class PlyRunner {
             const items: vscode.QuickPickItem[] = [];
             const proceed = { label: 'Proceed', description: 'let verification fail' };
             items.push(proceed);
-            const noVerify = { label: 'Run without verifying', description: 'ad hoc execution' };
+            const noVerify = { label: 'Submit without verifying', description: 'ad hoc execution' };
             items.push(noVerify);
             const addToSkip = { label: 'Add to "ply.skip" setting', description: 'exclude suite from bulk runs'};
             const createExpected = { label: 'Create expected result', description: 'from actual' };
@@ -276,7 +276,7 @@ export class PlyRunner {
             const res = await vscode.window.showQuickPick(items, options);
             if (res) {
                 if (res === noVerify) {
-                    return { noVerifyIfExpectedMissing: true };
+                    return { submitIfExpectedMissing: true };
                 } else if (res === addToSkip) {
                     // add suite file to ply.skip setting
                     for (const suite of suitesWithMissingResults) {
