@@ -137,7 +137,7 @@ export class PlyAdapter implements TestAdapter {
 			port: this.config.debugPort,
 			protocol: 'inspector',
 			timeout: 10000,
-			stopOnEntry: false
+			continueOnAttach: true
 		};
 
 		const debugSessionPromise = new Promise<vscode.DebugSession>((resolve, reject) => {

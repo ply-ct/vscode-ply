@@ -45,7 +45,7 @@ in setting `ply.debugConfig`.  The default built-in debug configuration looks li
   "port": 9229,
   "protocol": "inspector",
   "timeout": 10000,
-  "stopOnEntry": false
+  "continueOnAttach": true
 }
 ```
 
