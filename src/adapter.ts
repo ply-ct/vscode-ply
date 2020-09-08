@@ -8,6 +8,7 @@ import { PlyRoots } from './plyRoots';
 import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
+import { SubmitCodeLensProvider } from './codeLens';
 
 export class PlyAdapter implements TestAdapter {
 
@@ -27,7 +28,7 @@ export class PlyAdapter implements TestAdapter {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
-        readonly plyRoots: PlyRoots,
+        private readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
         private readonly log: Log
@@ -46,6 +47,10 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(this.config);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
+
+        const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
+        this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider));
+        this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'typescript' }, submitCodeLensProvider));
     }
 
     async load(): Promise<void> {
