@@ -49,7 +49,8 @@ export class PlyRoot {
                 id: testUri.toString(true),
                 label: testName,
                 file: testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true),
-                line: testUris[i][1]
+                line: testUris[i][1],
+                debuggable: testUri.path.endsWith('.ts')
             };
 
             // find suite (file)
@@ -68,6 +69,7 @@ export class PlyRoot {
                     id: suiteId,
                     label: labeler ? labeler(suiteId) : fileName,
                     file: fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true),
+                    debuggable: filePath.endsWith('.ts'),
                     line: 0,
                     children: []
                 };
@@ -85,6 +87,7 @@ export class PlyRoot {
                         type: 'suite',
                         id: this.formSuiteId(dirUri),
                         label: dirPath,
+                        debuggable: false,
                         children: [],
                     };
                     this.baseSuite.children.push(parentSuite);
@@ -217,6 +220,7 @@ export class PlyRoots {
             type: 'suite',
             id: `Ply:${uri.toString(true)}`,
             label: 'Ply',
+            debuggable: false,
             children: []
         };
         this.requestsRoot = new PlyRoot(uri, 'requests', 'Requests');
@@ -257,7 +261,10 @@ export class PlyRoots {
         for (const caseSuiteUri of caseSuiteUris) {
             const suite = caseSuites.get(caseSuiteUri);
             if (suite) {
-                this.suitesByTestOrSuiteId.set(this.casesRoot.formSuiteId(caseSuiteUri), suite);
+                const suiteId = this.casesRoot.formSuiteId(caseSuiteUri);
+                this.suitesByTestOrSuiteId.set(suiteId, suite);
+                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
+                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
                 for (const plyCase of suite) {
                     const testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
                     this.testsById.set(testId, plyCase);

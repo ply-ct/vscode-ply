@@ -39,7 +39,7 @@ export class DiffState {
      */
     updateDiffs(testId: string, diffs: ply.Diff[]) {
         this.state = { [testId]: diffs, ...this.state };
-        console.log(`updated diff state for: ${testId} to: ${diffs}`);
+        console.debug(`updated diff state for: ${testId}`);
     }
 
     clearDiffs(testId: string): boolean;

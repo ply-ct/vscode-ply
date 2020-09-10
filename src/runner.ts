@@ -142,7 +142,7 @@ export class PlyRunner {
                 if (typeof message === 'string') {
                     this.log.debug(`Worker: ${message}`);
                 } else {
-                    this.log.debug(`Received ${JSON.stringify(message)}`);
+                    this.log.debug(`Received: ${JSON.stringify(message)}`);
                     if (message.type !== 'finished') {
                         const decorations: TestDecoration[] = [];
                         if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {

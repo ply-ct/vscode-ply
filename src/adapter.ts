@@ -91,13 +91,13 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
-    async debug(testIds: string[]): Promise<void> {
+    async debug(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {
         // start a test run in a child process and attach the debugger to it...
         this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
         this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
             this.plyRoots, this.log, this.testStatesEmitter);
-		const testRunPromise = this.runner.runTests(testIds, true);
+		const testRunPromise = this.runner.runTests(testIds, true, runOptions);
 
 		this.log.info('Starting debug session');
 		let debugSession: any;
