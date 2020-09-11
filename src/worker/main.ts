@@ -141,6 +141,6 @@ function getUri(plyee: string) {
         return plyee;
     }
     else {
-        return `file://${process.platform.startsWith('win') ? '/' : '/'}${plyee}`;
+        return `file://${process.platform.startsWith('win') ? '/' : ''}${plyee}`;
     }
 }
