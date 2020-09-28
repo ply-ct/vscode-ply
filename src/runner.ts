@@ -124,6 +124,7 @@ export class PlyRunner {
 
             const childProcScript = this.workerScript;
 
+            this.log.info('Starting worker...');
             this.runningTestProcess = fork(
                 childProcScript,
                 [],
@@ -140,9 +141,9 @@ export class PlyRunner {
             this.runningTestProcess.on('message', (message: string | TestSuiteEvent | TestEvent | TestRunFinishedEvent) => {
 
                 if (typeof message === 'string') {
-                    this.log.debug(`Worker: ${message}`);
+                    console.debug(`Worker: ${message}`);
                 } else {
-                    this.log.debug(`Received: ${JSON.stringify(message)}`);
+                    console.debug(`Received: ${JSON.stringify(message)}`);
                     if (message.type !== 'finished') {
                         const decorations: TestDecoration[] = [];
                         if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {
@@ -202,6 +203,7 @@ export class PlyRunner {
             });
 
             this.runningTestProcess.on('error', err => {
+                console.log(err);
                 this.log.error(`Error from child process: ${err}`);
                 runningTest = undefined;
                 this.runningTestProcess = undefined;

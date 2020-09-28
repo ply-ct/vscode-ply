@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const submitCommand = async (...args: any[]) => {
         try {
             const item = await getItem(...args);
-            log.debug('ply.submit item: ' + JSON.stringify(item));
+            console.debug('ply.submit item: ' + JSON.stringify(item));
             if (item) {
                 const adapter = testAdapters.get(item.workspaceFolder.uri.toString());
                 if (!adapter) {
@@ -94,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const diffCommand = async (...args: any[]) => {
         try {
             const item = await getItem(...args);
-            log.debug('ply.diff item: ' + JSON.stringify(item));
+            console.debug('ply.diff item: ' + JSON.stringify(item));
             if (item) {
                 const diffHandler = diffHandlers.get(item.workspaceFolder.uri.toString());
                 if (!diffHandler) {
@@ -196,9 +196,6 @@ export async function activate(context: vscode.ExtensionContext) {
                         log.info(`Importing postman file ${uri.fsPath}`);
                         importer.doImport(new ply.Retrieval(uri.fsPath));
                     }
-                    // TODO: can get rid of this once we watch for file system changes:
-                    // https://github.com/ply-ct/vscode-ply/issues/15
-                    await vscode.commands.executeCommand("test-explorer.reload");
                 }
             }
 

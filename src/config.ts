@@ -37,10 +37,10 @@ export class PlyConfig {
     }
 
     async onChange(change: vscode.ConfigurationChangeEvent) {
-        this.log.info('config change');
+        console.debug('config change');
         for (const setting of Object.values(Setting)) {
             if (change.affectsConfiguration(`ply.${setting}`, this.workspaceFolder.uri)) {
-                this.log.info(`config change affects ply.${setting}`);
+                console.debug(`config change affects ply.${setting}`);
                 if (setting === Setting.testsLocation
                     || setting === Setting.requestFiles
                     || setting === Setting.caseFiles

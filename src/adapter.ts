@@ -48,14 +48,26 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
 
+        const requestWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(this.config.plyOptions.testsLocation, this.config.plyOptions.requestFiles));
+        this.disposables.push(requestWatcher);
+        requestWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
+        requestWatcher.onDidChange(uri => this.onSuiteChange(uri));
+        requestWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
+
+        const caseWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(this.config.plyOptions.testsLocation, this.config.plyOptions.caseFiles));
+        this.disposables.push(caseWatcher);
+        caseWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
+        caseWatcher.onDidChange(uri => this.onSuiteChange(uri));
+        caseWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
+
         const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider));
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'typescript' }, submitCodeLensProvider));
     }
 
     async load(): Promise<void> {
-        this.retireEmitter.fire({});
-        this.diffState.clearState();
         this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
 
         try {
@@ -66,9 +78,9 @@ export class PlyAdapter implements TestAdapter {
             const cases = await loader.loadCases();
 
             this.plyRoots.build(requests, cases);
-            this.log.debug('requestsRoot: ' + this.plyRoots.requestsRoot.toString());
-            this.log.debug('requestsRoot.baseSuite: ' + JSON.stringify(this.plyRoots.requestsRoot.baseSuite, null, 2));
-            this.log.debug('casesRoot: ' + this.plyRoots.casesRoot.toString());
+            console.debug('requestsRoot: ' + this.plyRoots.requestsRoot.toString());
+            console.debug('requestsRoot.baseSuite: ' + JSON.stringify(this.plyRoots.requestsRoot.baseSuite, null, 2));
+            console.debug('casesRoot: ' + this.plyRoots.casesRoot.toString());
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: this.plyRoots.rootSuite });
         }
         catch (err) {
@@ -172,30 +184,61 @@ export class PlyAdapter implements TestAdapter {
 		return vscode.debug.onDidTerminateDebugSession(cb);
     }
 
+    /**
+     * Handle non-suite changes (config, results, etc).
+     */
     private onSave(document: vscode.TextDocument) {
-        this.log.debug(`saved: ${document.uri}`);
         if (document.uri.scheme === 'file' && document.uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
+            console.debug(`saved: ${document.uri}`);
             if (PlyConfig.isPlyConfig(document.uri.fsPath)) {
                 this.config.clearPlyOptions();
                 this.load();
+                this.retireEmitter.fire({});
+                this.diffState.clearState();
             } else {
-                const file = document.uri.fsPath;
-                const info = this.plyRoots.find(i => i.file === file);
-                if (info && info.type === 'suite') {
-                    const testIds = info.children.map(i => i.id);
-                    // TODO only reload affected files and diff state -- issue #14
-                    this.load();
-                    this.retireEmitter.fire({ tests: testIds });
-                } else if (document.languageId === 'yaml') {
+                if (document.languageId === 'yaml') {
+                    // expected results
                     const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
                     if (affectedSuiteId) {
                         const testIds = this.plyRoots.getTestInfosForSuite(affectedSuiteId).map(ti => ti.id);
                         this.retireEmitter.fire({ tests: testIds });
+                        this.diffState.clearDiffs(testIds);
                     }
                 } else if (document.languageId === 'json') {
                     // TODO check if values changed and fire retire event & remove diff state
                 }
             }
+        }
+    }
+
+    private onSuiteChange(uri: vscode.Uri) {
+        console.debug(`changed: ${uri}`);
+        const file = uri.fsPath;
+        this.load(); // TODO: issue #14
+        const info = this.plyRoots.find(i => i.file === file);
+        if (info && info.type === 'suite') {
+            // existing -- retire only these tests
+            const testIds = info.children.map(i => i.id);
+            this.retireEmitter.fire({ tests: testIds });
+            this.diffState.clearDiffs(testIds);
+        } else {
+            this.retireEmitter.fire({});
+            this.diffState.clearState();
+        }
+    }
+
+    private onSuiteCreate(uri: vscode.Uri) {
+        console.debug(`created: ${uri}`);
+        this.load(); // TODO: issue #14
+    }
+
+    private onSuiteDelete(uri: vscode.Uri) {
+        console.debug(`deleted: ${uri}`);
+        const file = uri.fsPath;
+        const info = this.plyRoots.find(i => i.file === file);
+        // we only care if we know this file as a suite (might be ignored)
+        if (info && info.type === 'suite') {
+            this.load(); // TODO: issue #14
         }
     }
 

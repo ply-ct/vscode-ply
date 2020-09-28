@@ -162,7 +162,7 @@ export class DiffHandler {
         const actual = suite.runtime.results.actual;
         const actualResult = new Result(actual, test?.name);
         let actualLabel = actualResult.label;
-        const actualUri = actualResult.toUri();
+        let actualUri = actualResult.toUri();
 
         if (test) {
             // expected is read-only virtual file
@@ -171,7 +171,9 @@ export class DiffHandler {
         }
         else {
             expectedUri = Result.convertUri(expectedUri);
-            // actual uri stays virtual so as to be read-only
+            // actual uri cannot stay virtual to be read-only,
+            // because then vscode.diff prompts when saving expected
+            actualUri = Result.convertUri(actualUri);
         }
         if (!(await actualResult.exists())) {
             actualLabel = `(not found) ${actualLabel}`;
@@ -179,8 +181,7 @@ export class DiffHandler {
 
         const title = `${expectedLabel} ⟷ ${actualLabel}`;
         const options: vscode.TextDocumentShowOptions = {
-            preserveFocus: false,
-            preview: true
+            preserveFocus: true
         };
 
         await vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options);
