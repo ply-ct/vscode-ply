@@ -1,8 +1,8 @@
 {
   "name": "vscode-ply",
   "displayName": "Ply",
-  "description": "REST API Automated Testing",
-  "icon": "resources/icon.png",
+  "description": "API Automated Testing",
+  "icon": "icons/ply.png",
   "version": "0.8.5",
   "license": "MIT",
   "author": {
@@ -10,7 +10,7 @@
 		"email": "donald.h.oakes@gmail.com"
 	},
   "publisher": "ply-ct",
-  "homepage": "https://github.com/ply-ct/vscode-ply#readme",
+  "homepage": "https://ply-ct.com/",
   "repository": {
     "type": "git",
     "url": "https://github.com/ply-ct/vscode-ply.git"
@@ -19,12 +19,15 @@
     "url": "https://github.com/ply-ct/vscode-ply/issues"
   },
   "keywords": [
-    "rest",
-    "api",
-    "test",
-    "testing"
+    "REST",
+    "API",
+    "GraphQL",
+    "Test",
+    "Automated Testing"
   ],
   "categories": [
+    "Programming Languages",
+    "Linters",
     "Other"
   ],
   "main": "./out/src/extension.js",
