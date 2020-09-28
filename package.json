@@ -5,7 +5,10 @@
   "icon": "resources/icon.png",
   "version": "0.8.5",
   "license": "MIT",
-  "author": "Donald Oakes <donald@oakesville.io>",
+  "author": {
+		"name": "Donald Oakes",
+		"email": "donald.h.oakes@gmail.com"
+	},
   "publisher": "ply-ct",
   "homepage": "https://github.com/ply-ct/vscode-ply#readme",
   "repository": {
