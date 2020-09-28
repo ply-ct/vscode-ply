@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "REST API Automated Testing",
   "icon": "resources/icon.png",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "license": "MIT",
   "author": "Donald Oakes <donald@oakesville.io>",
   "publisher": "ply-ct",
