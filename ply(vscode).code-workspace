@@ -1,13 +1,11 @@
 {
 	"folders": [
 		{
-			"path": "../ply"
-		},
-		{
 			"path": "../ply-demo"
 		}
 	],
 	"settings": {
-		"diffEditor.codeLens": true
+		"diffEditor.codeLens": true,
+		"editor.minimap.enabled": false
 	}
 }

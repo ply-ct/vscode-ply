@@ -2,6 +2,7 @@
 src/**
 **/*.ts
 test/**
+docs/**
 out/test/**
 out/src/worker/**
 **/*.map
