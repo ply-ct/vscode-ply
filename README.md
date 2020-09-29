@@ -1,4 +1,4 @@
-# vscode-ply
+# Ply for Visual Studio Code
 API Automated Testing via [Ply](https://github.com/ply-ct/ply).
 To install, search for "ply" in the [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode),
 or in VS Code's Extensions sidebar. 
