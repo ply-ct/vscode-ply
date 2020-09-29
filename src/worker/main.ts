@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as process from 'process';
 import { WorkerArgs } from './args';
 // events API must stay compatible
 import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';

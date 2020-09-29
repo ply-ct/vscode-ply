@@ -3,12 +3,12 @@
   "displayName": "Ply",
   "description": "API Automated Testing",
   "icon": "icons/ply.png",
-  "version": "0.8.5",
+  "version": "0.8.7",
   "license": "MIT",
   "author": {
-		"name": "Donald Oakes",
-		"email": "donald.h.oakes@gmail.com"
-	},
+    "name": "Donald Oakes",
+    "email": "donald.h.oakes@gmail.com"
+  },
   "publisher": "ply-ct",
   "homepage": "https://ply-ct.com/",
   "repository": {
@@ -39,7 +39,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "tslint -p ./",
+    "lint": "eslint",
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
     "build-worker": "rollup -c",
     "watch-worker": "rollup --watch -c"
@@ -48,7 +48,7 @@
     "vscode": "^1.48.0"
   },
   "dependencies": {
-    "ply-ct": "^2.1.6",
+    "ply-ct": "^2.1.7",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
     "vscode-uri": "^2.1.2"

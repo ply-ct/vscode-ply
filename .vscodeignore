@@ -6,6 +6,10 @@ docs/**
 out/test/**
 out/src/worker/**
 **/*.map
+**/*.txt
+**/*.md
+**/*.html
+**/*.lcl
 tsconfig.json
 .gitignore
 .eslintignore
@@ -14,6 +18,13 @@ tsconfig.json
 rollup.config.js
 *.code-workspace
 *.vsix
+# unneeded typescript components
+node_modules/typescript/bin/**
+node_modules/typescript/lib/tsc.js
+node_modules/typescript/lib/tsserver.js
+node_modules/typescript/lib/tsserverlibrary.js
+node_modules/typescript/lib/typingsInstaller.js
+node_modules/typescript/lib/typescriptServices.js
 .rpt2_cache/
 .DS_Store/
 
