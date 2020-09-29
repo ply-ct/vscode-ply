@@ -31,7 +31,7 @@ export class PlyRoot {
     /**
      * Creates the test/suite hierarchy.
      * Relies on Uris coming in already sorted by shortest segment count first, then alpha.
-     * Within files requests/cases should be sorted by the order they appear in the file (TODO: or alpha?).
+     * Within files requests/cases should be sorted by the order they appear in the file.
      */
     build(testUris: [Uri, number][], labeler?: (suiteId: string) => string) {
 

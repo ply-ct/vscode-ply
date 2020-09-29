@@ -81,6 +81,10 @@ export class PlyAdapter implements TestAdapter {
             console.debug('requestsRoot: ' + this.plyRoots.requestsRoot.toString());
             console.debug('requestsRoot.baseSuite: ' + JSON.stringify(this.plyRoots.requestsRoot.baseSuite, null, 2));
             console.debug('casesRoot: ' + this.plyRoots.casesRoot.toString());
+
+            // tests should be sorted in file order (user can override if they want)
+            await vscode.commands.executeCommand('test-explorer.dont-sort');
+
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: this.plyRoots.rootSuite });
         }
         catch (err) {

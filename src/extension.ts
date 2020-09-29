@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    console.log('vscode-ply is active');
+    console.log('vscode-ply activating...');
 
     const outputChannel = vscode.window.createOutputChannel('Ply Tests');
     context.subscriptions.push(outputChannel);
@@ -248,6 +248,8 @@ export async function activate(context: vscode.ExtensionContext) {
             return { id, uri, workspaceFolder };
         }
     }
+
+    console.log('vscode-ply is active');
 }
 
 export function deactivate() {

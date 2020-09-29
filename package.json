@@ -3,7 +3,8 @@
   "displayName": "Ply",
   "description": "API Automated Testing",
   "icon": "icons/ply.png",
-  "version": "0.8.7",
+  "version": "0.8.8",
+  "preview": true,
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
