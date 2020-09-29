@@ -294,6 +294,7 @@ export class PlyRunner {
                         } else {
                             skip = '{' + suite.path + '}';
                         }
+                        suite.skip = true;
                         vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri).update('skip', skip);
                         this.config.clearPlyOptions();
                     }
