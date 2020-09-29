@@ -1,21 +1,23 @@
 # vscode-ply
-REST API Automated Testing via [Ply](https://github.com/ply-ct/ply).
+API Automated Testing via [Ply](https://github.com/ply-ct/ply).
 To install, search for "ply" in the [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode),
 or in VS Code's Extensions sidebar. 
 
 ## Features
   - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
-  - CodeLense in your Ply test files for starting and debugging tests
-  - Gutter decorations on your Ply test files showing tests status
+  - CodeLense in your Ply test files for running tests and debugging cases
+  - Gutter decorations on your Ply test files showing test statuses
   - Decorations in Ply test files indicate source line where a test failed
   - Display failed test log when a test is selected in Test Explorer
   - Diff editor for comparing expected/actual results, with smart decorations that know about runtime values
+
+![demo](docs/images/demo.gif)
 
 ## Dependencies
 Requires [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer) extension.
 
 ## Configuration
-Honors .plyrc.yml.  Values there are superseded by the following vscode settings:
+Honors [plyconfig.json/yaml](https://ply-ct.github.io/ply/topics/config). Values there are superseded by the following vscode settings:
 Setting | Description | Default
 ------- | ----------- | -------
 `ply.testsLocation` | Base directory (absolute or relative to workspace root) for all Ply request and case files | .
@@ -35,8 +37,8 @@ Setting | Description | Default
 
 ### Custom debug configuration
 You can specify a custom vscode debug configuration to use instead of the built-in default.
-Do this by creating a debugging configuration in `.vscode/launch.json`.  Then specify the name of that
-in setting `ply.debugConfig`.  The default built-in debug configuration looks like this:
+Do this by creating a debugging configuration in `.vscode/launch.json`. Then specify the name of that
+in setting `ply.debugConfig`. The default built-in debug configuration looks like this:
 ```
 {
   "name": "Ply Debugging",
@@ -50,3 +52,6 @@ in setting `ply.debugConfig`.  The default built-in debug configuration looks li
 ```
 
 ## Troubleshooting
+If your Ply tests are not displayed or not executing correctly, you can diagnose problems by turning
+on logging to "Ply Invoker" in Output view through this VS Code setting:
+ - `ply.logpanel`
