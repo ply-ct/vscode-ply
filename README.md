@@ -7,6 +7,8 @@
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
+
 Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
 and compare actual results against expected, with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
@@ -16,17 +18,16 @@ results at a glance.
 ![diff](docs/images/diff.png)
 
 Checkmarks indicate diff lines that're okay, such as substituted values or comments; whereas Xs indicate
-significant differences causing test failure.
+significant differences causing test failure(s).
 
 When you need greater control, Ply [cases](https://ply-ct.github.io/ply/topics/cases) give you
 programmatic access via TypeScript to supplement this built-in expected/actual verification.
 
 ## Features
   - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
-  - CodeLense in your Ply test files for running tests and debugging cases
+  - CodeLenses in your Ply test files for running tests and debugging cases
   - Gutter decorations on your Ply test files showing test statuses
-  - Decorations in Ply test files indicate source line where a test failed
-  - Display failed test log when a test is selected in Test Explorer
+  - Display test log when a test is selected in Test Explorer
   - Diff editor for comparing expected/actual results, with smart decorations that know about runtime values
   - Import Ply requests from [Postman](https://www.postman.com/) collections
 
