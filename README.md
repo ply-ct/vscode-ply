@@ -1,12 +1,12 @@
 <a href="https://ply-ct.github.io/ply/topics/requests" style="position:relative;top:-5px">
-  <img src="https://raw.githubusercontent.com/vscode-ply/master/docs/images/logo.png" width="64" alt="ply" />
+  <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/logo.png" width="64" alt="ply" />
 </a>
 <br><br>
 
 <h2>API Automated Testing
 <div>
 <a href="https://ply-ct.github.io/ply/topics/requests">
-  <img src="https://raw.githubusercontent.com/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
+  <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 </div>
 </h2>
