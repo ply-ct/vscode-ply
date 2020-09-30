@@ -7,7 +7,7 @@
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply?label=Build) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
 
 Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
@@ -25,10 +25,10 @@ programmatic access via TypeScript to supplement this built-in expected/actual v
 
 ## Features
   - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
-  - CodeLenses in your Ply test files for running tests and debugging cases
+  - CodeLens segments in your Ply test files for running tests and debugging cases
   - Gutter decorations on your Ply test files showing test statuses
-  - Display test log when a test is selected in Test Explorer
-  - Diff editor for comparing expected/actual results, with smart decorations that know about runtime values
+  - Test log displayed in Output view when a test is selected in Test Explorer
+  - Diff editor for comparing expected/actual results, with smart decorations aware of runtime values
   - Import Ply requests from [Postman](https://www.postman.com/) collections
 
 ![recording](docs/images/recording.gif)
@@ -56,7 +56,7 @@ Setting | Description | Default
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
 
 ### Custom debug configuration
-You can specify a custom vscode debug configuration to use instead of the built-in default.
+You can specify a custom vscode debug configuration to use for Ply cases instead of the built-in default.
 Do this by creating a debugging configuration in `.vscode/launch.json`. Then specify the name of that
 in setting `ply.debugConfig`. The default built-in debug configuration looks like this:
 ```
