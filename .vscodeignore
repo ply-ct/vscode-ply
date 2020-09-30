@@ -8,6 +8,8 @@ out/src/worker/**
 **/*.map
 **/*.txt
 **/*.md
+!README.md
+!CHANGELOG.md
 **/*.html
 **/*.lcl
 tsconfig.json
