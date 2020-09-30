@@ -11,7 +11,7 @@ or in VS Code's Extensions sidebar.
   - Display failed test log when a test is selected in Test Explorer
   - Diff editor for comparing expected/actual results, with smart decorations that know about runtime values
 
-![demo](docs/images/demo.gif)
+![recording](docs/images/recording.gif)
 
 ## Dependencies
 Requires [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer) extension.
