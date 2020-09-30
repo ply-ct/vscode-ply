@@ -8,7 +8,11 @@ describing your request(s). Run Ply to submit these requests and compare actual 
 with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
 placeholders for dynamic values. The Ply extension gives you a side-by-side diff view so you can compare
 results at a glance.
+
 ![diff](docs/images/diff.png)
+
+Checkmarks indicate diff lines that're okay, such as substituted values or comments; whereas Xs indicate
+significant differences causing test failure.
 
 ## Features
   - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
