@@ -1,7 +1,4 @@
-<a href="https://ply-ct.github.io/ply/topics/requests" style="position:relative;top:-5px">
-  <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/logo.png" width="64" alt="ply" />
-</a>
-
+# Ply for VS Code
 <h2>API Automated Testing
 <div>
 <a href="https://ply-ct.github.io/ply/topics/requests">
