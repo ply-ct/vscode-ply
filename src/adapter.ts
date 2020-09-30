@@ -49,7 +49,7 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
 
         let testsLoc = this.config.plyOptions.testsLocation;
-        if (process.platform.indexOf('win') >= 0) {
+        if (process.platform.startsWith('win')) {
             // watcher needs backslashes in RelativePattern base on windows
             testsLoc = testsLoc.replace(/\//g, '\\');
         }
