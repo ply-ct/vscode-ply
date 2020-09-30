@@ -7,7 +7,7 @@
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
 
 Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
