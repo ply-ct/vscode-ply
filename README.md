@@ -1,7 +1,11 @@
 # Ply for Visual Studio Code
 API Automated Testing via [Ply](https://github.com/ply-ct/ply#readme). Search for "ply" in VS Code extensions.
 
-![ply your wares](docs/images/wares.png)
+<div>
+<a href="https://ply-ct.github.io/ply/topics/requests">
+  <img src="https://raw.githubusercontent.com/ply-ct/ply/master/docs/img/wares.png" width="128" alt="Ply your wares" />
+</a>
+</div>
 
 Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your request(s). Run Ply to submit these requests and compare actual results against expected,
