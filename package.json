@@ -1,7 +1,7 @@
 {
   "name": "vscode-ply",
   "displayName": "Ply",
-  "description": "API Automated Testing",
+  "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
   "version": "0.8.9",
   "preview": true,

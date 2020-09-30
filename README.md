@@ -1,7 +1,14 @@
 # Ply for Visual Studio Code
-API Automated Testing via [Ply](https://github.com/ply-ct/ply).
+API Automated Testing via [Ply](https://github.com/ply-ct/ply#readme).
 To install, search for "ply" in the [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode),
-or in VS Code's Extensions sidebar. 
+or in VS Code's Extensions sidebar.
+
+Ply is simply a more intuitive way to autotest your REST and GraphQL APIs. Start with a YAML file
+describing your request(s). Run Ply to submit these requests and compare actual results against expected,
+with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
+placeholders for dynamic values. The Ply extension gives you a side-by-side diff view so you can compare
+results at a glance.
+![diff](docs/images/diff.gif)
 
 ## Features
   - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
@@ -10,6 +17,7 @@ or in VS Code's Extensions sidebar.
   - Decorations in Ply test files indicate source line where a test failed
   - Display failed test log when a test is selected in Test Explorer
   - Diff editor for comparing expected/actual results, with smart decorations that know about runtime values
+  - Import Ply requests from [Postman](https://www.postman.com/) collections
 
 ![recording](docs/images/recording.gif)
 
