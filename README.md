@@ -8,7 +8,6 @@
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 </div>
-</h2>
 
 Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
