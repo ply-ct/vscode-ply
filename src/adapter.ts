@@ -48,15 +48,20 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(c => this.config.onChange(c)));
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(d => this.onSave(d)));
 
+        let testsLoc = this.config.plyOptions.testsLocation;
+        if (process.platform.indexOf('win') >= 0) {
+            // watcher needs backslashes in RelativePattern base on windows
+            testsLoc = testsLoc.replace(/\//g, '\\');
+        }
         const requestWatcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(this.config.plyOptions.testsLocation, this.config.plyOptions.requestFiles));
+            new vscode.RelativePattern(testsLoc, this.config.plyOptions.requestFiles));
         this.disposables.push(requestWatcher);
         requestWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
         requestWatcher.onDidChange(uri => this.onSuiteChange(uri));
         requestWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
 
         const caseWatcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(this.config.plyOptions.testsLocation, this.config.plyOptions.caseFiles));
+            new vscode.RelativePattern(testsLoc, this.config.plyOptions.caseFiles));
         this.disposables.push(caseWatcher);
         caseWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
         caseWatcher.onDidChange(uri => this.onSuiteChange(uri));
