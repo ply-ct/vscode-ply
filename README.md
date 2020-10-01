@@ -9,7 +9,7 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply?label=Build) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
 
-Ply is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
+[Ply](https://ply-ct.com/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
 describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
 and compare actual results against expected, with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
 placeholders for dynamic values. The Ply extension gives you a side-by-side diff view so you can compare
