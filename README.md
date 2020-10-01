@@ -38,6 +38,7 @@ Requires [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=
 
 ## Configuration
 Honors [plyconfig.json/yaml](https://ply-ct.github.io/ply/topics/config). Values there are superseded by the following vscode settings:
+
 Setting | Description | Default
 ------- | ----------- | -------
 `ply.testsLocation` | Base directory (absolute or relative to workspace root) for all Ply request and case files | .
