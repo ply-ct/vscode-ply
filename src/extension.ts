@@ -250,7 +250,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    const workflowEditor = new WorkflowEditor();
+    const workflowEditor = new WorkflowEditor(context.extensionPath);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.workflow', workflowEditor));
 
     console.log('vscode-ply is active');
