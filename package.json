@@ -302,6 +302,18 @@
           "when": "false"
         }
       ]
-    }
+    },
+    "customEditors": [
+      {
+        "viewType": "ply.workflow",
+        "displayName": "Ply Workflow",
+        "selector": [
+          {
+            "filenamePattern": "*.flow"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
   }
 }

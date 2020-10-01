@@ -10,6 +10,7 @@ import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
+import { WorkflowEditor } from './workflow/editor';
 
 interface Item {
     id: string;
@@ -248,6 +249,9 @@ export async function activate(context: vscode.ExtensionContext) {
             return { id, uri, workspaceFolder };
         }
     }
+
+    const workflowEditor = new WorkflowEditor();
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.workflow', workflowEditor));
 
     console.log('vscode-ply is active');
 }
