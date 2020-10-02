@@ -7,6 +7,8 @@ extends:
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
+  document: false
+  window: false
 parser: '@typescript-eslint/parser'
 parserOptions:
   ecmaVersion: 2018
