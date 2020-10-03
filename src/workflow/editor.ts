@@ -17,7 +17,8 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
 
 		function updateWebview() {
 			webviewPanel.webview.postMessage({
-				type: 'update',
+                type: 'update',
+                file: path.basename(document.uri.fsPath),
 				text: document.getText(),
 			});
         }
