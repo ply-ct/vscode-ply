@@ -12,7 +12,7 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
     ): void | Thenable<void> {
 
 		webviewPanel.webview.options = {
-			enableScripts: true,
+			enableScripts: true
         };
 
 		function updateWebview() {
@@ -30,20 +30,14 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
 			path.join(this.extensionPath, 'media', 'workflow.css')
         ));
 
-        let nonce = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            nonce += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-
-        // TODO nonce
-        // <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webviewPanel.webview.cspSource}; style-src ${webviewPanel.webview.cspSource}; script-src 'nonce-${nonce}';">
+        const nonce = this.getNonce();
 
         const html = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webviewPanel.webview.cspSource}; style-src ${webviewPanel.webview.cspSource}; script-src 'nonce-${nonce}';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <link href="${styleUri}" rel="stylesheet" />
                 <title>Ply Workflow</title>
@@ -52,7 +46,7 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
                 <div class="flow">
                     <canvas id="my-canvas" class="diagram"></canvas>
                 </div>
-                <script src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>
         `;
@@ -60,6 +54,15 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.html = html;
 
         updateWebview();
+    }
+
+    getNonce(): string {
+        let nonce = '';
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < 32; i++) {
+            nonce += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return nonce;
     }
 
 }
