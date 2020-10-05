@@ -24,7 +24,7 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
         }
 
 		const scriptUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
-			path.join(this.extensionPath, 'media/out', 'bundle.js')
+			path.join(this.extensionPath, 'media', 'out/bundle.js')
 		));
 		const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
 			path.join(this.extensionPath, 'media', 'workflow.css')
