@@ -1,11 +1,11 @@
-import { Flow, DEFAULT_LIGHT, DEFAULT_DARK } from 'flowbee';
+import { Flow, LIGHT_OPTIONS, DARK_OPTIONS } from 'flowbee';
 
 const renderState = false;
 const animate = false;
 
-const doRender = (text, file) => {
-    const canvas = document.getElementById('my-canvas');
-    const options = document.body.className === 'vscode-light' ? DEFAULT_LIGHT : DEFAULT_DARK;
+const doRender = (text: string, file: string) => {
+    const canvas = document.getElementById('my-canvas') as HTMLCanvasElement;
+    const options = document.body.className === 'vscode-light' ? LIGHT_OPTIONS : DARK_OPTIONS;
     const flow = new Flow(canvas, options);
     flow.render(text, file);
 };

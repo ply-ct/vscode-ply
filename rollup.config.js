@@ -22,14 +22,17 @@ export default [
     },
     {
         // webviews
-        input: 'media/workflow.js',
+        input: 'media/workflow.ts',
         output: {
             file: 'media/out/bundle.js',
             format: 'umd'
         },
         plugins: [
             resolve(),
-            commonjs()
+            commonjs(),
+            typescript({
+                tsconfigOverride: { compilerOptions: { module: 'es2015' } }
+            })
         ]
     }
 ];
