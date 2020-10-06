@@ -45,17 +45,14 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
         const mediaPath = path.join(this.extensionPath, 'media');
         if (!WorkflowEditor.specs) {
             WorkflowEditor.specs = this.loadSpecs(path.join(mediaPath, 'specs'));
-            webviewPanel.webview.postMessage({
-                type: 'init',
-                base: mediaPath,
-                specs: WorkflowEditor.specs
-            });
         }
 
 
 		function updateWebview() {
 			webviewPanel.webview.postMessage({
                 type: 'update',
+                base: mediaPath,
+                specs: WorkflowEditor.specs,
                 file: path.basename(document.uri.fsPath),
 				text: document.getText(),
 			});
