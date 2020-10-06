@@ -1,9 +1,36 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as vscode from 'vscode';
+import { Log } from 'vscode-test-adapter-util';
 
 export class WorkflowEditor implements vscode.CustomTextEditorProvider {
 
-    constructor(private readonly extensionPath: string) {}
+    static specs: any[] | undefined;
+
+    constructor(
+        readonly extensionPath: string,
+        readonly log: Log
+    ) {}
+
+    loadSpecs(specPath: string): any[] {
+        this.log.info(`Loading workflow specs from ${specPath}`);
+        const specs: string[] = [];
+        for (const file of fs.readdirSync(specPath)) {
+            const filepath = path.join(specPath, file);
+            if (!fs.statSync(filepath).isDirectory() && file.endsWith('.spec')) {
+                const text = fs.readFileSync(filepath, 'utf-8');
+                if (text) {
+                    try {
+                        specs.push(JSON.parse(text));
+                    } catch (err) {
+                        console.log(err);
+                        this.log.error(err);
+                    }
+                }
+            }
+        }
+        return specs;
+    }
 
     resolveCustomTextEditor(
         document: vscode.TextDocument,
@@ -15,6 +42,17 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
 			enableScripts: true
         };
 
+        const mediaPath = path.join(this.extensionPath, 'media');
+        if (!WorkflowEditor.specs) {
+            WorkflowEditor.specs = this.loadSpecs(path.join(mediaPath, 'specs'));
+            webviewPanel.webview.postMessage({
+                type: 'init',
+                base: mediaPath,
+                specs: WorkflowEditor.specs
+            });
+        }
+
+
 		function updateWebview() {
 			webviewPanel.webview.postMessage({
                 type: 'update',
@@ -24,10 +62,10 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
         }
 
 		const scriptUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
-			path.join(this.extensionPath, 'media', 'out/bundle.js')
+			path.join(mediaPath, 'out', 'bundle.js')
 		));
 		const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
-			path.join(this.extensionPath, 'media', 'workflow.css')
+			path.join(mediaPath, 'workflow.css')
         ));
 
         const nonce = this.getNonce();
@@ -44,7 +82,7 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
             </head>
             <body>
                 <div class="flow">
-                    <canvas id="my-canvas" class="diagram"></canvas>
+                    <canvas id="workflow-canvas" class="diagram"></canvas>
                 </div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>

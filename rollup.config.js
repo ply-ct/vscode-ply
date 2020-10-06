@@ -24,8 +24,9 @@ export default [
         // webviews
         input: 'media/workflow.ts',
         output: {
+            name: 'workflow',
             file: 'media/out/bundle.js',
-            format: 'umd'
+            format: 'umd',
         },
         plugins: [
             resolve(),
