@@ -38,8 +38,8 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
         _token: vscode.CancellationToken
     ): void | Thenable<void> {
 
-		webviewPanel.webview.options = {
-			enableScripts: true
+        webviewPanel.webview.options = {
+            enableScripts: true
         };
 
         const mediaPath = path.join(this.extensionPath, 'media');
@@ -47,22 +47,23 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
             WorkflowEditor.specs = this.loadSpecs(path.join(mediaPath, 'specs'));
         }
 
+        const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
 
-		function updateWebview() {
-			webviewPanel.webview.postMessage({
+        function updateWebview() {
+            webviewPanel.webview.postMessage({
                 type: 'update',
-                base: mediaPath,
+                base: baseUri.toString(),
                 specs: WorkflowEditor.specs,
                 file: path.basename(document.uri.fsPath),
-				text: document.getText(),
-			});
+                text: document.getText(),
+            });
         }
 
-		const scriptUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
-			path.join(mediaPath, 'out', 'bundle.js')
-		));
-		const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
-			path.join(mediaPath, 'workflow.css')
+        const scriptUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
+            path.join(mediaPath, 'out', 'bundle.js')
+        ));
+        const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(
+            path.join(mediaPath, 'workflow.css')
         ));
 
         const nonce = this.getNonce();
