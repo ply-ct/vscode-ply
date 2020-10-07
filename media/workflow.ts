@@ -7,6 +7,7 @@ export class Workflow {
     constructor(base: string, readonly specs: flowbee.Specifier[]) {
         this.options = document.body.className === 'vscode-light' ? flowbee.LIGHT_OPTIONS : flowbee.DARK_OPTIONS;
         this.options.iconBase = `${base}/icons`;
+        this.options.specIdPrefix = 'ply';
     }
 
     render(text: string, file: string, readonly = false, animate = false) {
