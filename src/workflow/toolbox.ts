@@ -32,10 +32,25 @@ export class Toolbox implements vscode.WebviewViewProvider {
         }
 
         function updateWebview() {
+            // TODO:
+            const specs = Workflow.specs?.map(spec => {
+                if (spec.icon === 'shape:start') {
+                    return { ...spec, icon: 'start.png' };
+                } else if (spec.icon === 'shape:stop') {
+                    return { ...spec, icon: 'stop.png' };
+                } else if (spec.icon === 'shape:pause') {
+                    return { ...spec, icon: 'pause.png' };
+                } else if (spec.icon === 'shape:decision') {
+                    return { ...spec, icon: 'decision.png' };
+                } else {
+                    return spec;
+                }
+            });
+
             webviewView.webview.postMessage({
                 type: 'update',
                 base: baseUri.toString(),
-                specs: Workflow.specs
+                specs
             });
         }
 
@@ -57,9 +72,9 @@ export class Toolbox implements vscode.WebviewViewProvider {
             <link href="${styleUri}" rel="stylesheet" />
             <title>Ply Toolbox</title>
           </head>
-          <body>
-            <div class="toolbox">
-              <ul id="workflow-toolbox">
+          <body class="toolbox-body">
+            <div id="workflow-toolbox" class="toolbox">
+              <ul>
               </ul>
             </div>
             <script nonce="${nonce}" src="${scriptUri}"></script>

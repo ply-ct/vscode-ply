@@ -318,14 +318,31 @@
         "priority": "default"
       }
     ],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "ply-toolbox",
+					"title": "Ply Toolbox",
+					"icon": "icons/toolbox.svg"
+				}
+			]
+		},
     "views": {
       "explorer": [
         {
-          "type": "webview",
           "id": "ply.toolbox",
-          "name": "Ply Toolbox"
+          "name": "Ply Toolbox",
+          "type": "webview"
         }
-      ]
+      ],
+			"ply-toolbox": [
+				{
+					"id": "ply.toolbox2",
+					"name": "Ply Toolbox",
+					"icon": "icons/toolbox.svg",
+					"contextualTitle": "Ply Toolbox"
+				}
+			]
     }
   }
 }
