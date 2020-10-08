@@ -10,11 +10,18 @@ export class Workflow {
         this.options.specIdPrefix = 'ply';
     }
 
-    render(text: string, file: string, readonly = false, animate = false) {
+    render(text: string, file: string, readonly = false) {
         const canvas = document.getElementById('workflow-canvas') as HTMLCanvasElement;
         console.info(`rendering workflow ${file} to canvas: ${canvas}`);
-        const flow = new flowbee.FlowDiagram(canvas, this.options, this.specs);
-        flow.render(text, file, readonly, animate);
+        const flow = new flowbee.FlowDiagram(canvas, this.options, this.specs, readonly);
+
+        const instance = undefined;
+        const step: string | undefined = undefined;
+        const animate = false;
+        const instanceEdit = false;
+        const data = undefined;
+
+        flow.render(text, file, instance, step, animate, instanceEdit, data);
     }
 }
 
