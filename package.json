@@ -5,6 +5,7 @@
   "icon": "icons/ply.png",
   "version": "0.8.15",
   "license": "MIT",
+  "enableProposedApi": true,
   "author": {
     "name": "Donald Oakes",
     "email": "donald.h.oakes@gmail.com"
@@ -316,6 +317,15 @@
         ],
         "priority": "default"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "ply.toolbox",
+          "name": "Ply Toolbox"
+        }
+      ]
+    }
   }
 }

@@ -21,11 +21,27 @@ export default [
         ]
     },
     {
-        // webviews
+        // workflow webview
         input: 'media/workflow.ts',
         output: {
             name: 'workflow',
-            file: 'media/out/bundle.js',
+            file: 'media/out/workflow.js',
+            format: 'umd',
+        },
+        plugins: [
+            resolve(),
+            commonjs(),
+            typescript({
+                tsconfigOverride: { compilerOptions: { module: 'es2015' } }
+            })
+        ]
+    },
+    {
+        // toolbox webview
+        input: 'media/toolbox.ts',
+        output: {
+            name: 'toolbox',
+            file: 'media/out/toolbox.js',
             format: 'umd',
         },
         plugins: [

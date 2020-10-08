@@ -1,0 +1,34 @@
+.toolbox {
+}
+.toolbox > ul {
+  padding: 0;
+  list-style-type: none;
+  overflow-y: visible;
+}
+.toolbox > ul > li {
+  display: flex;
+  cursor: pointer;
+  padding: 7px 0;
+}
+.toolbox > ul > li:active {
+  cursor: copy;
+}
+.toolbox-icon {
+  width: 30px;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+.toolbox-icon img {
+  margin: auto;
+}
+.toolbox-label {
+  padding-left: 5px;
+  padding-top: 5px;
+  white-space: nowrap;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}

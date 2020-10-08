@@ -11,6 +11,7 @@ import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
 import { WorkflowEditor } from './workflow/editor';
+import { Toolbox } from './workflow/toolbox';
 
 interface Item {
     id: string;
@@ -252,6 +253,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const workflowEditor = new WorkflowEditor(context.extensionPath, log);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.workflow', workflowEditor));
+
+    const workflowToolbox = new Toolbox(context.extensionUri, log);
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('ply.toolbox', workflowToolbox));
 
     console.log('vscode-ply is active');
 }
