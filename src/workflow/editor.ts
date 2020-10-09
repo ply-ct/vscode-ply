@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Log } from 'vscode-test-adapter-util';
+import { Toolbox } from './toolbox';
 import { Workflow } from './workflow';
 
 export class WorkflowEditor implements vscode.CustomTextEditorProvider {
@@ -59,14 +60,25 @@ export class WorkflowEditor implements vscode.CustomTextEditorProvider {
             <link href="${styleUri}" rel="stylesheet" />
             <title>Ply Workflow</title>
           </head>
-          <body>
-            <div class="flow">
+          <body class="workflow-body">
+            <div class="workflow-diagram">
               <canvas id="workflow-canvas" class="diagram"></canvas>
             </div>
             <script nonce="${nonce}" src="${scriptUri}"></script>
           </body>
           </html>
         `;
+
+        webviewPanel.onDidChangeViewState(e => {
+            this.log.info("VIEW STATE CHANGE");
+        });
+
+        webviewPanel.webview.onDidReceiveMessage(data => {
+            if (data.type === 'drag' && Toolbox.selected) {
+                //
+            }
+        });
+
 
         updateWebview();
     }

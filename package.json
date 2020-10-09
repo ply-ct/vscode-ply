@@ -318,31 +318,23 @@
         "priority": "default"
       }
     ],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "ply-toolbox",
-					"title": "Ply Toolbox",
-					"icon": "icons/toolbox.svg"
-				}
-			]
-		},
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ply-toolbox",
+          "title": "Ply Toolbox",
+          "icon": "icons/toolbox.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "ply-toolbox": [
         {
           "id": "ply.toolbox",
           "name": "Ply Toolbox",
           "type": "webview"
         }
-      ],
-			"ply-toolbox": [
-				{
-					"id": "ply.toolbox2",
-					"name": "Ply Toolbox",
-					"icon": "icons/toolbox.svg",
-					"contextualTitle": "Ply Toolbox"
-				}
-			]
+      ]
     }
   }
 }

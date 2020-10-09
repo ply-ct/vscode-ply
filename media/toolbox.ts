@@ -23,12 +23,33 @@ export class Toolbox {
             li.appendChild(iconDiv);
             const labelDiv = document.createElement("div") as HTMLDivElement;
             labelDiv.className = 'toolbox-label';
-            labelDiv.style.color = document.body.className.endsWith('vscode-light') ? 'dimgray' : 'lightgray';
+            labelDiv.style.color = document.body.className.endsWith('vscode-light') ? '#616161' : '#cccccc';
             labelDiv.appendChild(document.createTextNode(spec.label));
             li.appendChild(labelDiv);
             ul.appendChild(li);
             tabIndex++;
         }
+
+        // events
+        ul.onmousedown = (e: MouseEvent) => {
+            let el = e.target as HTMLElement;
+            if (el.tagName !== 'LI') {
+              while ((el = el.parentElement as HTMLElement) && el.tagName !== 'LI') {
+                // find
+              }
+            }
+            if (el) {
+                vscode.postMessage({ type: 'select', selected: el.id });
+            }
+        };
+        ul.onmouseup = (_e: MouseEvent) => {
+            vscode.postMessage({ type: 'select', selected: null });
+        };
+        ul.onmouseout = (e: MouseEvent) => {
+            if (e.buttons !== 1) {
+                vscode.postMessage({ type: 'select', selected: null });
+            }
+        };
     }
 }
 

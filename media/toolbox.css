@@ -1,8 +1,8 @@
 .toolbox-body {
-  padding: 0;
+  padding: 0 2px;
 }
 .toolbox {
-  margin-top: -10px;
+  margin-top: -12px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
   font-size: 13px;
 }

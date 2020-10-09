@@ -258,8 +258,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const workflowToolbox = new Toolbox(context.extensionUri, log);
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('ply.toolbox', workflowToolbox));
 
-    new ToolboxTree(context);
-
     console.log('vscode-ply is active');
 }
 

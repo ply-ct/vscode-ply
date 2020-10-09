@@ -5,6 +5,8 @@ import { Workflow } from './workflow';
 
 export class Toolbox implements vscode.WebviewViewProvider {
 
+    static selected: string | null = null;
+
     constructor(
         readonly extensionUri: vscode.Uri,
         readonly log: Log
@@ -81,6 +83,15 @@ export class Toolbox implements vscode.WebviewViewProvider {
           </body>
           </html>
         `;
+
+        webviewView.webview.onDidReceiveMessage(data => {
+            if (data.type === 'select') {
+                Toolbox.selected = data.selected;
+                if (Toolbox.selected) {
+                    this.log.info(`toolbox selected: ${Toolbox.selected}`);
+                }
+            }
+        });
 
         updateWebview();
     }
