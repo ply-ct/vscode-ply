@@ -1,0 +1,621 @@
+/* default is light theme */
+.flowbee-diagram-light {
+  color: #000000;
+  background-color: #ffffff;
+  font-family: sans-serif;
+  font-size: 12px;
+  min-width: 640px;
+  min-height: 480px;
+  padding: 25px;
+  /* boundary size (make extra room) */ }
+  .flowbee-diagram-light .grid {
+    color: #f0f0f0;
+    width: 10px; }
+  .flowbee-diagram-light .title {
+    color: #360303;
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold; }
+  .flowbee-diagram-light .label .select {
+    color: #e91e63;
+    padding: 4px;
+    border-radius: 4px; }
+  .flowbee-diagram-light .line {
+    width: 1px; }
+  .flowbee-diagram-light .drag {
+    min-width: 3px; }
+  .flowbee-diagram-light .meta {
+    color: gray; }
+  .flowbee-diagram-light .state {
+    border-radius: 12px; }
+  .flowbee-diagram-light .step {
+    border-color: #000000;
+    border-radius: 12px;
+    min-width: 4px;
+    min-height: 4px; }
+    .flowbee-diagram-light .step .start {
+      color: #000000;
+      background-color: #98fb98; }
+    .flowbee-diagram-light .step .stop {
+      color: #000000;
+      background-color: #ff8c86; }
+    .flowbee-diagram-light .step .pause {
+      color: #000000;
+      background-color: #fffd87; }
+    .flowbee-diagram-light .step .state {
+      width: 8px; }
+      .flowbee-diagram-light .step .state .previous {
+        width: 4px; }
+  .flowbee-diagram-light .link {
+    color: #9e9e9e;
+    width: 3px; }
+    .flowbee-diagram-light .link .draw {
+      color: #008000; }
+    .flowbee-diagram-light .link .hit {
+      width: 8px; }
+    .flowbee-diagram-light .link .state .initiated {
+      color: #0000ff; }
+    .flowbee-diagram-light .link .state .traversed {
+      color: #000000; }
+  .flowbee-diagram-light .subflow {
+    border-radius: 12px;
+    border-color: #337ab7;
+    min-width: 40px;
+    min-height: 20px; }
+    .flowbee-diagram-light .subflow .hit {
+      width: 7px; }
+  .flowbee-diagram-light .note {
+    color: #101010;
+    background-color: #ffffcc;
+    border-color: #808080;
+    font-family: monospace;
+    font-size: 13px;
+    border-radius: 2px;
+    border-color: #d3d3d3;
+    min-width: 40px;
+    min-height: 20px;
+    padding: 4px; }
+  .flowbee-diagram-light .milestone {
+    background-color: #4cafea; }
+  .flowbee-diagram-light .anchor {
+    width: 3px;
+    color: #ec407a; }
+    .flowbee-diagram-light .anchor .hit {
+      width: 8px; }
+  .flowbee-diagram-light .marquee {
+    border-color: #00ffff;
+    border-radius: 2px; }
+  .flowbee-diagram-light .highlight {
+    padding: 10px;
+    border-color: #03a9f4;
+    border-width: 3px; }
+  .flowbee-diagram-light .hyperlink {
+    color: #1565c0; }
+  .flowbee-diagram-light .data {
+    border-radius: 12px; }
+  .flowbee-diagram-light .template {
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    font-style: italic; }
+
+.flowbee-diagram-dark {
+  color: #000000;
+  background-color: #ffffff;
+  font-family: sans-serif;
+  font-size: 12px;
+  min-width: 640px;
+  min-height: 480px;
+  padding: 25px;
+  /* boundary size (make extra room) */
+  color: #d4d4d4;
+  background-color: #1e1e1e; }
+  .flowbee-diagram-dark .grid {
+    color: #f0f0f0;
+    width: 10px; }
+  .flowbee-diagram-dark .title {
+    color: #360303;
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold; }
+  .flowbee-diagram-dark .label .select {
+    color: #e91e63;
+    padding: 4px;
+    border-radius: 4px; }
+  .flowbee-diagram-dark .line {
+    width: 1px; }
+  .flowbee-diagram-dark .drag {
+    min-width: 3px; }
+  .flowbee-diagram-dark .meta {
+    color: gray; }
+  .flowbee-diagram-dark .state {
+    border-radius: 12px; }
+  .flowbee-diagram-dark .step {
+    border-color: #000000;
+    border-radius: 12px;
+    min-width: 4px;
+    min-height: 4px; }
+    .flowbee-diagram-dark .step .start {
+      color: #000000;
+      background-color: #98fb98; }
+    .flowbee-diagram-dark .step .stop {
+      color: #000000;
+      background-color: #ff8c86; }
+    .flowbee-diagram-dark .step .pause {
+      color: #000000;
+      background-color: #fffd87; }
+    .flowbee-diagram-dark .step .state {
+      width: 8px; }
+      .flowbee-diagram-dark .step .state .previous {
+        width: 4px; }
+  .flowbee-diagram-dark .link {
+    color: #9e9e9e;
+    width: 3px; }
+    .flowbee-diagram-dark .link .draw {
+      color: #008000; }
+    .flowbee-diagram-dark .link .hit {
+      width: 8px; }
+    .flowbee-diagram-dark .link .state .initiated {
+      color: #0000ff; }
+    .flowbee-diagram-dark .link .state .traversed {
+      color: #000000; }
+  .flowbee-diagram-dark .subflow {
+    border-radius: 12px;
+    border-color: #337ab7;
+    min-width: 40px;
+    min-height: 20px; }
+    .flowbee-diagram-dark .subflow .hit {
+      width: 7px; }
+  .flowbee-diagram-dark .note {
+    color: #101010;
+    background-color: #ffffcc;
+    border-color: #808080;
+    font-family: monospace;
+    font-size: 13px;
+    border-radius: 2px;
+    border-color: #d3d3d3;
+    min-width: 40px;
+    min-height: 20px;
+    padding: 4px; }
+  .flowbee-diagram-dark .milestone {
+    background-color: #4cafea; }
+  .flowbee-diagram-dark .anchor {
+    width: 3px;
+    color: #ec407a; }
+    .flowbee-diagram-dark .anchor .hit {
+      width: 8px; }
+  .flowbee-diagram-dark .marquee {
+    border-color: #00ffff;
+    border-radius: 2px; }
+  .flowbee-diagram-dark .highlight {
+    padding: 10px;
+    border-color: #03a9f4;
+    border-width: 3px; }
+  .flowbee-diagram-dark .hyperlink {
+    color: #1565c0; }
+  .flowbee-diagram-dark .data {
+    border-radius: 12px; }
+  .flowbee-diagram-dark .template {
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    font-style: italic; }
+  .flowbee-diagram-dark .grid {
+    color: #303030; }
+  .flowbee-diagram-dark .title {
+    color: #d4d4d4; }
+  .flowbee-diagram-dark .step {
+    border-color: #bbbbbb; }
+  .flowbee-diagram-dark .link {
+    color: #9e9e9e; }
+    .flowbee-diagram-dark .link .state .traversed {
+      color: #ffffff; }
+  .flowbee-diagram-dark .subflow {
+    border-color: #4ba5c7; }
+  .flowbee-diagram-dark .note {
+    border-color: #d3d3d3; }
+
+.flowbee-toolbox-light {
+  height: 100%;
+  overflow: auto;
+  color: #303030;
+  background-color: #f3f3f3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 13px; }
+  .flowbee-toolbox-light ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none; }
+    .flowbee-toolbox-light ul li {
+      height: 22px;
+      display: flex;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0 5px;
+      line-height: 22px; }
+      .flowbee-toolbox-light ul li img {
+        width: 16px;
+        min-width: 16px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none;
+        cursor: pointer; }
+      .flowbee-toolbox-light ul li label {
+        padding-left: 10px;
+        user-select: none;
+        cursor: pointer; }
+    .flowbee-toolbox-light ul li:focus {
+      color: #ffffff;
+      background-color: #146dee;
+      outline-width: 0; }
+
+.flowbee-toolbox-dark {
+  height: 100%;
+  overflow: auto;
+  color: #303030;
+  background-color: #f3f3f3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 13px;
+  color: #cccccc;
+  background-color: #252526; }
+  .flowbee-toolbox-dark ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none; }
+    .flowbee-toolbox-dark ul li {
+      height: 22px;
+      display: flex;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0 5px;
+      line-height: 22px; }
+      .flowbee-toolbox-dark ul li img {
+        width: 16px;
+        min-width: 16px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none;
+        cursor: pointer; }
+      .flowbee-toolbox-dark ul li label {
+        padding-left: 10px;
+        user-select: none;
+        cursor: pointer; }
+    .flowbee-toolbox-dark ul li:focus {
+      color: #ffffff;
+      background-color: #146dee;
+      outline-width: 0; }
+  .flowbee-toolbox-dark ul li:focus {
+    background-color: #0a4574; }
+
+.flowbee-configurator-light {
+  display: none;
+  width: 600px;
+  height: 200px;
+  position: fixed;
+  left: 15px;
+  bottom: 15px;
+  flex-direction: column;
+  background-color: #ffffff;
+  color: #616161;
+  border: 1px solid #c8c8c8;
+  box-shadow: 0 2px 8px #a8a8a8;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
+  font-size: 13px; }
+  .flowbee-configurator-light .flowbee-config-header {
+    display: flex;
+    height: 30px;
+    background-color: #e6e6e6;
+    color: #616161;
+    border-bottom: 1px solid #c8c8c8;
+    padding: 5px 5px 0 5px;
+    font-weight: 500;
+    box-sizing: border-box; }
+  .flowbee-configurator-light .flowbee-config-title {
+    flex-grow: 1; }
+  .flowbee-configurator-light .flowbee-config-close {
+    cursor: pointer; }
+  .flowbee-configurator-light .flowbee-config-content {
+    display: flex;
+    flex-direction: column; }
+  .flowbee-configurator-light .flowbee-config-tabbed-content {
+    display: flex; }
+  .flowbee-configurator-light .flowbee-config-tabs {
+    list-style: none;
+    width: 140px;
+    background-color: #ececec;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; }
+  .flowbee-configurator-light .flowbee-config-tab {
+    background-color: #ececec;
+    color: #6a6a6a;
+    border-bottom: 1px solid #ffffff;
+    border-radius: 3px;
+    padding: 5px;
+    cursor: pointer; }
+  .flowbee-configurator-light .flowbee-config-tab-active {
+    background-color: #ffffff;
+    color: #333333; }
+  .flowbee-configurator-light .flowbee-config-tab-content {
+    display: grid;
+    grid-template-columns: 80px auto;
+    grid-gap: 10px 15px;
+    width: 100%;
+    overflow: auto;
+    padding: 10px;
+    box-sizing: border-box; }
+  .flowbee-configurator-light .flowbee-config-tab-content label {
+    height: fit-content; }
+  .flowbee-configurator-light .flowbee-config-tab-content select {
+    width: fit-content; }
+  .flowbee-configurator-light .flowbee-config-tab-content textarea {
+    grid-column: 1/3; }
+  .flowbee-configurator-light .flowbee-config-tab-content table {
+    grid-column: 1/3;
+    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 10px; }
+  .flowbee-configurator-light .flowbee-config-tab-content th, .flowbee-configurator-light td {
+    border: 1px solid #4f4f4f;
+    text-align: left;
+    padding-left: 3px; }
+
+.flowbee-configurator-dark {
+  display: none;
+  width: 600px;
+  height: 200px;
+  position: fixed;
+  left: 15px;
+  bottom: 15px;
+  flex-direction: column;
+  background-color: #ffffff;
+  color: #616161;
+  border: 1px solid #c8c8c8;
+  box-shadow: 0 2px 8px #a8a8a8;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  background-color: #1e1e1e;
+  color: #cccccc;
+  border: 1px solid #454545;
+  box-shadow: 0 2px 8px #000000; }
+  .flowbee-configurator-dark .flowbee-config-header {
+    display: flex;
+    height: 30px;
+    background-color: #e6e6e6;
+    color: #616161;
+    border-bottom: 1px solid #c8c8c8;
+    padding: 5px 5px 0 5px;
+    font-weight: 500;
+    box-sizing: border-box; }
+  .flowbee-configurator-dark .flowbee-config-title {
+    flex-grow: 1; }
+  .flowbee-configurator-dark .flowbee-config-close {
+    cursor: pointer; }
+  .flowbee-configurator-dark .flowbee-config-content {
+    display: flex;
+    flex-direction: column; }
+  .flowbee-configurator-dark .flowbee-config-tabbed-content {
+    display: flex; }
+  .flowbee-configurator-dark .flowbee-config-tabs {
+    list-style: none;
+    width: 140px;
+    background-color: #ececec;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; }
+  .flowbee-configurator-dark .flowbee-config-tab {
+    background-color: #ececec;
+    color: #6a6a6a;
+    border-bottom: 1px solid #ffffff;
+    border-radius: 3px;
+    padding: 5px;
+    cursor: pointer; }
+  .flowbee-configurator-dark .flowbee-config-tab-active {
+    background-color: #ffffff;
+    color: #333333; }
+  .flowbee-configurator-dark .flowbee-config-tab-content {
+    display: grid;
+    grid-template-columns: 80px auto;
+    grid-gap: 10px 15px;
+    width: 100%;
+    overflow: auto;
+    padding: 10px;
+    box-sizing: border-box; }
+  .flowbee-configurator-dark .flowbee-config-tab-content label {
+    height: fit-content; }
+  .flowbee-configurator-dark .flowbee-config-tab-content select {
+    width: fit-content; }
+  .flowbee-configurator-dark .flowbee-config-tab-content textarea {
+    grid-column: 1/3; }
+  .flowbee-configurator-dark .flowbee-config-tab-content table {
+    grid-column: 1/3;
+    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 10px; }
+  .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
+    border: 1px solid #4f4f4f;
+    text-align: left;
+    padding-left: 3px; }
+  .flowbee-configurator-dark .flowbee-config-header {
+    background-color: #323232;
+    color: #c8c8c8;
+    border-bottom: 1px solid #454545; }
+  .flowbee-configurator-dark .flowbee-config-tabs {
+    background-color: #2d2d2d; }
+  .flowbee-configurator-dark .flowbee-config-tab {
+    background-color: #2d2d2d;
+    color: #969696;
+    border-bottom: 1px solid #1e1e1e; }
+  .flowbee-configurator-dark .flowbee-config-tab-active {
+    background-color: #1e1e1e;
+    color: #eaeaea; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input {
+    background-color: #3c3c3c;
+    color: #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-tab-content select {
+    background-color: #3c3c3c;
+    color: #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-tab-content textarea {
+    background-color: #3c3c3c;
+    color: #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-tab-content table {
+    background-color: #3c3c3c;
+    color: #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
+    border: 1px solid #cccccc; }
+
+.flowbee-tree-light {
+  height: 100%;
+  overflow: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 13px;
+  color: #303030;
+  background-color: '#ffffff'; }
+  .flowbee-tree-light ul {
+    margin: 0;
+    padding: 0 0 0 12px;
+    list-style-type: none; }
+    .flowbee-tree-light ul li {
+      user-select: none;
+      white-space: nowrap;
+      padding-left: 3px;
+      cursor: pointer; }
+    .flowbee-tree-light ul li:focus {
+      outline-width: 0;
+      color: #ffffff;
+      background-color: #146dee; }
+    .flowbee-tree-light ul .flowbee-caret {
+      cursor: pointer;
+      user-select: none;
+      color: #505050; }
+    .flowbee-tree-light ul .flowbee-caret::before {
+      content: "\25BC";
+      display: inline-block;
+      margin-right: 6px; }
+    .flowbee-tree-light ul .flowbee-caret-closed::before {
+      transform: rotate(-90deg); }
+    .flowbee-tree-light ul .flowbee-nested {
+      display: block; }
+    .flowbee-tree-light ul .flowbee-hidden {
+      display: none; }
+    .flowbee-tree-light ul .flowbee-flow-icon {
+      width: 10px;
+      margin-right: 3px; }
+
+.flowbee-tree-dark {
+  height: 100%;
+  overflow: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 13px;
+  color: #303030;
+  background-color: '#ffffff';
+  color: #cccccc;
+  background-color: #252526; }
+  .flowbee-tree-dark ul {
+    margin: 0;
+    padding: 0 0 0 12px;
+    list-style-type: none; }
+    .flowbee-tree-dark ul li {
+      user-select: none;
+      white-space: nowrap;
+      padding-left: 3px;
+      cursor: pointer; }
+    .flowbee-tree-dark ul li:focus {
+      outline-width: 0;
+      color: #ffffff;
+      background-color: #146dee; }
+    .flowbee-tree-dark ul .flowbee-caret {
+      cursor: pointer;
+      user-select: none;
+      color: #505050; }
+    .flowbee-tree-dark ul .flowbee-caret::before {
+      content: "\25BC";
+      display: inline-block;
+      margin-right: 6px; }
+    .flowbee-tree-dark ul .flowbee-caret-closed::before {
+      transform: rotate(-90deg); }
+    .flowbee-tree-dark ul .flowbee-nested {
+      display: block; }
+    .flowbee-tree-dark ul .flowbee-hidden {
+      display: none; }
+    .flowbee-tree-dark ul .flowbee-flow-icon {
+      width: 10px;
+      margin-right: 3px; }
+  .flowbee-tree-dark ul li:focus {
+    background-color: #0a4574; }
+  .flowbee-tree-dark ul .flowbee-caret {
+    color: #cccccc; }
+
+.flowbee-menu-light {
+  color: #303030;
+  background-color: #f6f6f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 14px;
+  border: 1px solid #909090;
+  border-radius: 4px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.35);
+  line-height: 15px; }
+  .flowbee-menu-light ul {
+    min-width: 150px;
+    margin: 0;
+    padding: 5px 0;
+    list-style-type: none; }
+    .flowbee-menu-light ul li {
+      height: 22px;
+      display: flex;
+      white-space: nowrap;
+      padding: 0 10px 0 5px;
+      line-height: 22px; }
+      .flowbee-menu-light ul li img {
+        width: 16px;
+        min-width: 16px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none; }
+      .flowbee-menu-light ul li label {
+        user-select: none;
+        flex-grow: 1; }
+      .flowbee-menu-light ul li span {
+        margin-left: 20px; }
+    .flowbee-menu-light ul li:hover {
+      color: #ffffff;
+      background-color: #146dee;
+      outline-width: 0; }
+
+.flowbee-menu-dark {
+  color: #303030;
+  background-color: #f6f6f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 14px;
+  border: 1px solid #909090;
+  border-radius: 4px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.35);
+  line-height: 15px; }
+  .flowbee-menu-dark ul {
+    min-width: 150px;
+    margin: 0;
+    padding: 5px 0;
+    list-style-type: none; }
+    .flowbee-menu-dark ul li {
+      height: 22px;
+      display: flex;
+      white-space: nowrap;
+      padding: 0 10px 0 5px;
+      line-height: 22px; }
+      .flowbee-menu-dark ul li img {
+        width: 16px;
+        min-width: 16px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none; }
+      .flowbee-menu-dark ul li label {
+        user-select: none;
+        flex-grow: 1; }
+      .flowbee-menu-dark ul li span {
+        margin-left: 20px; }
+    .flowbee-menu-dark ul li:hover {
+      color: #ffffff;
+      background-color: #146dee;
+      outline-width: 0; }

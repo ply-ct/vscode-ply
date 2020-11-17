@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; img-src ${cspSource}; style-src ${cspSource}; script-src 'nonce-${nonce}'; connect-src ${cspSource};">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="${flowbeeCssUri}" rel="stylesheet" />
+  <link href="${flowCssUri}" rel="stylesheet" />
+  <title>Flowbee Diagram</title>
+</head>
+<body>
+  <div id="container" class="container" class="container">
+    <div id="flow-container" class="flow-container">
+      <div class="flow-header">
+        <div id="diagram-tools" class="drawing-tools">
+          <input id="grid" type="image" alt="grid" title="Grid" data-icon="grid.svg" />
+          <input id="snap" type="image" alt="snap" title="Snap to grid" data-icon="snap.svg" />
+          <input id="zoom-out" type="image" alt="zoom-out" title="Zoom out" data-icon="zoom-out.svg" />
+          <input id="zoom-range" type="range" min="20" max="200" value="100" />
+          <input id="zoom-in" type="image" alt="zoom-in" title="Zoom in" data-icon="zoom-in.svg" />
+          <span id="mode-toggle" class="mode-toggle">
+            <input id="select" type="image" alt="select" title="Select" data-icon="select.png" />
+            <input id="connect" type="image" alt="connect" title="Connect" class="unselected" data-icon="connect.png" />
+          </span>
+        </div>
+        <div id="flow-actions" class="drawing-tools tool-group">
+          <input id="debug" type="image" alt="debug" title="Debug" data-icon="debug.svg" />
+          <input id="run" type="image" alt="run" title="Run" data-icon="start.svg" />
+        </div>
+        <div>
+          <div>
+            <span class="toolbox-caret toolbox-caret-closed" title="Show Toolbox">TOOLBOX</span>
+          </div>
+        </div>
+      </div>
+      <div id="flow-diagram" class="flow-diagram">
+        <canvas id="diagram-canvas"></canvas>
+      </div>
+    </div>
+    <div id="toolbox-container" class="toolbox-container">
+      <div class="toolbox-header" title="Flowbee Toolbox">
+        <span class="toolbox-caret">TOOLBOX</span>
+      </div>
+      <div id="flow-toolbox" class="flow-toolbox"></div>
+    </div>
+  </div>
+  <div id="flow-inspector" class="inspector">
+    <div class="inspector-header">
+      <div class="inspector-title">
+      </div>
+      <div class="inspector-close">
+        <input id="inspector-close" type="image" alt="Close Inspector" title="Close Inspector" data-icon="close.svg" />
+      </div>
+    </div>
+    <div class="inspector-content">
+      <div class="inspector-tabbed-content">
+        <ul id="inspector-tabs" class="inspector-tabs">
+        </ul>
+        <div class="inspector-tab-content">
+          CONTENT HERE
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script nonce="${nonce}" src="${jsUri}"></script>
+</body>
+</html>

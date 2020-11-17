@@ -5,12 +5,14 @@ test/**
 docs/**
 out/test/**
 out/src/worker/**
+out/media/src/**
 **/*.map
 **/*.txt
 **/*.md
 !README.md
 !CHANGELOG.md
 **/*.html
+!media/flow.html
 **/*.lcl
 tsconfig.json
 .gitignore
