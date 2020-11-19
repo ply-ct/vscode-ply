@@ -149,7 +149,12 @@ export class Flow {
 
     onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
-        console.log("ACTION: " + flowAction);
+        if (flowAction === 'run') {
+            vscode.postMessage({
+                type: 'run',
+                flow: this.flowDiagram.flow.path
+            });
+        }
     }
 
     updateFlow() {

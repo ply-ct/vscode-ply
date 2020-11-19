@@ -67,6 +67,13 @@ export class PlyAdapter implements TestAdapter {
         caseWatcher.onDidChange(uri => this.onSuiteChange(uri));
         caseWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
 
+        const flowWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(testsLoc, this.config.plyOptions.flowFiles));
+        this.disposables.push(flowWatcher);
+        flowWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
+        flowWatcher.onDidChange(uri => this.onSuiteChange(uri));
+        flowWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
+
         const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider));
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'typescript' }, submitCodeLensProvider));

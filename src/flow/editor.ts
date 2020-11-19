@@ -56,7 +56,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             webviewPanel.webview.postMessage({
                 type: 'update',
                 base: baseUri.toString(),
-                file: path.basename(document.uri.fsPath),
+                file: document.uri.fsPath,
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
             });
@@ -91,6 +91,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     id: message.message.id,
                     result: res === 'OK'
                 });
+            } else if (message.type === 'run') {
+                // new Executor(message.flow).run();
             }
         });
 

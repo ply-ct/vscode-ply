@@ -46,6 +46,7 @@ Setting | Description | Default
 `ply.testsLocation` | Base directory (absolute or relative to workspace root) for all Ply request and case files | .
 `ply.requestFiles` | Glob pattern for Ply request files | **/*.{ply.yaml,ply.yml}
 `ply.caseFiles` | Glob pattern for Ply case files | **/*.ply.ts
+`ply.flowFiles` | Glob pattern for Ply flow files | **/*.ply.flow
 `ply.ignore` | Glob pattern for places to ignore | \**/{node_modules,bin,dist,out}/**
 `ply.skip` | Glob pattern for tests to skip |
 `ply.expectedLocation` | Expected results base dir | testsLocation + '/results/expected'

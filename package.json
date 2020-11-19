@@ -62,6 +62,7 @@
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.3",
     "@types/node": "^13.7.4",
+    "@types/resize-observer-browser": "^0.1.4",
     "@types/vscode": "^1.50.0",
     "@typescript-eslint/eslint-plugin": "^4.3.0",
     "@typescript-eslint/parser": "^4.3.0",
@@ -97,6 +98,11 @@
         "ply.caseFiles": {
           "type": "string",
           "description": "Glob pattern for Ply case files, relative to testsLocation ('**/*.ply.ts').",
+          "scope": "resource"
+        },
+        "ply.flowFiles": {
+          "type": "string",
+          "description": "Glob pattern for Ply flow files, relative to testsLocation ('**/*.ply.flow').",
           "scope": "resource"
         },
         "ply.ignore": {

@@ -7,6 +7,7 @@ export enum Setting {
     testsLocation = 'testsLocation',
     requestFiles = 'requestFiles',
     caseFiles = 'caseFiles',
+    flowFiles = 'flowFiles',
     excludes = 'excludes',
     expectedLocation = 'expectedLocation',
     actualLocation = 'actualLocation',
@@ -44,6 +45,7 @@ export class PlyConfig {
                 if (setting === Setting.testsLocation
                     || setting === Setting.requestFiles
                     || setting === Setting.caseFiles
+                    || setting === Setting.flowFiles
                     || setting === Setting.excludes
                     || setting === Setting.nodePath
                     || setting === Setting.plyPath) {
@@ -134,6 +136,7 @@ export class PlyConfig {
                 testsLocation: abs(this.val('testsLocation', options.testsLocation)),
                 requestFiles: this.val('requestFiles', options.requestFiles),
                 caseFiles: this.val('caseFiles', options.caseFiles),
+                flowFiles: this.val('flowFiles', options.flowFiles),
                 ignore: this.val('ignore', options.ignore),
                 skip: this.val('skip', options.skip),
                 expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
