@@ -35,6 +35,8 @@ export class PlyRunner {
                 const testOrSuite = this.plyRoots.find(i => i.id === testId);
                 if (testOrSuite) {
                     this.collectTests(testOrSuite, testInfos);
+                } else {
+                    throw new Error(`No such ply test: ${testId}`);
                 }
             }
 
@@ -234,7 +236,7 @@ export class PlyRunner {
      * If expected result file exists: empty runOptions object.
      */
     private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.RunOptions | undefined> {
-        const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case>[] = [];
+        const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case|ply.Flow>[] = [];
         for (const testInfo of testInfos) {
             const suite = this.plyRoots.getSuiteForTest(testInfo.id);
             if (suite) {

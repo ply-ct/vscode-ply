@@ -67,7 +67,7 @@ export class DrawingTools {
         }, { passive: false });
         // mode
         const modeToggle = container.querySelector('#mode-toggle') as HTMLSpanElement;
-        modeToggle.onclick = e => {
+        modeToggle.onclick = _e => {
             this._onOptionToggle.emit({ option: 'mode' });
         };
     }

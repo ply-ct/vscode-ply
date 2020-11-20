@@ -40,9 +40,9 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(decorator);
 
     // workspace folder uri to test adapter
-    const testAdapters = new Map<string, PlyAdapter>();
+    const testAdapters = new Map<string,PlyAdapter>();
     // workspace folder uri to diff handler
-    const diffHandlers = new Map<string, DiffHandler>();
+    const diffHandlers = new Map<string,DiffHandler>();
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
@@ -250,7 +250,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    const flowEditor = new FlowEditor(context);
+    const flowEditor = new FlowEditor(context, testAdapters);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
 
     console.log('vscode-ply is active');

@@ -1,13 +1,16 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { PlyAdapter } from '../adapter';
+import { PlyRoots } from '../plyRoots';
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     private static html: string;
 
     constructor(
-        readonly context: vscode.ExtensionContext
+        readonly context: vscode.ExtensionContext,
+        readonly adapters: Map<string,PlyAdapter>
     ) {}
 
     resolveCustomTextEditor(
@@ -91,9 +94,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     id: message.message.id,
                     result: res === 'OK'
                 });
-            } else if (message.type === 'run') {
-                // new Executor(message.flow).run();
-            }
+            } else if (message.type === 'run' || message.type === 'debug') {
+                this.runFlow(message.flow, message.type === 'debug');
+      }
         });
 
         const themeChangeSubscription = vscode.workspace.onDidChangeConfiguration(configChange => {
@@ -117,5 +120,30 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             nonce += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return nonce;
+    }
+
+    async runFlow(flowPath: string, debug = false) {
+        try {
+            console.debug(`run flow: ${flowPath}`);
+            const flowUri = vscode.Uri.file(flowPath);
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(flowUri);
+            if (!workspaceFolder) {
+                throw new Error(`Workspace folder not found for flow path: ${flowPath}`);
+            }
+            const adapter = this.adapters.get(workspaceFolder.uri.toString());
+            if (!adapter) {
+                throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
+            }
+            // TODO remove extra suite layer since one flow per file
+            let flowName = path.basename(flowPath, path.extname(flowPath));
+            if (flowName.endsWith('.ply')) {
+                flowName = flowName.substring(0, flowName.length - 4);
+            }
+            const flowId = `${flowUri}#${flowName}`;
+            await adapter.run([flowId]); // TODO options?
+        } catch (err) {
+            console.error(err);
+            vscode.window.showErrorMessage(err.message);
+        }
     }
 }

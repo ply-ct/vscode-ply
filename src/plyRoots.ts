@@ -1,6 +1,6 @@
 import { URI as Uri } from 'vscode-uri';
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
-import { Suite, Request, Case, Test } from 'ply-ct';
+import { Suite, Request, Case, Flow, Test } from 'ply-ct';
 
 type Info = TestInfo | TestSuiteInfo;
 
@@ -205,10 +205,11 @@ export class PlyRoots {
     public readonly roots: PlyRoot[] = [];
     public readonly requestsRoot: PlyRoot;
     public readonly casesRoot: PlyRoot;
+    public readonly flowsRoot: PlyRoot;
     public readonly rootSuite: TestSuiteInfo;
 
     private readonly testsById = new Map<string,Test>();
-    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case>>();
+    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case|Flow>>();
     private readonly suiteIdsByExpectedResultUri = new Map<string,string>();
     private readonly suiteIdsByActualResultUri = new Map<string,string>();
 
@@ -227,9 +228,11 @@ export class PlyRoots {
         this.roots.push(this.requestsRoot);
         this.casesRoot = new PlyRoot(uri, 'cases', 'Cases');
         this.roots.push(this.casesRoot);
+        this.flowsRoot = new PlyRoot(uri, 'flows', 'Flows');
+        this.roots.push(this.flowsRoot);
     }
 
-    build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>) {
+    build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>, flowSuites: Map<Uri,Suite<Flow>>) {
         this.testsById.clear();
         this.suitesByTestOrSuiteId.clear();
         this.suiteIdsByExpectedResultUri.clear();
@@ -275,6 +278,26 @@ export class PlyRoots {
         }
         this.casesRoot.build(caseUris, suiteId => this.suitesByTestOrSuiteId.get(suiteId)!.name);
 
+        // flows
+        const flowSuiteUris = Array.from(flowSuites.keys());
+        const flowUris: [Uri, number][] = [];
+        for (const flowSuiteUri of flowSuiteUris) {
+            const suite = flowSuites.get(flowSuiteUri);
+            if (suite) {
+                const suiteId = this.flowsRoot.formSuiteId(flowSuiteUri);
+                this.suitesByTestOrSuiteId.set(suiteId, suite);
+                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
+                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
+                for (const plyFlow of suite) {
+                    const testId = flowSuiteUri.toString(true) + '#' + plyFlow.name;
+                    this.testsById.set(testId, plyFlow);
+                    this.suitesByTestOrSuiteId.set(testId, suite);
+                    flowUris.push([Uri.parse(testId), plyFlow.start || 0]);
+                }
+            }
+        }
+        this.flowsRoot.build(flowUris, suiteId => this.suitesByTestOrSuiteId.get(suiteId)!.name);
+
         this.rootSuite.children = this.roots.map(root => root.baseSuite);
     }
 
@@ -317,11 +340,11 @@ export class PlyRoots {
         return this.testsById.get(testId);
     }
 
-    getSuiteForTest(testId: string): Suite<Request|Case> | undefined {
+    getSuiteForTest(testId: string): Suite<Request|Case|Flow> | undefined {
         return this.suitesByTestOrSuiteId.get(testId);
     }
 
-    getSuite(suiteId: string): Suite<Request|Case> | undefined {
+    getSuite(suiteId: string): Suite<Request|Case|Flow> | undefined {
         return this.suitesByTestOrSuiteId.get(suiteId);
     }
 
@@ -408,7 +431,7 @@ export class PlyRoots {
     }
 
     static fromUri(uri: Uri): string {
-        const rootId = uri.path.endsWith('.ts') ? 'cases' : 'requests';
+        const rootId = uri.path.endsWith('.flow') ? 'flows' : (uri.path.endsWith('.ts') ? 'cases' : 'requests');
         return `${rootId}|${uri.toString(true)}`;
     }
 }
