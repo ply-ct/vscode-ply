@@ -164,8 +164,8 @@ export class DiffHandler {
         let actualLabel = actualResult.label;
         let actualUri = actualResult.toUri();
 
-        if (test) {
-            // expected is read-only virtual file
+        if (test && test.type !== 'flow') {
+            // expected is read-only virtual file (except flows which are one test per file)
             expectedLabel = `(read-only fragment) ${expectedResult.plyResult.location.name}#${test?.name}`;
             actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
         }

@@ -63,20 +63,22 @@ export class PlyRoot {
                 suite.children.push(test);
             }
             else {
-                const suiteId = this.formSuiteId(fileUri);
-                suite = {
-                    type: 'suite',
-                    id: suiteId,
-                    label: labeler ? labeler(suiteId) : fileName,
-                    file: fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true),
-                    debuggable: filePath.endsWith('.ts'),
-                    line: 0,
-                    children: []
-                };
-                if (labeler) {
-                    suite.description = fileName;
+                if (this.id !== 'flows') {
+                    const suiteId = this.formSuiteId(fileUri);
+                    suite = {
+                        type: 'suite',
+                        id: suiteId,
+                        label: labeler ? labeler(suiteId) : fileName,
+                        file: fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true),
+                        debuggable: filePath.endsWith('.ts'),
+                        line: 0,
+                        children: []
+                    };
+                    if (labeler) {
+                        suite.description = fileName;
+                    }
+                    suite.children.push(test);
                 }
-                suite.children.push(test);
 
                 // find parent suite (dir)
                 const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -92,7 +94,15 @@ export class PlyRoot {
                     };
                     this.baseSuite.children.push(parentSuite);
                 }
-                parentSuite.children.push(suite);
+                if (suite) {
+                    parentSuite.children.push(suite);
+                } else {
+                    // flows bypass file suite since one flow per file
+                    if (labeler) {
+                        test.description = fileName;
+                    }
+                    parentSuite.children.push(test);
+                }
             }
         }
     }
@@ -185,10 +195,14 @@ export class PlyRoot {
         let str = this.label + '\n';
         for (const dirSuite of this.baseSuite.children as TestSuiteInfo[]) {
             str += indent + dirSuite.label + '\n';
-            for (const fileSuite of dirSuite.children as TestSuiteInfo[]) {
-                str += indent + indent + fileSuite.label + '\n';
-                for (const plyTest of fileSuite.children as TestInfo[]) {
-                    str += indent + indent + indent + '- ' + plyTest.label + '\n';
+            for (const fileSuiteOrTest of dirSuite.children as TestSuiteInfo[] | TestInfo[]) {
+                if (fileSuiteOrTest.type === 'suite') {
+                    str += indent + indent + fileSuiteOrTest.label + '\n';
+                    for (const plyTest of fileSuiteOrTest.children as TestInfo[]) {
+                        str += indent + indent + indent + '- ' + plyTest.label + '\n';
+                    }
+                } else {
+                    str += indent + indent + '- ' + fileSuiteOrTest.label + '\n';
                 }
             }
         }
