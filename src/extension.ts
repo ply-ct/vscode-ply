@@ -253,6 +253,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const flowEditor = new FlowEditor(context, testAdapters);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
 
+    context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
+        const item = await getItem(...args);
+        if (item?.uri?.fsPath) {
+            vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(item.uri.fsPath), 'ply.flow.diagram');
+        }
+    }));
+
     console.log('vscode-ply is active');
 }
 

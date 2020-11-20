@@ -48,10 +48,13 @@ export class PlyRoot {
                 type: 'test',
                 id: testUri.toString(true),
                 label: testName,
-                file: testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true),
                 line: testUris[i][1],
-                debuggable: testUri.path.endsWith('.ts')
+                debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
+            if (this.id !== 'flows') {
+                // flows should not be opened in text editor
+                test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
+            }
 
             // find suite (file)
             const lastSlash = testPath.lastIndexOf('/');

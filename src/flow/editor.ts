@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { PlyAdapter } from '../adapter';
-import { PlyRoots } from '../plyRoots';
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 

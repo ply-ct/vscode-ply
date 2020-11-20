@@ -17,7 +17,8 @@ export class Result {
      */
     constructor(
         readonly plyResult: ply.Retrieval | ply.Storage,
-        readonly testName?: string
+        readonly testName?: string,
+        readonly type?: ply.TestType
     ) { }
 
     /**
@@ -130,7 +131,7 @@ export class Result {
      * Suite file exists, and specified test if any is present in yaml.
      */
     async exists(): Promise<boolean> {
-        if (this.testName) {
+        if (this.testName && this.type !== 'flow') {
             return !!(await this.getResultContents());
         }
         else {
@@ -162,6 +163,6 @@ export class Result {
         } else {
             path = this.plyResult.location.path;
         }
-        return this.testName ? `${path}#${this.testName}` : path;
+        return this.testName && this.type !== 'flow' ? `${path}#${this.testName}` : path;
     }
 }

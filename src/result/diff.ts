@@ -151,7 +151,7 @@ export class DiffHandler {
         const test = info.type === 'test' ? this.plyRoots.getTest(info.id) : undefined;
 
         const expected = suite.runtime.results.expected;
-        const expectedResult = new Result(expected, test?.name);
+        const expectedResult = new Result(expected, test?.name, test?.type);
         let expectedLabel = expectedResult.label;
         if (!(await expected.exists)) {
             // even the suite file doesn't exist
@@ -160,7 +160,7 @@ export class DiffHandler {
         let expectedUri = expectedResult.toUri();
 
         const actual = suite.runtime.results.actual;
-        const actualResult = new Result(actual, test?.name);
+        const actualResult = new Result(actual, test?.name, test?.type);
         let actualLabel = actualResult.label;
         let actualUri = actualResult.toUri();
 
