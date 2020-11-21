@@ -13,13 +13,14 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         super(flowDiagram);
     }
 
-    getItems(flowElementEvent: flowbee.FlowElementEvent): flowbee.MenuItem[] | undefined {
+    getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
         let items = super.getItems(flowElementEvent) || [];
         if (flowElementEvent.element) {
             items = [
-                ...items,
                 { id: 'configure', label: 'Configure' },
-                { id: 'expected', label: 'Expected Results' }
+                { id: 'expected', label: 'Expected Results' },
+                'separator',
+                ...items
             ];
         }
         return items;

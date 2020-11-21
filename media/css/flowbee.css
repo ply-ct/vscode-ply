@@ -579,10 +579,20 @@
         flex-grow: 1; }
       .flowbee-menu-light ul li span {
         margin-left: 20px; }
+      .flowbee-menu-light ul li hr {
+        height: 0;
+        margin: 5px 0 0 0;
+        border-bottom: 1px solid #e5e5e5;
+        border-style: solid;
+        color: #e5e5e5; }
     .flowbee-menu-light ul li:hover {
       color: #ffffff;
       background-color: #146dee;
       outline-width: 0; }
+    .flowbee-menu-light ul .separator {
+      display: block;
+      padding: 0;
+      height: 7px; }
 
 .flowbee-menu-dark {
   color: #303030;
@@ -615,7 +625,17 @@
         flex-grow: 1; }
       .flowbee-menu-dark ul li span {
         margin-left: 20px; }
+      .flowbee-menu-dark ul li hr {
+        height: 0;
+        margin: 5px 0 0 0;
+        border-bottom: 1px solid #e5e5e5;
+        border-style: solid;
+        color: #e5e5e5; }
     .flowbee-menu-dark ul li:hover {
       color: #ffffff;
       background-color: #146dee;
       outline-width: 0; }
+    .flowbee-menu-dark ul .separator {
+      display: block;
+      padding: 0;
+      height: 7px; }
