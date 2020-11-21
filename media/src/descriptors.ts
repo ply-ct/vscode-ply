@@ -9,19 +9,19 @@ export const descriptors: flowbee.Descriptor[] = [
     { ...flowbee.note, icon: 'note.svg' },
     {
         type: 'step',
-        path: 'request.ts',
+        path: 'request',
         name: 'Request',
         icon: 'request.svg'
     },
     {
         type: 'step',
-        path: 'sync.ts',
+        path: 'sync',
         name: 'Sync',
         icon: 'sync.svg'
     },
     {
         type: 'step',
-        path: 'script.ts',
+        path: 'script',
         name: 'Script',
         icon: 'typescript.svg'
     }

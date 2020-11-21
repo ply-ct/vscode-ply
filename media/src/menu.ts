@@ -15,14 +15,12 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
 
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
         let items = super.getItems(flowElementEvent) || [];
-        if (flowElementEvent.element) {
-            items = [
-                { id: 'configure', label: 'Configure' },
-                { id: 'expected', label: 'Expected Results' },
-                'separator',
-                ...items
-            ];
-        }
+        items = [
+            { id: 'configure', label: 'Configure' },
+            { id: 'expected', label: 'Expected Results' },
+            'separator',
+            ...items
+        ];
         return items;
     }
 
@@ -31,11 +29,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             return true;
         } else if (selectEvent.item.id === 'configure') {
             if (selectEvent.element) {
-                // TODO general templates
-                let template = '{}';
-                if (selectEvent.element.type === 'step' && (selectEvent.element as flowbee.Step).path === 'request.ts') {
-                    template = await this.templates.get('request.yaml');
-                }
+                const template = (await this.templates.get(selectEvent.element)) || '{}';
                 this.configurator.render(selectEvent.element, template, this.options.configuratorOptions);
             }
             return true;

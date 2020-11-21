@@ -346,6 +346,8 @@
     box-sizing: border-box; }
   .flowbee-configurator-light .flowbee-config-tab-content label {
     height: fit-content; }
+  .flowbee-configurator-light .flowbee-config-tab-content input {
+    background-color: #f3f3f3; }
   .flowbee-configurator-light .flowbee-config-tab-content select {
     width: fit-content; }
   .flowbee-configurator-light .flowbee-config-tab-content textarea {
@@ -360,6 +362,10 @@
     border: 1px solid #4f4f4f;
     text-align: left;
     padding-left: 3px; }
+  .flowbee-configurator-light .flowbee-config-tab-content div > label {
+    padding-right: 10px;
+    position: relative;
+    top: -2px; }
 
 .flowbee-configurator-dark {
   display: none;
@@ -424,6 +430,8 @@
     box-sizing: border-box; }
   .flowbee-configurator-dark .flowbee-config-tab-content label {
     height: fit-content; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input {
+    background-color: #f3f3f3; }
   .flowbee-configurator-dark .flowbee-config-tab-content select {
     width: fit-content; }
   .flowbee-configurator-dark .flowbee-config-tab-content textarea {
@@ -438,6 +446,10 @@
     border: 1px solid #4f4f4f;
     text-align: left;
     padding-left: 3px; }
+  .flowbee-configurator-dark .flowbee-config-tab-content div > label {
+    padding-right: 10px;
+    position: relative;
+    top: -2px; }
   .flowbee-configurator-dark .flowbee-config-header {
     background-color: #323232;
     color: #c8c8c8;
@@ -454,6 +466,10 @@
   .flowbee-configurator-dark .flowbee-config-tab-content input {
     background-color: #3c3c3c;
     color: #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input[type=checkbox] {
+    opacity: .8; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input[type=radio] {
+    opacity: .8; }
   .flowbee-configurator-dark .flowbee-config-tab-content select {
     background-color: #3c3c3c;
     color: #cccccc; }

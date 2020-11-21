@@ -1,0 +1,16 @@
+# configurator template for embedded subflow
+Request:
+  widgets:
+  - attribute: when
+    label: When
+    type: radio
+    options:
+    - Before
+    - After
+    default: Before
+  - attribute: steps
+    label: Steps
+    type: text
+  - label: 'Glob pattern: "" = before all, "*" = before each'
+    type: note
+

@@ -1,0 +1,6 @@
+# configurator template for flow
+Options:
+  widgets:
+  - attribute: bail
+    label: Bail on first failure
+    type: checkbox

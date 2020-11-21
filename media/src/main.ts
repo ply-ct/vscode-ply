@@ -68,22 +68,14 @@ export class Flow {
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
             if (this.configurator.isOpen) {
                 const flowElement = flowElementSelect.element || this.flowDiagram.flow;
-                // TODO general templates
-                let template = '{}';
-                if (flowElement.type === 'step' && (flowElement as flowbee.Step).path === 'request.ts') {
-                    template = await templates.get('request.yaml');
-                }
+                const template = await templates.get(flowElement);
                 this.configurator.render(flowElement, template, this.options.configuratorOptions);
             }
         });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             const flowElement = flowElementUpdate.element;
             if (this.configurator.isOpen && this.configurator.flowElement?.id === flowElement.id) {
-                // TODO general templates
-                let template = '{}';
-                if (flowElement.type === 'step' && (flowElement as flowbee.Step).path === 'request.ts') {
-                    template = await templates.get('request.yaml');
-                }
+                const template = await templates.get(flowElement);
                 this.configurator.render(flowElement, template, this.options.configuratorOptions);
             }
         });
