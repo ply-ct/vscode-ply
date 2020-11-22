@@ -1,12 +1,12 @@
 # configurator template for "Request" step
 Request:
   widgets:
-  - attribute: url
+  - type: text
+    attribute: url
     label: URL
-    type: text
-  - attribute: method
+  - type: select
+    attribute: method
     label: Method
-    type: select
     options:
     - GET
     - POST
@@ -14,19 +14,23 @@ Request:
     - PATCH
     - DELETE
     default: GET
+  - type: checkbox
+    attribute: submit
+    label: Submit Only
 
 Headers:
   widgets:
-  - attribute: headers # no label means fill entire tab
-    type: table
+  - type: table
+    attribute: headers # no label means fill entire tab
     widgets: # table widgets don't specify attribute
-    - label: Name
-      type: text
-    - label: Value
-      type: text
+    - type: text
+      label: Name
+    - type: text
+      label: Value
 
 Body:
   widgets:
-  - attribute: body
+  - type: textarea
+    attribute: body
     label: Body content
-    type: textarea
+
