@@ -42,8 +42,8 @@ export class Flow {
     readonly toolbox?: flowbee.Toolbox;
     readonly configurator: flowbee.Configurator;
 
-    constructor(private base: string, text: string, private file: string) {
-        const webSocketUrl = 'ws://localhost:8080/websocket'; // TODO
+    constructor(private base: string, websocketPort: number, text: string, private file: string) {
+        const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
         this.options.theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
 
@@ -171,12 +171,12 @@ window.addEventListener('message', async (event) => {
             templates = new Templates(message.base);
         }
         const text = message.text?.trim() || (await templates.get('default.flow'));
-        const flow = new Flow(message.base, text, message.file);
+        const flow = new Flow(message.base, message.websocketPort, text, message.file);
         flow.flowDiagram.readonly = message.readonly;
         flow.render();
         // save state
-        const { base, file, readonly } = message;
-        vscode.setState({ base, file, text, readonly });
+        const { base, websocketPort, file, readonly } = message;
+        vscode.setState({ base, websocketPort, file, text, readonly });
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
@@ -185,7 +185,7 @@ window.addEventListener('message', async (event) => {
 const state = vscode.getState();
 if (state) {
     templates = new Templates(state.base);
-    const flow = new Flow(state.base, state.text, state.file);
+    const flow = new Flow(state.base, state.websocketPort, state.text, state.file);
     flow.flowDiagram.readonly = state.readonly;
     flow.render();
 }

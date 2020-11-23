@@ -18,7 +18,8 @@ export enum Setting {
     nodePath = 'nodePath',
     plyPath = 'plyPath',
     cwd = 'cwd',
-    useDist = 'useDist'
+    useDist = 'useDist',
+    websocketPort = 'websocketPort'
 }
 
 export class PlyConfig {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as WebSocket from 'ws';
 import * as ply from 'ply-ct';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
@@ -11,6 +12,8 @@ import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
 import { FlowEditor } from './flow/editor';
+import { Setting } from './config';
+import { WebSocketSender } from './websocket';
 
 interface Item {
     id: string;
@@ -259,6 +262,17 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(item.uri.fsPath), 'ply.flow.diagram');
         }
     }));
+
+    // websocket server for flow instance updates
+    const websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
+    const websocketServer = new WebSocket.Server({ port: websocketPort });
+    websocketServer.on('connection', function connection(ws) {
+        ws.on('message', function incoming(message) {
+            console.log('received: %s', message);
+        });
+
+        // ws.send('something');
+    });
 
     console.log('vscode-ply is active');
 }

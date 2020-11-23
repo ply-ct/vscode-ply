@@ -49,11 +49,10 @@
     "vscode": "^1.48.0"
   },
   "dependencies": {
-    "flowbee": "^0.1.2-beta.4",
-    "ply-ct": "^2.1.9",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
-    "vscode-uri": "^2.1.2"
+    "vscode-uri": "^2.1.2",
+    "ws": "^7.4.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
@@ -64,6 +63,7 @@
     "@types/node": "^13.7.4",
     "@types/resize-observer-browser": "^0.1.4",
     "@types/vscode": "^1.50.0",
+    "@types/ws": "^7.4.0",
     "@typescript-eslint/eslint-plugin": "^4.3.0",
     "@typescript-eslint/parser": "^4.3.0",
     "chai": "^4.2.0",
@@ -183,7 +183,13 @@
           ],
           "default": "Prompt",
           "scope": "window"
-        }
+        },
+				"ply.websocketPort": {
+					"description": "The WebSocket port for flow instance updates",
+					"type": "number",
+					"default": 7001,
+					"scope": "window"
+				}
       }
     },
     "commands": [

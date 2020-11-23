@@ -2,15 +2,19 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { PlyAdapter } from '../adapter';
+import { Setting } from '../config';
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     private static html: string;
+    private wsPort: number;
 
     constructor(
         readonly context: vscode.ExtensionContext,
         readonly adapters: Map<string,PlyAdapter>
-    ) {}
+    ) {
+        this.wsPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
+    }
 
     resolveCustomTextEditor(
         document: vscode.TextDocument,
@@ -28,6 +32,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         // TODO cache this
         if (!FlowEditor.html) {
             FlowEditor.html = fs.readFileSync(path.join(mediaPath, 'flow.html'), 'utf-8');
+
+            FlowEditor.html = FlowEditor.html.replace(/\${wsSource}/g, `ws://localhost:${this.wsPort}`);
 
             // img
             const img  = vscode.Uri.file(path.join(mediaPath, 'icons'));
@@ -54,10 +60,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.html = html;
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
+        const websocketPort = this.wsPort;
         function updateWebview() {
             webviewPanel.webview.postMessage({
                 type: 'update',
                 base: baseUri.toString(),
+                websocketPort,
                 file: document.uri.fsPath,
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
