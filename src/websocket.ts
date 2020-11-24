@@ -2,13 +2,13 @@ import * as WebSocket from 'ws';
 
 export class WebSocketSender {
 
-    static subscriptions: Map<string,WebSocketSender[]> = new Map();
+    private static subscriptions: Map<string,WebSocketSender[]> = new Map();
 
     static send(topic: string, message: string) {
         const subscribers = WebSocketSender.subscriptions.get(topic);
         if (subscribers) {
-            for (const monitor of subscribers) {
-                monitor.websocket.send(message);
+            for (const subscriber of subscribers) {
+                subscriber.websocket.send(message);
             }
         }
     }
