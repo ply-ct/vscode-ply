@@ -152,6 +152,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             const listener: Listener<FlowEvent> = (flowEvent: FlowEvent) => {
                 if (flowEvent.flowPath === flowPath) {
                     if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
+                        // TODO this takes time so client websocket is not listening immediately
                         updateWebview(flowEvent.instance as FlowInstance);
                     } else {
                         WebSocketSender.send(`flowInstance-${flowEvent.flowInstanceId}`, flowEvent);

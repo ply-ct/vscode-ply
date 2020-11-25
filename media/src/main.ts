@@ -40,7 +40,7 @@ export class Flow {
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly toolbox?: flowbee.Toolbox;
-    readonly configurator: flowbee.Configurator;
+    static configurator?: flowbee.Configurator;
 
     constructor(private base: string, websocketPort: number, text: string, private file: string) {
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
@@ -48,8 +48,11 @@ export class Flow {
         this.options.theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
 
         // configurator
-        this.configurator = new flowbee.Configurator();
-        this.configurator.onFlowElementUpdate(_e => this.updateFlow());
+        if (!Flow.configurator) {
+            // TODO dispose listener
+            Flow.configurator = new flowbee.Configurator();
+            Flow.configurator.onFlowElementUpdate(_e => this.updateFlow());
+        }
 
         // theme-based icons
         for (const toolIcon of document.querySelectorAll('input[type=image]')) {
@@ -64,19 +67,19 @@ export class Flow {
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors);
         this.flowDiagram.onFlowChange(_e => this.updateFlow());
         this.flowDiagram.dialogProvider = new DialogProvider();
-        this.flowDiagram.contextMenuProvider = new MenuProvider(this.flowDiagram, this.configurator, templates, this.options);
+        this.flowDiagram.contextMenuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
-            if (this.configurator.isOpen) {
+            if (Flow.configurator?.isOpen) {
                 const flowElement = flowElementSelect.element || this.flowDiagram.flow;
                 const template = await templates.get(flowElement);
-                this.configurator.render(flowElement, template, this.options.configuratorOptions);
+                Flow.configurator.render(flowElement, template, this.options.configuratorOptions);
             }
         });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             const flowElement = flowElementUpdate.element;
-            if (this.configurator.isOpen && this.configurator.flowElement?.id === flowElement.id) {
+            if (Flow.configurator?.isOpen && Flow.configurator.flowElement?.id === flowElement.id) {
                 const template = await templates.get(flowElement);
-                this.configurator.render(flowElement, template, this.options.configuratorOptions);
+                Flow.configurator.render(flowElement, template, this.options.configuratorOptions);
             }
         });
 
