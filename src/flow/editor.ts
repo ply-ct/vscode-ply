@@ -1,19 +1,47 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import * as WebSocket from 'ws';
+import { FlowEvent, Listener, Disposable, FlowInstance } from 'flowbee';
 import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
+import { WebSocketSender } from '../websocket';
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     private static html: string;
-    private wsPort: number;
+    private websocketPort: number;
+    private disposables: Disposable[] = [];
+    private flowListeners: Listener<FlowEvent>[] = [];
 
     constructor(
         readonly context: vscode.ExtensionContext,
         readonly adapters: Map<string,PlyAdapter>
     ) {
-        this.wsPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
+        this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
+        if (this.websocketPort) {
+            // websocket server for FlowEvents
+            const webSocketServer = new WebSocket.Server({ port: this.websocketPort });
+            webSocketServer.on('connection', webSocket => {
+                webSocket.on('message', message => {
+                    const topic = JSON.parse('' + message).topic;
+                    WebSocketSender.subscribe(topic, webSocket);
+                });
+                webSocket.on('error', error => {
+                    console.error(error);
+                });
+                webSocket.on('close', (code, reason) => {
+                    console.debug(`Closing WebSocket due to ${code}: ${reason}`);
+                    WebSocketSender.unsubscribe(webSocket);
+                });
+            });
+            webSocketServer.on('error', error => {
+                console.error(error);
+            });
+            webSocketServer.on('close', () => {
+                WebSocketSender.unsubscribe();
+            });
+        }
     }
 
     resolveCustomTextEditor(
@@ -33,7 +61,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (!FlowEditor.html) {
             FlowEditor.html = fs.readFileSync(path.join(mediaPath, 'flow.html'), 'utf-8');
 
-            FlowEditor.html = FlowEditor.html.replace(/\${wsSource}/g, `ws://localhost:${this.wsPort}`);
+            FlowEditor.html = FlowEditor.html.replace(/\${wsSource}/g, `ws://localhost:${this.websocketPort}`);
 
             // img
             const img  = vscode.Uri.file(path.join(mediaPath, 'icons'));
@@ -60,19 +88,23 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.html = html;
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
-        const websocketPort = this.wsPort;
-        function updateWebview() {
-            webviewPanel.webview.postMessage({
+        const websocketPort = this.websocketPort;
+        function updateWebview(instance?: FlowInstance) {
+            const msg: any = {
                 type: 'update',
                 base: baseUri.toString(),
                 websocketPort,
                 file: document.uri.fsPath,
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
-            });
+            };
+            if (instance) {
+                msg.instance = instance;
+            }
+            webviewPanel.webview.postMessage(msg);
         }
 
-        const docChangeSubscription = webviewPanel.webview.onDidReceiveMessage(async message => {
+        this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'change') {
                 const edit = new vscode.WorkspaceEdit();
                 edit.replace(
@@ -103,18 +135,38 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
                 this.runFlow(message.flow, message.type === 'debug');
-      }
-        });
+            }
+        }));
 
-        const themeChangeSubscription = vscode.workspace.onDidChangeConfiguration(configChange => {
+        this.disposables.push(vscode.workspace.onDidChangeConfiguration(configChange => {
             if (configChange.affectsConfiguration('workbench.colorTheme')) {
                 updateWebview();
             }
-        });
+        }));
+
+        const flowPath = document.uri.fsPath.replace(/\\/g, '/');
+        for (const adapter of this.adapters.values()) {
+            for (const handler of this.flowListeners) {
+                adapter.removeFlowListener(handler);
+            }
+            const listener: Listener<FlowEvent> = (flowEvent: FlowEvent) => {
+                if (flowEvent.flowPath === flowPath) {
+                    if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
+                        updateWebview(flowEvent.instance as FlowInstance);
+                    } else {
+                        WebSocketSender.send(`flowInstance-${flowEvent.flowInstanceId}`, flowEvent);
+                    }
+                }
+            };
+            this.flowListeners.push(listener);
+            adapter.onFlow(listener);
+        }
 
         webviewPanel.onDidDispose(() => {
-            docChangeSubscription.dispose();
-            themeChangeSubscription.dispose();
+            for (const disposable of this.disposables) {
+                disposable.dispose();
+            }
+            this.disposables = [];
 		});
 
         updateWebview();

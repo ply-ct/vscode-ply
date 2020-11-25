@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as flowbee from 'flowbee';
 import { WorkerArgs } from './args';
 // events API must stay compatible
 import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
@@ -60,11 +61,12 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
         plier.on('test', (plyEvent: PlyEvent) => {
             const testId = getUri(plyEvent.plyee);
             startTimes.set(testId, Date.now());
-            sendMessage({
+            const msg = {
                 type: 'test',
                 test: testId,
                 state: 'running'
-            });
+            } as any;
+            sendMessage(msg);
         });
         plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
             const testId = getUri(outcomeEvent.plyee);
@@ -75,6 +77,12 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
                 message: outcomeEvent.outcome.message,
                 description: elapsed(testId),
                 diffs: outcomeEvent.outcome.diffs
+            });
+        });
+        plier.on('flow', (flowEvent: flowbee.FlowEvent) => {
+            sendMessage({
+                type: 'flow',
+                flowEvent
             });
         });
         plier.on('error', (err: Error) => {

@@ -173,10 +173,11 @@ window.addEventListener('message', async (event) => {
         const text = message.text?.trim() || (await templates.get('default.flow'));
         const flow = new Flow(message.base, message.websocketPort, text, message.file);
         flow.flowDiagram.readonly = message.readonly;
+        flow.flowDiagram.instance = message.instance;
         flow.render();
         // save state
-        const { base, websocketPort, file, readonly } = message;
-        vscode.setState({ base, websocketPort, file, text, readonly });
+        const { base, websocketPort, file, readonly, instance } = message;
+        vscode.setState({ base, websocketPort, file, text, readonly, instance });
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
@@ -187,6 +188,7 @@ if (state) {
     templates = new Templates(state.base);
     const flow = new Flow(state.base, state.websocketPort, state.text, state.file);
     flow.flowDiagram.readonly = state.readonly;
+    flow.flowDiagram.instance = state.instance;
     flow.render();
 }
 

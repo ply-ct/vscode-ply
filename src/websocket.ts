@@ -4,44 +4,44 @@ export class WebSocketSender {
 
     private static subscriptions: Map<string,WebSocketSender[]> = new Map();
 
-    static send(topic: string, message: string) {
+    private constructor(readonly topic: string, readonly websocket: WebSocket) {}
+
+    static send(topic: string, message: string | object) {
         const subscribers = WebSocketSender.subscriptions.get(topic);
         if (subscribers) {
+            const msg = typeof message === 'string' ? message : JSON.stringify(message);
             for (const subscriber of subscribers) {
-                subscriber.websocket.send(message);
+                subscriber.websocket.send(msg);
             }
         }
     }
 
-    constructor(private websocket: WebSocket) { }
-
-    subscribe(topic: string) {
-        this.unsubscribe(topic);
+    static subscribe(topic: string, websocket: WebSocket) {
+        WebSocketSender.unsubscribe(websocket);
         let subscribers = WebSocketSender.subscriptions.get(topic);
         if (!subscribers) {
             subscribers = [];
             WebSocketSender.subscriptions.set(topic, subscribers);
         }
-        subscribers.push(this);
+        subscribers.push(new WebSocketSender(topic, websocket));
     }
 
-    unsubscribe(topic?: string) {
-        if (topic) {
-            const subscribers = WebSocketSender.subscriptions.get(topic);
-            if (subscribers) {
-                const idx = subscribers.indexOf(this);
-                if (idx >= 0) {
-                    subscribers.splice(idx, 1);
-                    if (subscribers.length === 0) {
-                        WebSocketSender.subscriptions.delete(topic);
+    static unsubscribe(websocket?: WebSocket) {
+        if (websocket) {
+            const subscribers: WebSocketSender[] = [];
+            for (const topic of WebSocketSender.subscriptions.keys()) {
+                for (const subscriber of WebSocketSender.subscriptions.get(topic) || []) {
+                    if (subscriber.websocket === websocket) {
+                        subscribers.push(subscriber);
                     }
                 }
             }
+            subscribers.forEach(subscriber => {
+                WebSocketSender.subscriptions.delete(subscriber.topic);
+            });
         } else {
             // unsubscribe all
-            for (const topic of WebSocketSender.subscriptions.keys()) {
-                this.unsubscribe(topic);
-            }
+            WebSocketSender.subscriptions.clear();
         }
     }
 }

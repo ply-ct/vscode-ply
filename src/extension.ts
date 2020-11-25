@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as WebSocket from 'ws';
 import * as ply from 'ply-ct';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
@@ -12,8 +11,6 @@ import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
 import { FlowEditor } from './flow/editor';
-import { Setting } from './config';
-import { WebSocketSender } from './websocket';
 
 interface Item {
     id: string;
@@ -46,6 +43,16 @@ export async function activate(context: vscode.ExtensionContext) {
     const testAdapters = new Map<string,PlyAdapter>();
     // workspace folder uri to diff handler
     const diffHandlers = new Map<string,DiffHandler>();
+
+    const flowEditor = new FlowEditor(context, testAdapters);
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
+        const item = await getItem(...args);
+        if (item?.uri?.fsPath) {
+            vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(item.uri.fsPath), 'ply.flow.diagram');
+        }
+    }));
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
@@ -252,27 +259,6 @@ export async function activate(context: vscode.ExtensionContext) {
             return { id, uri, workspaceFolder };
         }
     }
-
-    const flowEditor = new FlowEditor(context, testAdapters);
-    context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
-
-    context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
-        const item = await getItem(...args);
-        if (item?.uri?.fsPath) {
-            vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(item.uri.fsPath), 'ply.flow.diagram');
-        }
-    }));
-
-    // websocket server for flow instance updates
-    const websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
-    const websocketServer = new WebSocket.Server({ port: websocketPort });
-    websocketServer.on('connection', function connection(ws) {
-        ws.on('message', function incoming(message) {
-            console.log('received: %s', message);
-        });
-
-        // ws.send('something');
-    });
 
     console.log('vscode-ply is active');
 }

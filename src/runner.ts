@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
+import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
 import { ChildProcess, fork } from 'child_process';
 import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, TestDecoration } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
@@ -14,6 +15,11 @@ export class PlyRunner {
 	private testRunId = 0;
 
     private readonly workerScript = require.resolve('../../out/worker/bundle.js');
+
+    private _onFlow = new Event<FlowEvent>();
+    onFlow(listener: Listener<FlowEvent>) {
+        this._onFlow.on(listener);
+    }
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
@@ -140,13 +146,15 @@ export class PlyRunner {
 
             this.runningTestProcess.send(workerArgs);
 
-            this.runningTestProcess.on('message', (message: string | TestSuiteEvent | TestEvent | TestRunFinishedEvent) => {
+            this.runningTestProcess.on('message', (message: any) => {
 
                 if (typeof message === 'string') {
                     console.debug(`Worker: ${message}`);
                 } else {
                     console.debug(`Received: ${JSON.stringify(message)}`);
-                    if (message.type !== 'finished') {
+                    if (message.type === 'flow') {
+                        this._onFlow.emit(message.flowEvent);
+                    } else if (message.type !== 'finished') {
                         const decorations: TestDecoration[] = [];
                         if (message.type === 'test' && message.state === 'failed' || message.state === 'errored') {
                             const msgTest = (message as TestEvent).message;
@@ -159,11 +167,13 @@ export class PlyRunner {
                                 });
                             }
                         }
-                        this.fire({ ...message as any, testRunId, decorations });
+                        this.fire({ ...message, testRunId, decorations });
                         if (message.type === 'test') {
                             if (message.state === 'running') {
                                 runningTest = (typeof message.test === 'string') ? message.test : message.test.id;
-                                this.diffState.clearDiffs(runningTest);
+                                if (runningTest) {
+                                    this.diffState.clearDiffs(runningTest);
+                                }
                             } else {
                                 if (runningTest) {
                                     this.diffState.updateDiffs(runningTest, (message as any).diffs || []);

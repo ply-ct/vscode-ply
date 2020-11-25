@@ -3,6 +3,7 @@ import * as ply from 'ply-ct';
 import { inspect } from 'util';
 import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
+import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
 import { PlyLoader } from './loader';
 import { PlyRoots } from './plyRoots';
 import { PlyRunner } from './runner';
@@ -25,6 +26,14 @@ export class PlyAdapter implements TestAdapter {
 
     private config: PlyConfig;
     private runner: PlyRunner | undefined;
+
+    private _onFlow = new Event<FlowEvent>();
+    onFlow(listener: Listener<FlowEvent>) {
+        this.disposables.push(this._onFlow.on(listener));
+    }
+    removeFlowListener(listener: Listener<FlowEvent>) {
+        this._onFlow.off(listener);
+    }
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
@@ -74,6 +83,18 @@ export class PlyAdapter implements TestAdapter {
         flowWatcher.onDidChange(uri => this.onSuiteChange(uri));
         flowWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
 
+        // let resultsLoc = this.config.plyOptions.actualLocation;
+        // if (process.platform.startsWith('win')) {
+        //     // watcher needs backslashes in RelativePattern base on windows
+        //     resultsLoc = resultsLoc.replace(/\//g, '\\');
+        // }
+        // const resultWatcher = vscode.workspace.createFileSystemWatcher(
+        //     new vscode.RelativePattern(resultsLoc, '*.{yml,yaml}'));
+        // this.disposables.push(resultWatcher);
+        // resultWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
+        // resultWatcher.onDidChange(uri => this.onSuiteChange(uri));
+        // resultWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
+
         const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider));
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'typescript' }, submitCodeLensProvider));
@@ -115,6 +136,7 @@ export class PlyAdapter implements TestAdapter {
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
                 this.plyRoots, this.log, this.testStatesEmitter);
+            this.runner.onFlow(evt => this._onFlow.emit(evt));
             await this.runner.runTests(testIds, false, runOptions);
         } catch (err) {
             console.error(err);
@@ -129,6 +151,7 @@ export class PlyAdapter implements TestAdapter {
 
         this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
             this.plyRoots, this.log, this.testStatesEmitter);
+        this.runner.onFlow(evt => this._onFlow.emit(evt));
 		const testRunPromise = this.runner.runTests(testIds, true, runOptions);
 
 		this.log.info('Starting debug session');
