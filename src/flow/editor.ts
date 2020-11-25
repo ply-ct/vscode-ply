@@ -2,10 +2,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as WebSocket from 'ws';
-import { FlowEvent, Listener, Disposable, FlowInstance } from 'flowbee';
+import { FlowEvent, TypedEvent as Event, Listener, Disposable, FlowInstance } from 'flowbee';
 import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
+
+interface InstanceSubscribed { instanceId: string }
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
@@ -13,6 +15,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     private websocketPort: number;
     private disposables: Disposable[] = [];
     private flowListeners: Listener<FlowEvent>[] = [];
+    private subscribedEvent = new Event<InstanceSubscribed>();
 
     constructor(
         readonly context: vscode.ExtensionContext,
@@ -26,6 +29,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 webSocket.on('message', message => {
                     const topic = JSON.parse('' + message).topic;
                     WebSocketSender.subscribe(topic, webSocket);
+                    this.subscribedEvent.emit({ instanceId: topic.substring(13) });
                 });
                 webSocket.on('error', error => {
                     console.error(error);
@@ -90,14 +94,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const websocketPort = this.websocketPort;
         function updateWebview(instance?: FlowInstance) {
-            const msg: any = {
+            const msg = {
                 type: 'update',
                 base: baseUri.toString(),
                 websocketPort,
                 file: document.uri.fsPath,
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
-            };
+            } as any;
             if (instance) {
                 msg.instance = instance;
             }
@@ -144,17 +148,32 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
         }));
 
+        const awaitInstanceSubscribe = async () => {
+            const promise = new Promise<string>(resolve => {
+                this.subscribedEvent.once(e =>  {
+                    resolve(e.instanceId);
+                });
+            });
+            return promise;
+        };
+
         const flowPath = document.uri.fsPath.replace(/\\/g, '/');
         for (const adapter of this.adapters.values()) {
             for (const handler of this.flowListeners) {
                 adapter.removeFlowListener(handler);
             }
-            const listener: Listener<FlowEvent> = (flowEvent: FlowEvent) => {
+            let flowInstanceId: string | null = null;
+            const listener: Listener<FlowEvent> = async (flowEvent: FlowEvent) => {
                 if (flowEvent.flowPath === flowPath) {
                     if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
-                        // TODO this takes time so client websocket is not listening immediately
+                        flowInstanceId = null;
+                        // set the diagram instance so it'll start listening for websocket updates
                         updateWebview(flowEvent.instance as FlowInstance);
                     } else {
+                        if (!flowInstanceId) {
+                            // wait until diagram is subscribed before sending updates
+                            flowInstanceId = await awaitInstanceSubscribe();
+                        }
                         WebSocketSender.send(`flowInstance-${flowEvent.flowInstanceId}`, flowEvent);
                     }
                 }

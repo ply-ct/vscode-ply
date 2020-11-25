@@ -125,7 +125,7 @@ export class PlyAdapter implements TestAdapter {
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: this.plyRoots.rootSuite });
         }
         catch (err) {
-            console.log(err);
+            console.error(err);
             this.log.error('Error loading ply tests: ' + err, err);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', errorMessage: inspect(err) });
         }

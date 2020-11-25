@@ -215,7 +215,7 @@ export class PlyRunner {
             });
 
             this.runningTestProcess.on('error', err => {
-                console.log(err);
+                console.error(err);
                 this.log.error(`Error from child process: ${err}`);
                 runningTest = undefined;
                 this.runningTestProcess = undefined;
