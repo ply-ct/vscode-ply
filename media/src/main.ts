@@ -71,15 +71,15 @@ export class Flow {
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
             if (Flow.configurator?.isOpen) {
                 const flowElement = flowElementSelect.element || this.flowDiagram.flow;
-                const template = await templates.get(flowElement);
-                Flow.configurator.render(flowElement, template, this.options.configuratorOptions);
+                const template = await templates.get(flowElement, 'config');
+                Flow.configurator.render(flowElement, flowElementSelect.instances || [], template, this.options.configuratorOptions);
             }
         });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             const flowElement = flowElementUpdate.element;
             if (Flow.configurator?.isOpen && Flow.configurator.flowElement?.id === flowElement.id) {
-                const template = await templates.get(flowElement);
-                Flow.configurator.render(flowElement, template, this.options.configuratorOptions);
+                const template = await templates.get(flowElement, 'config');
+                Flow.configurator.render(flowElement, [], template, this.options.configuratorOptions);
             }
         });
 

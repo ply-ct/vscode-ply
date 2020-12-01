@@ -227,15 +227,15 @@
     padding: 0;
     list-style-type: none; }
     .flowbee-toolbox-light ul li {
-      height: 22px;
+      height: 24px;
       display: flex;
       cursor: pointer;
       white-space: nowrap;
       padding: 0 5px;
       line-height: 22px; }
       .flowbee-toolbox-light ul li img {
-        width: 16px;
-        min-width: 16px;
+        width: 20px;
+        min-width: 20px;
         vertical-align: middle;
         margin-bottom: 2px;
         user-select: none;
@@ -263,15 +263,15 @@
     padding: 0;
     list-style-type: none; }
     .flowbee-toolbox-dark ul li {
-      height: 22px;
+      height: 24px;
       display: flex;
       cursor: pointer;
       white-space: nowrap;
       padding: 0 5px;
       line-height: 22px; }
       .flowbee-toolbox-dark ul li img {
-        width: 16px;
-        min-width: 16px;
+        width: 20px;
+        min-width: 20px;
         vertical-align: middle;
         margin-bottom: 2px;
         user-select: none;

@@ -1,0 +1,26 @@
+# configurator template for "Request" instance
+Step:
+  widgets:
+  - type: text
+    instanceProp: id
+    label: ID
+  - type: text
+    instanceProp: status
+    label: Status
+  - type: text
+    instanceProp: start
+    label: Start
+  - type: text
+    instanceProp: end
+    label: End
+
+Request:
+  widgets:
+  - type: textarea
+    instanceProp: request
+
+Response:
+  widgets:
+  - type: textarea
+    instanceProp: response
+

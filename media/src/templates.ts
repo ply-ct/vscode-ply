@@ -13,20 +13,23 @@ export class Templates {
      * Template contents
      * @param pathOrElement relative to template path
      */
-    async get(pathOrElement: flowbee.FlowElement | string): Promise<string> {
+    async get(pathOrElement: flowbee.FlowElement | string, prefix = ''): Promise<string> {
         let path: string;
+        if (prefix && !prefix.endsWith('/')) {
+            prefix += '/';
+        }
         if (typeof pathOrElement === 'string') {
-            path = pathOrElement;
+            path = `${prefix}/${pathOrElement}`;
         } else if (pathOrElement.type === 'flow') {
-            path = 'flow.yaml';
+            path = `${prefix}/flow.yaml`;
         } else if (pathOrElement.type === 'link') {
-            path = 'link.yaml';
+            path = `${prefix}/link.yaml`;
         } else if (pathOrElement.type === 'subflow') {
-            path = 'subflow.yaml';
+            path = `${prefix}/subflow.yaml`;
         } else if (pathOrElement.type === 'note') {
-            path = 'note.yaml';
+            path = `${prefix}/note.yaml`;
         } else {
-            path = (pathOrElement as any).path + '.yaml';
+            path = `${prefix}/${(pathOrElement as any).path + '.yaml'}`;
         }
         let template = this.templates.get(path);
         if (!template) {

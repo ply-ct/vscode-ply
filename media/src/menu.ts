@@ -14,13 +14,32 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     }
 
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
+        const type = flowElementEvent.element?.type;
         let items = super.getItems(flowElementEvent) || [];
-        items = [
+        const designItems = [
             { id: 'configure', label: 'Configure' },
-            { id: 'expected', label: 'Expected Results' },
-            'separator',
-            ...items
+            { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
+            { id: 'submit', label: 'Submit', icon: 'submit.svg' }
         ];
+        if (type === 'flow') {
+            designItems.push({ id: 'run', label: 'Run', icon: 'start.svg' });
+        }
+        items = [
+            ...designItems,
+            'separator',
+            ...items,
+            { id: 'cut', label: 'Cut', key: '⌘ X'},
+            { id: 'copy', label: 'Copy', key: '⌘ C'},
+            { id: 'paste', label: 'Paste', key: '⌘ V'}
+        ];
+        if (flowElementEvent.instances) {
+            items = [
+                { id: 'inspect', label: 'Inspect' },
+                { id: 'compare', label: 'Compare Results', icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg' },
+                'separator',
+                ...items
+            ];
+        }
         return items;
     }
 
@@ -29,9 +48,25 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             return true;
         } else if (selectEvent.item.id === 'configure') {
             if (selectEvent.element) {
-                const template = (await this.templates.get(selectEvent.element)) || '{}';
-                this.configurator.render(selectEvent.element, template, this.options.configuratorOptions);
+                const template = (await this.templates.get(selectEvent.element, 'config')) || '{}';
+                this.configurator.render(selectEvent.element, [], template, this.options.configuratorOptions);
             }
+            return true;
+        } else if (selectEvent.item.id === 'inspect') {
+            const template = (await this.templates.get(selectEvent.element, 'inspect')) || '{}';
+            const instances = selectEvent.instances || [];
+            const instance: any = instances.length > 0 ? instances[instances.length - 1] : null;
+            if (instance) {
+                // supplement instance data
+                if (selectEvent.element.type === 'step') {
+                    const step = selectEvent.element as flowbee.Step;
+                    if (instance && step.path === 'request') {
+                        instance.request = 'xxx';
+                        instance.response = 'yyy';
+                    }
+                }
+            }
+            this.configurator.render(selectEvent.element, instances, template, this.options.configuratorOptions);
             return true;
         } else {
             return false;
