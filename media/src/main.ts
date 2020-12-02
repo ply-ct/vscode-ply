@@ -69,17 +69,11 @@ export class Flow {
         this.flowDiagram.dialogProvider = new DialogProvider();
         this.flowDiagram.contextMenuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
-            if (Flow.configurator?.isOpen) {
-                const flowElement = flowElementSelect.element || this.flowDiagram.flow;
-                const template = await templates.get(flowElement, 'config');
-                Flow.configurator.render(flowElement, flowElementSelect.instances || [], template, this.options.configuratorOptions);
-            }
+            this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
         });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
-            const flowElement = flowElementUpdate.element;
-            if (Flow.configurator?.isOpen && Flow.configurator.flowElement?.id === flowElement.id) {
-                const template = await templates.get(flowElement, 'config');
-                Flow.configurator.render(flowElement, [], template, this.options.configuratorOptions);
+            if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
+                this.updateConfigurator(flowElementUpdate.element);
             }
         });
 
@@ -121,6 +115,7 @@ export class Flow {
         flowActions.onFlowAction(e => {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                 drawingTools.switchMode('runtime');
+                Flow.configurator?.close();
                 this.flowDiagram.render(this.options.diagramOptions);
             }
             this.onFlowAction(e);
@@ -132,10 +127,23 @@ export class Flow {
         this.toolbox?.render(this.options.toolboxOptions);
     }
 
+    async updateConfigurator(flowElement?: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[]) {
+        if (Flow.configurator?.isOpen) {
+            flowElement = flowElement || this.flowDiagram.flow;
+            const template = await templates.get(flowElement, this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config');
+            Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions);
+        }
+    }
+
     onOptionToggle(e: OptionToggleEvent) {
         const drawingOption = e.option;
         if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
             this.flowDiagram.mode = drawingOption;
+            if (drawingOption === 'select') {
+                this.updateConfigurator(Flow.configurator?.flowElement);
+            } else {
+                Flow.configurator?.close();
+            }
         }
         else {
             (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
