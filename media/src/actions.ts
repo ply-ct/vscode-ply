@@ -26,11 +26,13 @@ export class DrawingTools {
         // grid
         const gridToggle = container.querySelector('#grid') as HTMLInputElement;
         gridToggle.onclick = e => {
+            gridToggle.classList.toggle('unselected');
             this._onOptionToggle.emit({ option: (e.target as HTMLElement).id });
         };
         // snap
         const snapToggle = container.querySelector('#snap') as HTMLInputElement;
         snapToggle.onclick = e => {
+            snapToggle.classList.toggle('unselected');
             this._onOptionToggle.emit({ option: (e.target as HTMLElement).id });
         };
         // zoom
@@ -65,11 +67,23 @@ export class DrawingTools {
                 this._onZoomChange.emit({ zoom });
             }
         }, { passive: false });
-        // mode
-        const modeToggle = container.querySelector('#mode-toggle') as HTMLSpanElement;
-        modeToggle.onclick = _e => {
-            this._onOptionToggle.emit({ option: 'mode' });
+        // mode select
+        const select = container.querySelector('#select') as HTMLInputElement;
+        const connect = container.querySelector('#connect') as HTMLInputElement;
+        const runtime = container.querySelector('#runtime') as HTMLInputElement;
+        select.onclick = connect.onclick = runtime.onclick = e => {
+            const mode = (e.target as HTMLInputElement).id;
+            this.switchMode(mode);
+            this._onOptionToggle.emit({ option: mode });
         };
+    }
+
+    switchMode(mode: string) {
+        (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
+            if (input.id === mode || !input.classList.contains('unselected')) {
+                input.classList.toggle('unselected');
+            }
+        });
     }
 }
 
@@ -85,7 +99,8 @@ export class FlowActions {
 
     constructor(container: HTMLElement) {
         const actionClick = (e: MouseEvent) => {
-            this._onFlowAction.emit({ action: (e.target as HTMLElement).id });
+            const action = (e.target as HTMLElement).id;
+            this._onFlowAction.emit({ action });
         };
 
         this.run = container.querySelector('#run') as HTMLInputElement;

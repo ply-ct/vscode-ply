@@ -16,11 +16,16 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
         const type = flowElementEvent.element?.type;
         let items = super.getItems(flowElementEvent) || [];
-        const designItems = [
-            { id: 'configure', label: 'Configure' },
+        let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
             { id: 'submit', label: 'Submit', icon: 'submit.svg' }
         ];
+        if (!flowElementEvent.instances) {
+            designItems = [
+                { id: 'configure', label: 'Configure' },
+                ...designItems
+            ];
+        }
         if (type === 'flow') {
             designItems.push({ id: 'run', label: 'Run', icon: 'start.svg' });
         }

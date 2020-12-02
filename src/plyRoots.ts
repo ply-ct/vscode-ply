@@ -215,7 +215,6 @@ export class PlyRoot {
 
 /**
  * Per one workspace folder.  Currently only has local requests.
- * Later we'll have another root with id = 'remoteRequests'.
  */
 export class PlyRoots {
 

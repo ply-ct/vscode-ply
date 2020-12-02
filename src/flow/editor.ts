@@ -187,7 +187,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 disposable.dispose();
             }
             this.disposables = [];
-		});
+        });
+
+        // TODO: instance
 
         updateWebview();
     }

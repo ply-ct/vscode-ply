@@ -6,7 +6,6 @@ export class Options {
     grid = true;
     snap = true;
     zoom = 100;
-    mode: 'select' | 'connect' = 'select';
     yaml = true;
     indent = 2;
 

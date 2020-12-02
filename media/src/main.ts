@@ -112,13 +112,19 @@ export class Flow {
         new Splitter(containerElement, toolboxContainer, toolboxCaret);
 
         // actions
-        const drawingTools = new DrawingTools(document.getElementById('diagram-tools') as HTMLDivElement);
+        const drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
         drawingTools.onOptionToggle(e => this.onOptionToggle(e));
         drawingTools.onZoomChange((e: ZoomChangeEvent) => {
             this.flowDiagram.zoom = e.zoom;
         });
         const flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
-        flowActions.onFlowAction(e => this.onFlowAction(e));
+        flowActions.onFlowAction(e => {
+            if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
+                drawingTools.switchMode('runtime');
+                this.flowDiagram.render(this.options.diagramOptions);
+            }
+            this.onFlowAction(e);
+        });
     }
 
     render() {
@@ -128,18 +134,13 @@ export class Flow {
 
     onOptionToggle(e: OptionToggleEvent) {
         const drawingOption = e.option;
-        if (drawingOption === 'mode') {
-            this.options.mode = this.options.mode === 'select' ? 'connect' : 'select';
-            (document.getElementById('select') as HTMLElement).classList.toggle('unselected');
-            (document.getElementById('connect') as HTMLElement).classList.toggle('unselected');
-            this.flowDiagram.mode = this.options.mode;
-        } else {
-            (document.getElementById(`${drawingOption}`) as HTMLInputElement).classList.toggle('unselected');
-            (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
-            if (this.flowDiagram) {
-                this.flowDiagram.render(this.options.diagramOptions);
-            }
+        if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
+            this.flowDiagram.mode = drawingOption;
         }
+        else {
+            (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
+        }
+        this.flowDiagram.render(this.options.diagramOptions);
     }
 
     onFlowAction(e: FlowActionEvent) {
