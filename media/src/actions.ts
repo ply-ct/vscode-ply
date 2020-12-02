@@ -80,7 +80,11 @@ export class DrawingTools {
 
     switchMode(mode: string) {
         (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
-            if (input.id === mode || !input.classList.contains('unselected')) {
+            if (input.id === mode) {
+                if (input.classList.contains('unselected')) {
+                    input.classList.toggle('unselected');
+                }
+            } else if (!input.classList.contains('unselected')) {
                 input.classList.toggle('unselected');
             }
         });

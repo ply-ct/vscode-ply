@@ -215,12 +215,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             if (!adapter) {
                 throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
             }
-            // TODO remove extra suite layer since one flow per file
-            let flowName = path.basename(flowPath, path.extname(flowPath));
-            if (flowName.endsWith('.ply')) {
-                flowName = flowName.substring(0, flowName.length - 4);
-            }
-            const flowId = `${flowUri}#${flowName}`;
+            const flowId = `${flowUri}#${path.basename(flowPath)}`;
             await adapter.run([flowId]); // TODO options?
         } catch (err) {
             console.error(err);

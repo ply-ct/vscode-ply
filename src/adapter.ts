@@ -115,9 +115,9 @@ export class PlyAdapter implements TestAdapter {
             console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
             // console.debug(`requestsRoot.baseSuite: ${JSON.stringify(this.plyRoots.requestsRoot.baseSuite, null, 2)}`);
             console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
-            console.debug(`casesRoot.baseSuite: ${JSON.stringify(this.plyRoots.casesRoot.baseSuite, null, 2)}`);
+            // console.debug(`casesRoot.baseSuite: ${JSON.stringify(this.plyRoots.casesRoot.baseSuite, null, 2)}`);
             console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
-            console.debug(`flowsRoot.baseSuite: ${JSON.stringify(this.plyRoots.flowsRoot.baseSuite, null, 2)}`);
+            // console.debug(`flowsRoot.baseSuite: ${JSON.stringify(this.plyRoots.flowsRoot.baseSuite, null, 2)}`);
 
             // tests should be sorted in file order (user can override if they want)
             await vscode.commands.executeCommand('test-explorer.dont-sort');

@@ -100,10 +100,6 @@ export class PlyRoot {
                 if (suite) {
                     parentSuite.children.push(suite);
                 } else {
-                    // flows bypass file suite since one flow per file
-                    if (labeler) {
-                        test.description = fileName;
-                    }
                     parentSuite.children.push(test);
                 }
             }
@@ -312,7 +308,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.flowsRoot.build(flowUris, suiteId => this.suitesByTestOrSuiteId.get(suiteId)!.name);
+        this.flowsRoot.build(flowUris);
 
         this.rootSuite.children = this.roots.map(root => root.baseSuite);
     }
