@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as WebSocket from 'ws';
-import { FlowEvent, TypedEvent as Event, Listener, Disposable, FlowInstance } from 'flowbee';
+import * as flowbee from 'flowbee';
 import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
@@ -13,9 +13,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     private static html: string;
     private websocketPort: number;
-    private disposables: Disposable[] = [];
-    private flowListeners: Listener<FlowEvent>[] = [];
-    private subscribedEvent = new Event<InstanceSubscribed>();
+    private disposables: flowbee.Disposable[] = [];
+    private flowListeners: flowbee.Listener<flowbee.FlowEvent>[] = [];
+    private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
 
     constructor(
         readonly context: vscode.ExtensionContext,
@@ -48,11 +48,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }
     }
 
-    resolveCustomTextEditor(
+    async resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken
-    ): void | Thenable<void> {
+    ): Promise<void> {
 
         webviewPanel.webview.options = {
             enableScripts: true
@@ -93,7 +93,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const websocketPort = this.websocketPort;
-        function updateWebview(instance?: FlowInstance) {
+        function updateWebview(instance?: flowbee.FlowInstance) {
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
@@ -138,7 +138,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     result: res === 'OK'
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
-                this.runFlow(message.flow, message.type === 'debug');
+                this.runFlow(document.uri, message.type === 'debug');
+            } else if (message.type === 'instance') {
+                updateWebview(this.getInstance(document.uri));
             }
         }));
 
@@ -163,12 +165,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 adapter.removeFlowListener(handler);
             }
             let flowInstanceId: string | null = null;
-            const listener: Listener<FlowEvent> = async (flowEvent: FlowEvent) => {
+            const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                 if (flowEvent.flowPath === flowPath) {
                     if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
                         flowInstanceId = null;
                         // set the diagram instance so it'll start listening for websocket updates
-                        updateWebview(flowEvent.instance as FlowInstance);
+                        updateWebview(flowEvent.instance as flowbee.FlowInstance);
                     } else {
                         if (!flowInstanceId) {
                             // wait until diagram is subscribed before sending updates
@@ -189,8 +191,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             this.disposables = [];
         });
 
-        // TODO: instance
-
         updateWebview();
     }
 
@@ -203,23 +203,39 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         return nonce;
     }
 
-    async runFlow(flowPath: string, debug = false) {
+    getAdapter(uri: vscode.Uri): PlyAdapter {
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+        if (!workspaceFolder) {
+            throw new Error(`Workspace folder not found for flow path: ${uri}`);
+        }
+        const adapter = this.adapters.get(workspaceFolder.uri.toString());
+        if (!adapter) {
+            throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
+        }
+        return adapter;
+    }
+
+    async runFlow(uri: vscode.Uri, debug = false) {
         try {
-            console.debug(`run flow: ${flowPath}`);
-            const flowUri = vscode.Uri.file(flowPath);
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(flowUri);
-            if (!workspaceFolder) {
-                throw new Error(`Workspace folder not found for flow path: ${flowPath}`);
-            }
-            const adapter = this.adapters.get(workspaceFolder.uri.toString());
-            if (!adapter) {
-                throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
-            }
-            const flowId = `${flowUri}#${path.basename(flowPath)}`;
-            await adapter.run([flowId]); // TODO options?
+            console.debug(`run flow: ${uri}`);
+            const adapter = this.getAdapter(uri);
+            const flowId = `${uri}#${path.basename(uri.fsPath)}`;
+            await adapter.run([flowId]); // TODO RunOptions?
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
+        }
+    }
+
+    getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
+        // instance from results
+        const adapter = this.getAdapter(uri);
+        const testId = `${uri}#${path.basename(uri.fsPath)}`;
+        const suite = adapter.plyRoots.getSuiteForTest(testId);
+        if (suite) {
+            return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
+        } else {
+            throw new Error(`Suite not found for test: ${testId}`);
         }
     }
 }

@@ -8,7 +8,6 @@ export class PlyLoader {
 
     private testsLocation: string;
     constructor(
-        private readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly config: PlyConfig,
         private readonly log: Log) {
             this.testsLocation = this.config.plyOptions.testsLocation;

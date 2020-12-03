@@ -115,6 +115,7 @@ export class Flow {
         flowActions.onFlowAction(e => {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                 drawingTools.switchMode('runtime');
+                this.flowDiagram.mode = 'runtime';
                 Flow.configurator?.close();
                 this.flowDiagram.render(this.options.diagramOptions);
             }
@@ -141,8 +142,17 @@ export class Flow {
             this.flowDiagram.mode = drawingOption;
             if (drawingOption === 'select') {
                 this.updateConfigurator(Flow.configurator?.flowElement);
+                this.flowDiagram.instance = null;
+                this.flowDiagram.readonly = false; // TODO could be readonly on file system
+            } else if (drawingOption === 'runtime') {
+                Flow.configurator?.close();
+                vscode.postMessage({
+                    type: 'instance'
+                });
             } else {
                 Flow.configurator?.close();
+                this.flowDiagram.instance = null;
+                this.flowDiagram.readonly = false; // TODO could be readonly on file system
             }
         }
         else {
@@ -159,6 +169,9 @@ export class Flow {
         });
     }
 
+    /**
+     * Save the flow diagram.
+     */
     updateFlow() {
         const indent = this.options.indent;
         const text = this.options.yaml ? this.flowDiagram.toYaml(indent) : this.flowDiagram.toJson(indent);
@@ -184,12 +197,14 @@ window.addEventListener('message', async (event) => {
         }
         const text = message.text?.trim() || (await templates.get('default.flow'));
         const flow = new Flow(message.base, message.websocketPort, text, message.file);
-        flow.flowDiagram.readonly = message.readonly;
         flow.flowDiagram.instance = message.instance;
+        const mode = message.instance ? 'runtime' : 'select';
+        flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
+        flow.flowDiagram.mode = mode;
         flow.render();
         // save state
         const { base, websocketPort, file, readonly, instance } = message;
-        vscode.setState({ base, websocketPort, file, text, readonly, instance });
+        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode });
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }

@@ -24,7 +24,7 @@ export class PlyAdapter implements TestAdapter {
     get retire(): vscode.Event<RetireEvent> { return this.retireEmitter.event; }
     retireIds(testIds: string[]) { this.retireEmitter.fire({ tests: testIds }); }
 
-    private config: PlyConfig;
+    config: PlyConfig;
     private runner: PlyRunner | undefined;
 
     private _onFlow = new Event<FlowEvent>();
@@ -37,7 +37,7 @@ export class PlyAdapter implements TestAdapter {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly plyRoots: PlyRoots,
+        readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
         private readonly log: Log
@@ -106,7 +106,7 @@ export class PlyAdapter implements TestAdapter {
         try {
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-            const loader = new PlyLoader(this.workspaceFolder, this.config, this.log);
+            const loader = new PlyLoader(this.config, this.log);
             const requests = await loader.loadRequests();
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();

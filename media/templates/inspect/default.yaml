@@ -1,4 +1,4 @@
-# inpect template for "Request" instance
+# default inspect template
 Step:
   widgets:
   - type: text
@@ -10,14 +10,3 @@ Step:
   - type: text
     instanceProp: end
     label: End
-
-Request:
-  widgets:
-  - type: textarea
-    instanceProp: request
-
-Response:
-  widgets:
-  - type: textarea
-    instanceProp: response
-
