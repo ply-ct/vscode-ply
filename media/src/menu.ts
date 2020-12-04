@@ -20,7 +20,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     }
 
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
-        const type = flowElementEvent.element?.type;
+        const type = flowElementEvent.element.type;
         let items = super.getItems(flowElementEvent) || [];
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
@@ -70,15 +70,10 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             let template = '{}';
             if (instance) {
                 template = (await this.templates.get(elementOrPath, 'inspect')) || '{}';
-                if (selectEvent.element.type === 'step') {
-                    const step = selectEvent.element as flowbee.Step;
-                    if (instance && step.path === 'request') {
-                        if (instance.data?.request) {
-                            instance.request = instance.data.request;
-                            if (instance.data.response) {
-                                instance.response = instance.data.response;
-                            }
-                        }
+                if (instance.data?.request) {
+                    instance.request = instance.data.request;
+                    if (instance.data.response) {
+                        instance.response = instance.data.response;
                     }
                 }
             }

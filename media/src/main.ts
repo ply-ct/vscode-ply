@@ -73,7 +73,9 @@ export class Flow {
         const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
         this.flowDiagram.contextMenuProvider = menuProvider;
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
-            this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
+            if (Flow.configurator) {
+                this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
+            }
         });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
@@ -135,10 +137,18 @@ export class Flow {
         this.toolbox?.render(this.options.toolboxOptions);
     }
 
-    async updateConfigurator(flowElement?: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[]) {
+    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[]) {
         if (Flow.configurator?.isOpen) {
-            flowElement = flowElement || this.flowDiagram.flow;
             const template = await templates.get(flowElement, this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config');
+            if (instances && instances.length > 0) {
+                const instance = instances[instances.length - 1] as any;
+                if (instance.data?.request) {
+                    instance.request = instance.data.request;
+                    if (instance.data.response) {
+                        instance.response = instance.data.response;
+                    }
+                }
+            }
             Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions);
         }
     }
@@ -148,7 +158,9 @@ export class Flow {
         if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
             this.flowDiagram.mode = drawingOption;
             if (drawingOption === 'select') {
-                this.updateConfigurator(Flow.configurator?.flowElement);
+                if (Flow.configurator) {
+                    this.updateConfigurator(Flow.configurator.flowElement);
+                }
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = false; // TODO could be readonly on file system
             } else if (drawingOption === 'runtime') {

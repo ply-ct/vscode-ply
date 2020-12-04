@@ -4,10 +4,10 @@ Step:
   - type: text
     instanceProp: status
     label: Status
-  - type: text
+  - type: datetime
     instanceProp: start
     label: Start
-  - type: text
+  - type: datetime
     instanceProp: end
     label: End
 
