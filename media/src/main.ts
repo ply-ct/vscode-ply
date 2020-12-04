@@ -35,6 +35,8 @@ class DialogProvider implements flowbee.DialogProvider {
     }
 }
 
+export type DrawingMode = 'select' | 'connect' | 'runtime';
+
 export class Flow {
 
     readonly options: Options;
@@ -42,7 +44,7 @@ export class Flow {
     readonly toolbox?: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
 
-    constructor(private base: string, websocketPort: number, text: string, private file: string) {
+    constructor(private base: string, websocketPort: number, text: string, private file: string, mode: DrawingMode) {
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
         this.options.theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
@@ -65,6 +67,7 @@ export class Flow {
         // diagram
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors);
+        this.flowDiagram.mode = mode;
         this.flowDiagram.onFlowChange(_e => this.updateFlow());
         this.flowDiagram.dialogProvider = new DialogProvider();
         const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
@@ -108,7 +111,7 @@ export class Flow {
 
         // actions
         const drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
-        drawingTools.switchMode(this.flowDiagram.mode);
+        drawingTools.switchMode(mode);
         drawingTools.onOptionToggle(e => this.onOptionToggle(e));
         drawingTools.onZoomChange((e: ZoomChangeEvent) => {
             this.flowDiagram.zoom = e.zoom;
@@ -200,11 +203,10 @@ window.addEventListener('message', async (event) => {
             templates = new Templates(message.base);
         }
         const text = message.text?.trim() || (await templates.get('default.flow'));
-        const flow = new Flow(message.base, message.websocketPort, text, message.file);
-        flow.flowDiagram.instance = message.instance;
         const mode = message.instance ? 'runtime' : 'select';
+        const flow = new Flow(message.base, message.websocketPort, text, message.file, mode);
+        flow.flowDiagram.instance = message.instance;
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
-        flow.flowDiagram.mode = mode;
         flow.render();
         // save state
         const { base, websocketPort, file, readonly, instance } = message;
@@ -217,7 +219,7 @@ window.addEventListener('message', async (event) => {
 const state = vscode.getState();
 if (state) {
     templates = new Templates(state.base);
-    const flow = new Flow(state.base, state.websocketPort, state.text, state.file);
+    const flow = new Flow(state.base, state.websocketPort, state.text, state.file, state.mode);
     flow.flowDiagram.readonly = state.readonly;
     flow.flowDiagram.instance = state.instance;
     flow.render();

@@ -65,16 +65,20 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             return true;
         } else if (selectEvent.item.id === 'inspect') {
             const elementOrPath = (selectEvent.element as any).path === 'request' ? selectEvent.element : 'default.yaml';
-            const template = (await this.templates.get(elementOrPath, 'inspect')) || '{}';
             const instances = selectEvent.instances || [];
             const instance: any = instances.length > 0 ? instances[instances.length - 1] : null;
+            let template = '{}';
             if (instance) {
-                // TODO supplement instance data
+                template = (await this.templates.get(elementOrPath, 'inspect')) || '{}';
                 if (selectEvent.element.type === 'step') {
                     const step = selectEvent.element as flowbee.Step;
                     if (instance && step.path === 'request') {
-                        instance.request = 'xxx';
-                        instance.response = 'yyy';
+                        if (instance.data?.request) {
+                            instance.request = instance.data.request;
+                            if (instance.data.response) {
+                                instance.response = instance.data.response;
+                            }
+                        }
                     }
                 }
             }
