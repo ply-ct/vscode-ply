@@ -1,8 +1,14 @@
 import * as flowbee from 'flowbee/dist/nostyles';
 import { Options } from './options';
 import { Templates } from './templates';
+import { FlowActionEvent } from './actions';
 
 export class MenuProvider extends flowbee.DefaultMenuProvider {
+
+    private _onFlowAction = new flowbee.TypedEvent<FlowActionEvent>();
+    onFlowAction(listener: flowbee.Listener<FlowActionEvent>) {
+        this._onFlowAction.on(listener);
+    }
 
     constructor(
         flowDiagram: flowbee.FlowDiagram,
@@ -73,6 +79,9 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
                 }
             }
             this.configurator.render(selectEvent.element, instances, template, this.options.configuratorOptions);
+            return true;
+        } else if (selectEvent.item.id === 'run') {
+            this._onFlowAction.emit({ action: 'run' });
             return true;
         } else {
             return false;

@@ -67,7 +67,8 @@ export class Flow {
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors);
         this.flowDiagram.onFlowChange(_e => this.updateFlow());
         this.flowDiagram.dialogProvider = new DialogProvider();
-        this.flowDiagram.contextMenuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
+        const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
+        this.flowDiagram.contextMenuProvider = menuProvider;
         this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
             this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
         });
@@ -107,12 +108,13 @@ export class Flow {
 
         // actions
         const drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
+        drawingTools.switchMode(this.flowDiagram.mode);
         drawingTools.onOptionToggle(e => this.onOptionToggle(e));
         drawingTools.onZoomChange((e: ZoomChangeEvent) => {
             this.flowDiagram.zoom = e.zoom;
         });
         const flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
-        flowActions.onFlowAction(e => {
+        const handleFlowAction = (e: FlowActionEvent) => {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                 drawingTools.switchMode('runtime');
                 this.flowDiagram.mode = 'runtime';
@@ -120,7 +122,9 @@ export class Flow {
                 this.flowDiagram.render(this.options.diagramOptions);
             }
             this.onFlowAction(e);
-        });
+        };
+        flowActions.onFlowAction(handleFlowAction);
+        menuProvider.onFlowAction(handleFlowAction);
     }
 
     render() {
