@@ -184,7 +184,8 @@ export class Flow {
         const flowAction = e.action;
         vscode.postMessage({
             type: flowAction,
-            flow: this.flowDiagram.flow.path
+            flow: this.flowDiagram.flow.path,
+            ...(e.target) && { target: e.target }
         });
     }
 

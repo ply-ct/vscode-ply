@@ -20,7 +20,12 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     }
 
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
-        const type = flowElementEvent.element.type;
+        const element = flowElementEvent.element;
+        const type = element.type;
+        let step: flowbee.Step | undefined;
+        if (type === 'step') {
+            step = element as flowbee.Step;
+        }
         let items = super.getItems(flowElementEvent) || [];
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
@@ -44,9 +49,10 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             { id: 'paste', label: 'Paste', key: '⌘ V'}
         ];
         if (flowElementEvent.instances) {
+            const hasCompare = type === 'flow' || step?.path === 'request' && !step.attributes?.submit;
             items = [
                 { id: 'inspect', label: 'Inspect' },
-                { id: 'compare', label: 'Compare Results', icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg' },
+                ...(hasCompare ? [{ id: 'compare', label: 'Compare Results', icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg' }] : []),
                 'separator',
                 ...items
             ];
@@ -81,6 +87,10 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             return true;
         } else if (selectEvent.item.id === 'run') {
             this._onFlowAction.emit({ action: 'run' });
+            return true;
+        } else if (selectEvent.item.id === 'compare') {
+            const target = selectEvent.element.type === 'flow' ? null : selectEvent.element.id;
+            this._onFlowAction.emit({ action: 'compare', target });
             return true;
         } else {
             return false;

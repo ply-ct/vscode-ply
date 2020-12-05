@@ -223,8 +223,16 @@ export async function activate(context: vscode.ExtensionContext) {
      * Returns a test/suite item.
      */
     async function getItem(...args: any[]): Promise<Item | undefined > {
-        if (args.length === 1 && (args[0] as Item)) {
-            return args[0];
+        if (args.length === 1) {
+            if (typeof args[0] === 'string') {
+                const uri = vscode.Uri.parse(args[0]);
+                const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+                if (workspaceFolder) {
+                    return { id: args[0], uri, workspaceFolder };
+                }
+            } else if (args[0] as Item) {
+                return args[0];
+            }
         }
 
         let uri: vscode.Uri | undefined = undefined;

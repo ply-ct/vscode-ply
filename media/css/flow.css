@@ -98,6 +98,9 @@ body {
   margin-right: 0;
   cursor: pointer;
 }
+.action-group {
+  flex-grow: 1;
+}
 .flow-diagram {
   height: 100%;
   overflow: auto;

@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as WebSocket from 'ws';
 import * as flowbee from 'flowbee';
 import { PlyAdapter } from '../adapter';
+import { PlyRoots } from '../plyRoots';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 
@@ -139,6 +140,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
                 this.runFlow(document.uri, message.type === 'debug');
+            } else if (message.type === 'compare') {
+                this.compareResults(document.uri);
             } else if (message.type === 'instance') {
                 updateWebview(this.getInstance(document.uri));
             }
@@ -225,6 +228,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
         }
+    }
+
+    compareResults(uri: vscode.Uri) {
+        // TODO hardcoded
+        vscode.commands.executeCommand('ply.diff', `${uri.toString(true)}#movies-api.ply.flow`);
     }
 
     getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {

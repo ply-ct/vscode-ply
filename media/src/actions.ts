@@ -5,6 +5,7 @@ export interface OptionToggleEvent {
 }
 export interface FlowActionEvent {
     action: string;
+    target?: any;
 }
 export interface ZoomChangeEvent {
     zoom: number;
