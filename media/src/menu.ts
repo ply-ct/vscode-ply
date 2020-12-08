@@ -40,13 +40,23 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         if (type === 'flow') {
             designItems.push({ id: 'run', label: 'Run', icon: 'start.svg' });
         }
+
+        const isMac = navigator.platform.startsWith('Mac');
+        let stroke;
+        if (isMac === true) {
+            stroke = '⌘';
+        }
+        else {
+            stroke = 'Ctrl';
+        }
+
         items = [
             ...designItems,
             'separator',
             ...items,
-            { id: 'cut', label: 'Cut', key: '⌘ X'},
-            { id: 'copy', label: 'Copy', key: '⌘ C'},
-            { id: 'paste', label: 'Paste', key: '⌘ V'}
+            { id: 'cut', label: 'Cut', key: stroke + ' X'},
+            { id: 'copy', label: 'Copy', key: stroke + ' C'},
+            { id: 'paste', label: 'Paste', key: stroke + ' V'}
         ];
         if (flowElementEvent.instances) {
             const hasCompare = type === 'flow' || step?.path === 'request' && !step.attributes?.submit;
