@@ -126,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const openResultCommand = async (...args: any[]) => {
         try {
             const uri = args[0] as vscode.Uri;
-            if (uri && uri.scheme === Result.URI_SCHEME && uri.fragment) {
+            if (uri && uri.scheme === Result.URI_SCHEME) {
                 const fileUri = Result.convertUri(uri);
                 const plyResult = Result.fromUri(uri);
                 const lineNumber = await plyResult.getStart(plyResult.testName);
@@ -225,7 +225,8 @@ export async function activate(context: vscode.ExtensionContext) {
     async function getItem(...args: any[]): Promise<Item | undefined > {
         if (args.length === 1) {
             if (typeof args[0] === 'string') {
-                const uri = vscode.Uri.parse(args[0]);
+                const id = args[0];
+                const uri = PlyRoots.toUri(id);
                 const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
                 if (workspaceFolder) {
                     return { id: args[0], uri, workspaceFolder };

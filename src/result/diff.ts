@@ -144,7 +144,7 @@ export class DiffHandler {
             return;
         }
 
-        const suite = info.type === 'test' ? this.plyRoots.getSuiteForTest(info.id) : this.plyRoots.getSuite(info.id);
+        const suite = this.plyRoots.getSuite(info.id);
         if (!suite) {
             throw new Error(`Ply suite not found for id: ${info.id}`);
         }
@@ -164,7 +164,7 @@ export class DiffHandler {
         let actualLabel = actualResult.label;
         let actualUri = actualResult.toUri();
 
-        if (test && test.type !== 'flow') {
+        if (test) {
             // expected is read-only virtual file (except flows which are one test per file)
             expectedLabel = `(read-only fragment) ${expectedResult.plyResult.location.name}#${test?.name}`;
             actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;

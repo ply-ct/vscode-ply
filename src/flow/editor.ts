@@ -7,6 +7,7 @@ import { RunOptions } from 'ply-ct';
 import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
+import { Result } from '../result/result';
 
 interface InstanceSubscribed { instanceId: string }
 
@@ -222,14 +223,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     async run(uri: vscode.Uri, target?: string, runOptions?: RunOptions, debug = false) {
         try {
-            console.debug(`run flow: ${uri}`);
+            const id = this.getId(uri, target);
+            console.debug(`run: ${id}`);
             const adapter = this.getAdapter(uri);
-            let id = uri.toString(true);
-            if (target) {
-                id += `#${target}`;
-            } else {
-                id = `flows|${id}`;
-            }
             await adapter.run([id], runOptions);
         } catch (err) {
             console.error(err);
@@ -238,25 +234,47 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     }
 
     expectedResults(uri: vscode.Uri, target?: string) {
-        const id = uri.toString(true) + (target ? `#${target}` : '');
-        console.log("EXPECTED: " + id);
+        const id = this.getId(uri, target);
+        console.debug(`expected: ${id}`);
+        const adapter = this.getAdapter(uri);
+        const suite = adapter.plyRoots.getSuite(id);
+        if (suite) {
+            let fileUri = vscode.Uri.file(suite.runtime.results.expected.toString());
+            if (target) {
+                fileUri = fileUri.with({fragment: target});
+            }
+            const expectedUri = Result.fromUri(fileUri).toUri().with({query: 'type=flow'});
+            vscode.commands.executeCommand('ply.openResult', expectedUri);
+        } else {
+            vscode.window.showErrorMessage(`Suite not found for: ${id}`);
+        }
     }
 
     compareResults(uri: vscode.Uri, target?: string) {
-        const id = uri.toString(true) + (target ? `#${target}` : '');
-        console.log("COMPARE: " + id);
-        // vscode.commands.executeCommand('ply.diff', `${uri.toString(true)}#movies-api.ply.flow`);
+        const id = this.getId(uri, target);
+        console.debug(`compare: ${id}`);
+        vscode.commands.executeCommand('ply.diff', id);
     }
 
     getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
         // instance from results
         const adapter = this.getAdapter(uri);
         const id = `flows|${uri.toString(true)}`;
-        const suite = adapter.plyRoots.getSuiteForTest(id);
+        const suite = adapter.plyRoots.getSuite(id);
         if (suite) {
             return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
         } else {
             throw new Error(`Flow not found: ${id}`);
         }
+    }
+
+    private getId(uri: vscode.Uri, target?: string): string {
+        let id = uri.toString(true);
+        if (target) {
+            id += `#${target}`;
+        } else {
+            id = `flows|${id}`;
+        }
+        return id;
     }
 }

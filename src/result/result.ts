@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as url from 'url';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 
@@ -32,12 +33,13 @@ export class Result {
             return vscode.Uri.parse(path).with({
                 scheme,
                 fragment,
-                query: `scheme=${this.plyResult.location.scheme}`});
+                query: `scheme=${this.plyResult.location.scheme}&type=${this.type}`});
         }
         else {
             return vscode.Uri.file(path).with({
                 scheme,
-                fragment
+                fragment,
+                query: `type=${this.type}`
             });
         }
     }
@@ -46,7 +48,14 @@ export class Result {
      * Convert ply-result uri to file or http/s uri.
      */
     static convertUri(plyResultUri: vscode.Uri): vscode.Uri {
-        const scheme = plyResultUri.query?.substring(7) || 'file';
+        let scheme = 'file';
+        if (plyResultUri.query) {
+            const u = new url.URL(plyResultUri.toString(true));
+            const s = u.searchParams.get('scheme');
+            if (s) {
+                scheme = s;
+            }
+        }
         return plyResultUri.with({scheme, query: '', fragment: ''});
     }
 
@@ -54,10 +63,18 @@ export class Result {
      * Create result from location or ply-result uri.
      */
     static fromUri(uri: vscode.Uri): Result {
+        let type: string | undefined;
+        if (uri.query) {
+            const u = new url.URL(uri.toString(true));
+            const t = u.searchParams.get('type');
+            if (t) {
+                type = t;
+            }
+        }
         const locUri = uri.scheme === Result.URI_SCHEME ? Result.convertUri(uri) : uri;
         const path = locUri.scheme === 'file' ? locUri.fsPath : locUri.toString();
         const testName = uri.fragment ? decodeURIComponent(uri.fragment) : undefined;
-        return new Result(new ply.Retrieval(path), testName);
+        return new Result(new ply.Retrieval(path), testName, type as ply.TestType);
     }
 
     /**
@@ -86,9 +103,16 @@ export class Result {
 
     async getStart(testName?: string): Promise<number> {
         if (testName) {
-            const yaml = await this.loadYaml();
-            const yamlObj = yaml ? yaml[testName] : undefined;
-            return yamlObj ? yamlObj.__start : 0;
+            let yamlObj = await this.loadYaml();
+            if (yamlObj) {
+                if (this.type === 'flow') {
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName);
+                } else {
+                    yamlObj = yamlObj[testName];
+                }
+                return yamlObj ? yamlObj.__start : 0;
+            }
+            return 0;
         }
         else {
             return 0;
@@ -97,9 +121,16 @@ export class Result {
 
     async getEnd(testName?: string): Promise<number> {
         if (testName) {
-            const yaml = await this.loadYaml();
-            const yamlObj = yaml ? yaml[testName] : undefined;
-            return yamlObj ? yamlObj.__end : 0;
+            let yamlObj = await this.loadYaml();
+            if (yamlObj) {
+                if (this.type === 'flow') {
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName);
+                } else {
+                    yamlObj = yamlObj[testName];
+                }
+                return yamlObj ? yamlObj.__end : 0;
+            }
+            return 0;
         }
         else {
             const contents = await this.load();
@@ -115,7 +146,12 @@ export class Result {
         if (contents) {
             const lines = ply.util.lines(contents);
             if (this.testName) {
-                const yamlObj = (await this.loadYaml())[this.testName];
+                let yamlObj = await this.loadYaml();
+                if (this.type === 'flow') {
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName);
+                } else {
+                    yamlObj = yamlObj[this.testName];
+                }
                 if (yamlObj) {
                     const contents = lines.slice(yamlObj.__start, yamlObj.__end + 1).join('\n');
                     return { contents, start: yamlObj.__start, end: yamlObj.__end };
@@ -131,7 +167,7 @@ export class Result {
      * Suite file exists, and specified test if any is present in yaml.
      */
     async exists(): Promise<boolean> {
-        if (this.testName && this.type !== 'flow') {
+        if (this.testName) {
             return !!(await this.getResultContents());
         }
         else {
@@ -163,6 +199,6 @@ export class Result {
         } else {
             path = this.plyResult.location.path;
         }
-        return this.testName && this.type !== 'flow' ? `${path}#${this.testName}` : path;
+        return this.testName ? `${path}#${this.testName}` : path;
     }
 }

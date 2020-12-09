@@ -360,12 +360,8 @@ export class PlyRoots {
         return this.testsById.get(testId);
     }
 
-    getSuiteForTest(testId: string): Suite<Request|Case|Step> | undefined {
-        return this.suitesByTestOrSuiteId.get(testId);
-    }
-
-    getSuite(suiteId: string): Suite<Request|Case|Step> | undefined {
-        return this.suitesByTestOrSuiteId.get(suiteId);
+    getSuite(testOrSuiteId: string): Suite<Request|Case|Step> | undefined {
+        return this.suitesByTestOrSuiteId.get(testOrSuiteId);
     }
 
     getSuiteIdForExpectedResult(resultUri: Uri): string | undefined {

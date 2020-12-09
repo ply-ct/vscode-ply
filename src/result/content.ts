@@ -31,13 +31,14 @@ export class ResultContentProvider implements vscode.TextDocumentContentProvider
     });
 
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+        const fileUri = Result.convertUri(uri);
         const result = Result.fromUri(uri);
         if (await result.plyResult.exists) {
-            const fileUri = Result.convertUri(uri).toString();
-            let plyUris = this.resultUris.get(fileUri);
+            // const fileUri = Result.convertUri(uri).toString();
+            let plyUris = this.resultUris.get(fileUri.toString());
             if (!plyUris) {
                 plyUris = [];
-                this.resultUris.set(fileUri, plyUris);
+                this.resultUris.set(fileUri.toString(), plyUris);
             }
             const plyUri = uri.toString();
             if (!plyUris.includes(plyUri)) {

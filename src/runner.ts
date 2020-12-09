@@ -248,7 +248,7 @@ export class PlyRunner {
     private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.RunOptions | undefined> {
         const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case|ply.Step>[] = [];
         for (const testInfo of testInfos) {
-            const suite = this.plyRoots.getSuiteForTest(testInfo.id);
+            const suite = this.plyRoots.getSuite(testInfo.id);
             if (suite) {
                 if (!suite.skip) {
                     const expectedExists = await suite.runtime.results.expected.exists;
