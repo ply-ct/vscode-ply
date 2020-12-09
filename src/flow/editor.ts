@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as WebSocket from 'ws';
 import * as flowbee from 'flowbee';
+import { RunOptions } from 'ply-ct';
 import { PlyAdapter } from '../adapter';
-import { PlyRoots } from '../plyRoots';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 
@@ -139,9 +139,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     result: res === 'OK'
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
-                this.runFlow(document.uri, message.type === 'debug');
+                this.run(document.uri, message.target, message.options, message.type === 'debug');
+            } else if (message.type === 'expected') {
+                this.expectedResults(document.uri, message.target);
             } else if (message.type === 'compare') {
-                this.compareResults(document.uri);
+                this.compareResults(document.uri, message.target);
             } else if (message.type === 'instance') {
                 updateWebview(this.getInstance(document.uri));
             }
@@ -218,31 +220,43 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         return adapter;
     }
 
-    async runFlow(uri: vscode.Uri, debug = false) {
+    async run(uri: vscode.Uri, target?: string, runOptions?: RunOptions, debug = false) {
         try {
             console.debug(`run flow: ${uri}`);
             const adapter = this.getAdapter(uri);
-            await adapter.run([`flows|${uri.toString(true)}`]); // TODO RunOptions?
+            let id = uri.toString(true);
+            if (target) {
+                id += `#${target}`;
+            } else {
+                id = `flows|${id}`;
+            }
+            await adapter.run([id], runOptions);
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);
         }
     }
 
-    compareResults(uri: vscode.Uri) {
-        // TODO hardcoded
-        vscode.commands.executeCommand('ply.diff', `${uri.toString(true)}#movies-api.ply.flow`);
+    expectedResults(uri: vscode.Uri, target?: string) {
+        const id = uri.toString(true) + (target ? `#${target}` : '');
+        console.log("EXPECTED: " + id);
+    }
+
+    compareResults(uri: vscode.Uri, target?: string) {
+        const id = uri.toString(true) + (target ? `#${target}` : '');
+        console.log("COMPARE: " + id);
+        // vscode.commands.executeCommand('ply.diff', `${uri.toString(true)}#movies-api.ply.flow`);
     }
 
     getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
         // instance from results
         const adapter = this.getAdapter(uri);
-        const testId = `${uri}#${path.basename(uri.fsPath)}`;
-        const suite = adapter.plyRoots.getSuiteForTest(testId);
+        const id = `flows|${uri.toString(true)}`;
+        const suite = adapter.plyRoots.getSuiteForTest(id);
         if (suite) {
             return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
         } else {
-            throw new Error(`Suite not found for test: ${testId}`);
+            throw new Error(`Flow not found: ${id}`);
         }
     }
 }

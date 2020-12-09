@@ -41,6 +41,7 @@ export class Flow {
 
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
+    readonly flowActions: FlowActions;
     readonly toolbox?: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
 
@@ -118,7 +119,7 @@ export class Flow {
         drawingTools.onZoomChange((e: ZoomChangeEvent) => {
             this.flowDiagram.zoom = e.zoom;
         });
-        const flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
+        this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
         const handleFlowAction = (e: FlowActionEvent) => {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                 drawingTools.switchMode('runtime');
@@ -126,9 +127,13 @@ export class Flow {
                 Flow.configurator?.close();
                 this.flowDiagram.render(this.options.diagramOptions);
             }
-            this.onFlowAction(e);
+            if (e.action === 'submit') {
+                this.onFlowAction({ action: 'run', options: { submit: true }});
+            } else {
+                this.onFlowAction(e);
+            }
         };
-        flowActions.onFlowAction(handleFlowAction);
+        this.flowActions.onFlowAction(handleFlowAction);
         menuProvider.onFlowAction(handleFlowAction);
     }
 
@@ -163,6 +168,7 @@ export class Flow {
                 }
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = false; // TODO could be readonly on file system
+                this.flowActions.enableCompare(false);
             } else if (drawingOption === 'runtime') {
                 Flow.configurator?.close();
                 vscode.postMessage({
@@ -172,6 +178,7 @@ export class Flow {
                 Flow.configurator?.close();
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = false; // TODO could be readonly on file system
+                this.flowActions.enableCompare(false);
             }
         }
         else {
@@ -185,7 +192,8 @@ export class Flow {
         vscode.postMessage({
             type: flowAction,
             flow: this.flowDiagram.flow.path,
-            ...(e.target) && { target: e.target }
+            ...(e.target) && { target: e.target },
+            ...(e.options) && { options: e.options }
         });
     }
 
@@ -219,6 +227,7 @@ window.addEventListener('message', async (event) => {
         const mode = message.instance ? 'runtime' : 'select';
         const flow = new Flow(message.base, message.websocketPort, text, message.file, mode);
         flow.flowDiagram.instance = message.instance;
+        flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
         // save state
@@ -235,6 +244,7 @@ if (state) {
     const flow = new Flow(state.base, state.websocketPort, state.text, state.file, state.mode);
     flow.flowDiagram.readonly = state.readonly;
     flow.flowDiagram.instance = state.instance;
+    flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
     flow.render();
 }
 

@@ -29,16 +29,14 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         let items = super.getItems(flowElementEvent) || [];
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
-            { id: 'submit', label: 'Submit', icon: 'submit.svg' }
+            { id: 'submit', label: 'Submit', icon: 'submit.svg' },
+            { id: 'run', label: 'Run', icon: 'start.svg' }
         ];
         if (!flowElementEvent.instances) {
             designItems = [
                 { id: 'configure', label: 'Configure' },
                 ...designItems
             ];
-        }
-        if (type === 'flow') {
-            designItems.push({ id: 'run', label: 'Run', icon: 'start.svg' });
         }
 
         const isMac = navigator.platform.startsWith('Mac');
@@ -95,14 +93,19 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             }
             this.configurator.render(selectEvent.element, instances, template, this.options.configuratorOptions);
             return true;
-        } else if (selectEvent.item.id === 'run') {
-            this._onFlowAction.emit({ action: 'run' });
-            return true;
-        } else if (selectEvent.item.id === 'compare') {
+        } else if (selectEvent.item.id === 'run' || selectEvent.item.id === 'submit') {
+            // TODO target in subflow
             const target = selectEvent.element.type === 'flow' ? null : selectEvent.element.id;
-            this._onFlowAction.emit({ action: 'compare', target });
+            const options = selectEvent.item.id === 'submit' ? { submit: true } : null;
+            this._onFlowAction.emit({ action: 'run', target, options });
             return true;
-        } else {
+        } else if (selectEvent.item.id === 'expected' || selectEvent.item.id === 'compare') {
+            // TODO target in subflow
+            const target = selectEvent.element.type === 'flow' ? null : selectEvent.element.id;
+            this._onFlowAction.emit({ action: selectEvent.item.id, target });
+            return true;
+        }
+        else {
             return false;
         }
     }

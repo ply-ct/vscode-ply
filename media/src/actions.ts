@@ -6,6 +6,7 @@ export interface OptionToggleEvent {
 export interface FlowActionEvent {
     action: string;
     target?: any;
+    options?: any;
 }
 export interface ZoomChangeEvent {
     zoom: number;
@@ -99,8 +100,11 @@ export class FlowActions {
         this._onFlowAction.on(listener);
     }
 
+    private submit: HTMLInputElement;
     private run: HTMLInputElement;
     private debug: HTMLInputElement;
+    private expected: HTMLInputElement;
+    private compare: HTMLInputElement;
 
     constructor(container: HTMLElement) {
         const actionClick = (e: MouseEvent) => {
@@ -108,15 +112,20 @@ export class FlowActions {
             this._onFlowAction.emit({ action });
         };
 
+        this.submit = container.querySelector('#submit') as HTMLInputElement;
+        this.submit.onclick = actionClick;
         this.run = container.querySelector('#run') as HTMLInputElement;
         this.run.onclick = actionClick;
         this.debug = container.querySelector('#debug') as HTMLInputElement;
         this.debug.onclick = actionClick;
+        this.expected = container.querySelector('#expected') as HTMLInputElement;
+        this.expected.onclick = actionClick;
+        this.compare = container.querySelector('#compare') as HTMLInputElement;
+        this.compare.onclick = actionClick;
     }
 
-    enable(isEnabled: boolean) {
-        this.run.disabled = !isEnabled;
-        this.debug.disabled = !isEnabled;
+    enableCompare(isEnabled: boolean) {
+        this.compare.disabled = !isEnabled;
     }
 
 }
