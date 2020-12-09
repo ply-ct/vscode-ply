@@ -222,8 +222,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         try {
             console.debug(`run flow: ${uri}`);
             const adapter = this.getAdapter(uri);
-            const flowId = `${uri}#${path.basename(uri.fsPath)}`;
-            await adapter.run([flowId]); // TODO RunOptions?
+            await adapter.run([`flows|${uri.toString(true)}`]); // TODO RunOptions?
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { URI as Uri } from 'vscode-uri';
 import { Log } from 'vscode-test-adapter-util';
-import { Ply, Suite, Request, Case, Flow } from 'ply-ct';
+import { Ply, Suite, Request, Case, Step } from 'ply-ct';
 import { PlyConfig } from './config';
 
 export class PlyLoader {
@@ -67,11 +67,11 @@ export class PlyLoader {
     /**
      * Loads ply flows.
      */
-    async loadFlows(): Promise<Map<Uri,Suite<Flow>>> {
+    async loadFlows(): Promise<Map<Uri,Suite<Step>>> {
         const flowFileUris = await vscode.workspace.findFiles(
             new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.flowFiles),
             new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.ignore));
-        const flows = new Map<Uri,Suite<Flow>>();
+        const flows = new Map<Uri,Suite<Step>>();
         if (flowFileUris.length > 0) {
             const flowSuites = await new Ply(this.config.plyOptions).loadFlows(flowFileUris.map(fileUri => fileUri.fsPath));
             const skipped = await this.getSkipped();

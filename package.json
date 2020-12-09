@@ -256,59 +256,14 @@
       ],
       "view/item/context": [
         {
-          "command": "ply.import.postman-item",
-          "group": "inline@3",
-          "when": "view == test-explorer && viewItem == collection"
-        },
-        {
           "command": "ply.submit-item",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == suiteWithSource"
-        },
-        {
-          "command": "ply.open-flow",
-          "group": "inline@3",
-          "when": "view == test-explorer && viewItem == debuggableTest"
-        },
-        {
-          "command": "ply.open-flow",
-          "group": "inline@3",
           "when": "view == test-explorer && viewItem == test"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
-          "when": "view == test-explorer && viewItem == suiteWithSource"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
-          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
-          "when": "view == test-explorer && viewItem == test"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
-          "when": "view == test-explorer && viewItem == debuggableTest"
         },
         {
           "command": "ply.submit-item",
           "group": "inline@0",
           "when": "view == test-explorer && viewItem == testWithSource"
-        },
-        {
-          "command": "ply.submit-item",
-          "group": "inline@0",
-          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
-        },
-        {
-          "command": "ply.submit-item",
-          "group": "inline@0",
-          "when": "view == test-explorer && viewItem == test"
         },
         {
           "command": "ply.submit-item",
@@ -321,9 +276,64 @@
           "when": "view == test-explorer && viewItem == debuggableTestWithSource"
         },
         {
+          "command": "ply.import.postman-item",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == collection"
+        },
+        {
+          "command": "ply.open-flow",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == suite"
+        },
+        {
+          "command": "ply.open-flow",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == debuggableSuite"
+        },
+        {
+          "command": "ply.open-flow",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == test"
+        },
+        {
+          "command": "ply.open-flow",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == debuggableTest"
+        },
+        {
+          "command": "ply.diff-item",
+          "group": "inline@4",
+          "when": "view == test-explorer && viewItem == suite"
+        },
+        {
+          "command": "ply.diff-item",
+          "group": "inline@4",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
+        },
+        {
+          "command": "ply.diff-item",
+          "group": "inline@4",
+          "when": "view == test-explorer && viewItem == debuggableSuite"
+        },
+        {
+          "command": "ply.diff-item",
+          "group": "inline@4",
+          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
+        },
+        {
+          "command": "ply.diff.fragment-item",
+          "group": "inline@5",
+          "when": "view == test-explorer && viewItem == test"
+        },
+        {
           "command": "ply.diff.fragment-item",
           "group": "inline@5",
           "when": "view == test-explorer && viewItem == testWithSource"
+        },
+        {
+          "command": "ply.diff.fragment-item",
+          "group": "inline@5",
+          "when": "view == test-explorer && viewItem == debuggableTest"
         },
         {
           "command": "ply.diff.fragment-item",

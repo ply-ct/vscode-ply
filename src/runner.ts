@@ -31,6 +31,7 @@ export class PlyRunner {
         private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
     ) { }
 
+    // TODO: run a suite directly (esp. flow) rather than by collecting its tests
     async runTests(testIds: string[], debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
@@ -45,7 +46,6 @@ export class PlyRunner {
                     throw new Error(`No such ply test: ${testId}`);
                 }
             }
-
 
             if (!runOptions) {
                 runOptions = await this.checkMissingExpectedResults(testInfos);
@@ -246,7 +246,7 @@ export class PlyRunner {
      * If expected result file exists: empty runOptions object.
      */
     private async checkMissingExpectedResults(testInfos: TestInfo[]): Promise<ply.RunOptions | undefined> {
-        const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case|ply.Flow>[] = [];
+        const suitesWithMissingResults: ply.Suite<ply.Request|ply.Case|ply.Step>[] = [];
         for (const testInfo of testInfos) {
             const suite = this.plyRoots.getSuiteForTest(testInfo.id);
             if (suite) {

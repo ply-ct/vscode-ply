@@ -1,6 +1,6 @@
 import { URI as Uri } from 'vscode-uri';
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
-import { Suite, Request, Case, Flow, Test } from 'ply-ct';
+import { Suite, Request, Case, Step, Test } from 'ply-ct';
 
 type Info = TestInfo | TestSuiteInfo;
 
@@ -33,7 +33,7 @@ export class PlyRoot {
      * Relies on Uris coming in already sorted by shortest segment count first, then alpha.
      * Within files requests/cases should be sorted by the order they appear in the file.
      */
-    build(testUris: [Uri, number][], labeler?: (suiteId: string) => string) {
+    build(testUris: [Uri, number][], suiteLabeler?: (suiteId: string) => string, testLabeler?: (suiteId: string) => string) {
 
         // clear children in case reload
         this.baseSuite.children = [];
@@ -44,16 +44,20 @@ export class PlyRoot {
             const lastHash = testPath.lastIndexOf('#');
             const testName = testPath.substring(lastHash + 1);
 
+            const testId = testUri.toString(true);
             const test: TestInfo = {
                 type: 'test',
-                id: testUri.toString(true),
-                label: testName,
+                id: testId,
+                label: testLabeler ? testLabeler(testId) : testName,
                 line: testUris[i][1],
                 debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
             if (this.id !== 'flows') {
                 // flows should not be opened in text editor
                 test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
+            }
+            if (testLabeler) {
+                test.description = testName;
             }
 
             // find suite (file)
@@ -66,22 +70,23 @@ export class PlyRoot {
                 suite.children.push(test);
             }
             else {
+                const suiteId = this.formSuiteId(fileUri);
+                suite = {
+                    type: 'suite',
+                    id: suiteId,
+                    label: suiteLabeler ? suiteLabeler(suiteId) : fileName,
+                    debuggable: filePath.endsWith('.ts') || filePath.endsWith('.flow'),
+                    line: 0,
+                    children: []
+                };
                 if (this.id !== 'flows') {
-                    const suiteId = this.formSuiteId(fileUri);
-                    suite = {
-                        type: 'suite',
-                        id: suiteId,
-                        label: labeler ? labeler(suiteId) : fileName,
-                        file: fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true),
-                        debuggable: filePath.endsWith('.ts'),
-                        line: 0,
-                        children: []
-                    };
-                    if (labeler) {
-                        suite.description = fileName;
-                    }
-                    suite.children.push(test);
+                    // flows should not be opened in text editor
+                    suite.file = fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
                 }
+                if (suiteLabeler) {
+                    suite.description = fileName;
+                }
+                suite.children.push(test);
 
                 // find parent suite (dir)
                 const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -221,7 +226,7 @@ export class PlyRoots {
     public readonly rootSuite: TestSuiteInfo;
 
     private readonly testsById = new Map<string,Test>();
-    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case|Flow>>();
+    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case|Step>>();
     private readonly suiteIdsByExpectedResultUri = new Map<string,string>();
     private readonly suiteIdsByActualResultUri = new Map<string,string>();
 
@@ -244,7 +249,7 @@ export class PlyRoots {
         this.roots.push(this.flowsRoot);
     }
 
-    build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>, flowSuites: Map<Uri,Suite<Flow>>) {
+    build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>, flowSuites: Map<Uri,Suite<Step>>) {
         this.testsById.clear();
         this.suitesByTestOrSuiteId.clear();
         this.suiteIdsByExpectedResultUri.clear();
@@ -308,7 +313,10 @@ export class PlyRoots {
                 }
             }
         }
-        this.flowsRoot.build(flowUris);
+        this.flowsRoot.build(flowUris, undefined, testId => {
+            const test = this.testsById.get(testId) as Step;
+            return (test.subflow ? `${test.subflow.name} → ` : '') + test.step.name.replace(/\r?\n/g, ' ');
+        });
 
         this.rootSuite.children = this.roots.map(root => root.baseSuite);
     }
@@ -352,11 +360,11 @@ export class PlyRoots {
         return this.testsById.get(testId);
     }
 
-    getSuiteForTest(testId: string): Suite<Request|Case|Flow> | undefined {
+    getSuiteForTest(testId: string): Suite<Request|Case|Step> | undefined {
         return this.suitesByTestOrSuiteId.get(testId);
     }
 
-    getSuite(suiteId: string): Suite<Request|Case|Flow> | undefined {
+    getSuite(suiteId: string): Suite<Request|Case|Step> | undefined {
         return this.suitesByTestOrSuiteId.get(suiteId);
     }
 
