@@ -27,9 +27,10 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             step = element as flowbee.Step;
         }
         let items = super.getItems(flowElementEvent) || [];
+        const hasSubmit = type === 'flow' || step?.path === 'request';
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
-            { id: 'submit', label: 'Submit', icon: 'submit.svg' },
+            ...(hasSubmit ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
             { id: 'run', label: 'Run', icon: 'start.svg' }
         ];
         if (!flowElementEvent.instances) {
@@ -57,7 +58,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             { id: 'paste', label: 'Paste', key: stroke + ' V'}
         ];
         if (flowElementEvent.instances) {
-            const hasCompare = type === 'flow' || step?.path === 'request' && !step.attributes?.submit;
+            const hasCompare = type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');
             items = [
                 { id: 'inspect', label: 'Inspect' },
                 ...(hasCompare ? [{ id: 'compare', label: 'Compare Results', icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg' }] : []),

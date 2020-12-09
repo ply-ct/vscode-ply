@@ -189,6 +189,19 @@ export class Flow {
 
     onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
+        if (e.target && e.target.startsWith('s')) {
+            let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
+            if (!step && this.flowDiagram.flow.subflows) {
+                // check subflows for target
+                for (const subflow of this.flowDiagram.flow.subflows) {
+                    step = subflow.steps?.find(step => step.id === e.target);
+                    if (step) {
+                        e.target = `${subflow.id}.${step.id}`;
+                        break;
+                    }
+                }
+            }
+        }
         vscode.postMessage({
             type: flowAction,
             flow: this.flowDiagram.flow.path,
