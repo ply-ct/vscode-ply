@@ -40,19 +40,23 @@ export class DrawingTools {
         // zoom
         const zoomSlider = container.querySelector('#zoom-range') as HTMLInputElement;
         zoomSlider.oninput = e => {
-            this._onZoomChange.emit({ zoom: parseInt((e.target as HTMLInputElement).value) });
+            const zoom = parseInt((e.target as HTMLInputElement).value);
+            this._onZoomChange.emit({ zoom });
+            zoomSlider.title = `${zoom} %`;
         };
         const zoomOut = container.querySelector('#zoom-out') as HTMLInputElement;
         zoomOut.onclick = _e => {
             const zoom = Math.max(parseInt(zoomSlider.value) - 20, 20);
             zoomSlider.value = '' + zoom;
             this._onZoomChange.emit({ zoom });
+            zoomSlider.title = `${zoom} %`;
         };
         const zoomIn = container.querySelector('#zoom-in') as HTMLInputElement;
         zoomIn.onclick = _e => {
             const zoom = Math.min(parseInt(zoomSlider.value) + 20, 200);
             zoomSlider.value = '' + zoom;
             this._onZoomChange.emit({ zoom });
+            zoomSlider.title = `${zoom} %`;
         };
         // pinch gesture
         window.addEventListener('wheel', e => {
