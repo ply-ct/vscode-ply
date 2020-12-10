@@ -246,6 +246,12 @@ window.addEventListener('message', async (event) => {
         // save state
         const { base, websocketPort, file, readonly, instance } = message;
         vscode.setState({ base, websocketPort, file, text, readonly, instance, mode });
+        if (message.select) {
+            // delay until after container resize event
+            setTimeout(() => {
+                flow.flowDiagram.select(message.select);
+            }, 100);
+        }
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }

@@ -9,19 +9,20 @@ import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { Result } from '../result/result';
 
-interface InstanceSubscribed { instanceId: string }
+interface InstanceSubscribed { instanceId: string; }
+export interface FlowItemSelectEvent { uri: vscode.Uri; }
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
     private static html: string;
     private websocketPort: number;
     private disposables: flowbee.Disposable[] = [];
-    private flowListeners: flowbee.Listener<flowbee.FlowEvent>[] = [];
     private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
 
     constructor(
         readonly context: vscode.ExtensionContext,
-        readonly adapters: Map<string,PlyAdapter>
+        readonly adapters: Map<string,PlyAdapter>,
+        readonly onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 7001);
         if (this.websocketPort) {
@@ -95,7 +96,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const websocketPort = this.websocketPort;
-        function updateWebview(instance?: flowbee.FlowInstance) {
+        function updateWebview(instance?: flowbee.FlowInstance, select?: string) {
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
@@ -106,6 +107,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             } as any;
             if (instance) {
                 msg.instance = instance;
+            }
+            if (select) {
+                msg.select = select;
             }
             webviewPanel.webview.postMessage(msg);
         }
@@ -167,9 +171,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const flowPath = document.uri.fsPath.replace(/\\/g, '/');
         for (const adapter of this.adapters.values()) {
-            for (const handler of this.flowListeners) {
-                adapter.removeFlowListener(handler);
-            }
             let flowInstanceId: string | null = null;
             const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                 if (flowEvent.flowPath === flowPath) {
@@ -186,9 +187,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     }
                 }
             };
-            this.flowListeners.push(listener);
-            adapter.onFlow(listener);
+            this.disposables.push(adapter.onFlow(listener));
         }
+
+        this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
+            if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {
+                updateWebview(undefined, flowItemSelect.uri.fragment);
+            }
+        }));
 
         webviewPanel.onDidDispose(() => {
             for (const disposable of this.disposables) {

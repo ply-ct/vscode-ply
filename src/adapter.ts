@@ -3,7 +3,7 @@ import * as ply from 'ply-ct';
 import { inspect } from 'util';
 import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
-import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
+import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
 import { PlyRoots } from './plyRoots';
 import { PlyRunner } from './runner';
@@ -28,11 +28,8 @@ export class PlyAdapter implements TestAdapter {
     private runner: PlyRunner | undefined;
 
     private _onFlow = new Event<FlowEvent>();
-    onFlow(listener: Listener<FlowEvent>) {
-        this.disposables.push(this._onFlow.on(listener));
-    }
-    removeFlowListener(listener: Listener<FlowEvent>) {
-        this._onFlow.off(listener);
+    onFlow(listener: Listener<FlowEvent>): Disposable {
+        return this._onFlow.on(listener);
     }
 
     constructor(

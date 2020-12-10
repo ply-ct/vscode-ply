@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
+import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { PlyAdapter } from './adapter';
@@ -10,7 +11,7 @@ import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { PlyConfig } from './config';
-import { FlowEditor } from './flow/editor';
+import { FlowEditor, FlowItemSelectEvent } from './flow/editor';
 
 interface Item {
     id: string;
@@ -44,13 +45,22 @@ export async function activate(context: vscode.ExtensionContext) {
     // workspace folder uri to diff handler
     const diffHandlers = new Map<string,DiffHandler>();
 
-    const flowEditor = new FlowEditor(context, testAdapters);
+    const _onFlowItemSelect = new Event<FlowItemSelectEvent>();
+    const onFlowItemSelect = (listener: Listener<FlowItemSelectEvent>): Disposable => {
+        return _onFlowItemSelect.on(listener);
+    };
+
+    const flowEditor = new FlowEditor(context, testAdapters, onFlowItemSelect);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
 
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
         const item = await getItem(...args);
-        if (item?.uri?.fsPath) {
-            vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(item.uri.fsPath), 'ply.flow.diagram');
+        if (item?.uri) {
+            const fileUri = vscode.Uri.file(item.uri.fsPath);
+            await vscode.commands.executeCommand('vscode.openWith', fileUri, 'ply.flow.diagram');
+            if (item.uri.fragment) {
+                _onFlowItemSelect.emit({ uri: item.uri });
+            }
         }
     }));
 
