@@ -247,9 +247,14 @@ window.addEventListener('message', async (event) => {
         const { base, websocketPort, file, readonly, instance } = message;
         vscode.setState({ base, websocketPort, file, text, readonly, instance, mode });
         if (message.select) {
+            let id = message.select;
+            const dot = id.indexOf('.');
+            if (dot > 0) {
+                id = id.substring(dot + 1);
+            }
             // delay until after container resize event
             setTimeout(() => {
-                flow.flowDiagram.select(message.select);
+                flow.flowDiagram.select(id, true);
             }, 100);
         }
     } else if (message.type === 'confirm') {
