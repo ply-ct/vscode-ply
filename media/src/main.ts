@@ -11,6 +11,7 @@ import {
 } from './actions';
 import { descriptors } from './descriptors';
 import { MenuProvider } from './menu';
+import { Values } from './values';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -42,6 +43,7 @@ export class Flow {
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions: FlowActions;
+    values?: Values;
     readonly toolbox?: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
 
@@ -201,6 +203,11 @@ export class Flow {
                     }
                 }
             }
+            if (step && e.action === 'run') {
+                console.log("PLY VALUES: " + JSON.stringify(this.values?.values, null, 2));
+                const neededValues = this.values?.getNeeded(step);
+                console.log("NEEDED VALUES: " + JSON.stringify(neededValues, null, 2));
+            }
         }
         vscode.postMessage({
             type: flowAction,
@@ -243,9 +250,12 @@ window.addEventListener('message', async (event) => {
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
+        if (message.values) {
+            flow.values = new Values(message.values, flow.flowDiagram.flow);
+        }
         // save state
-        const { base, websocketPort, file, readonly, instance } = message;
-        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode });
+        const { base, websocketPort, file, readonly, instance, values } = message;
+        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values });
         if (message.select) {
             let id = message.select;
             const dot = id.indexOf('.');
@@ -270,5 +280,8 @@ if (state) {
     flow.flowDiagram.instance = state.instance;
     flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
     flow.render();
+    if (state.values) {
+        flow.values = new Values(state.values, flow.flowDiagram.flow);
+    }
 }
 

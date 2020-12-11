@@ -10,6 +10,7 @@ import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
 import { SubmitCodeLensProvider } from './codeLens';
+import { Values } from './values';
 
 export class PlyAdapter implements TestAdapter {
 
@@ -24,8 +25,9 @@ export class PlyAdapter implements TestAdapter {
     get retire(): vscode.Event<RetireEvent> { return this.retireEmitter.event; }
     retireIds(testIds: string[]) { this.retireEmitter.fire({ tests: testIds }); }
 
-    config: PlyConfig;
+    private config: PlyConfig;
     private runner: PlyRunner | undefined;
+    values?: Values;
 
     private _onFlow = new Event<FlowEvent>();
     onFlow(listener: Listener<FlowEvent>): Disposable {
@@ -80,18 +82,6 @@ export class PlyAdapter implements TestAdapter {
         flowWatcher.onDidChange(uri => this.onSuiteChange(uri));
         flowWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
 
-        // let resultsLoc = this.config.plyOptions.actualLocation;
-        // if (process.platform.startsWith('win')) {
-        //     // watcher needs backslashes in RelativePattern base on windows
-        //     resultsLoc = resultsLoc.replace(/\//g, '\\');
-        // }
-        // const resultWatcher = vscode.workspace.createFileSystemWatcher(
-        //     new vscode.RelativePattern(resultsLoc, '*.{yml,yaml}'));
-        // this.disposables.push(resultWatcher);
-        // resultWatcher.onDidCreate(uri => this.onSuiteCreate(uri));
-        // resultWatcher.onDidChange(uri => this.onSuiteChange(uri));
-        // resultWatcher.onDidDelete(uri => this.onSuiteDelete(uri));
-
         const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider));
         this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'typescript' }, submitCodeLensProvider));
@@ -126,6 +116,10 @@ export class PlyAdapter implements TestAdapter {
             this.log.error('Error loading ply tests: ' + err, err);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', errorMessage: inspect(err) });
         }
+
+        this.values?.dispose();
+        this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
+        this.disposables.push(this.values);
     }
 
     async run(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {

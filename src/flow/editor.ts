@@ -96,7 +96,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const websocketPort = this.websocketPort;
-        function updateWebview(instance?: flowbee.FlowInstance, select?: string) {
+        const updateWebview = async (instance?: flowbee.FlowInstance, select?: string) => {
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
@@ -105,6 +105,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
             } as any;
+            const adapter = this.getAdapter(document.uri);
+            if (adapter?.values) {
+                msg.values = await adapter.values.getResultValues(this.getId(document.uri));
+            }
             if (instance) {
                 msg.instance = instance;
             }
@@ -112,7 +116,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 msg.select = select;
             }
             webviewPanel.webview.postMessage(msg);
-        }
+        };
 
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'change') {

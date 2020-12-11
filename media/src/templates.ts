@@ -1,4 +1,4 @@
-import * as flowbee from 'flowbee';
+import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Templates {
 
