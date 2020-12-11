@@ -33,6 +33,10 @@ export class PlyAdapter implements TestAdapter {
     onFlow(listener: Listener<FlowEvent>): Disposable {
         return this._onFlow.on(listener);
     }
+    private _onceValues = new Event<{values: Values}>();
+    onceValues(listener: Listener<{values: Values}>) {
+        return this._onceValues.once(listener);
+    }
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
@@ -120,6 +124,7 @@ export class PlyAdapter implements TestAdapter {
         this.values?.dispose();
         this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
         this.disposables.push(this.values);
+        this._onceValues.emit({ values: this.values });
     }
 
     async run(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {

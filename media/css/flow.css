@@ -151,6 +151,38 @@ body {
   background-color: var(--vscode-sideBar-background);
 }
 
+.flow-values {
+  position: absolute;
+  width: calc(100% - 200px);
+  height: calc(100% - 100px);
+  top: 50px;
+  left: 20px;
+  display: none;
+}
+
+.flow-values-content {
+  height: 100%;
+}
+
+/* TODO: move these to flowbee */
+.flowbee-configurator-light .flowbee-config-footer {
+  display: flex;
+  justify-content: flex-end;
+  height: 32px;
+  background-color: #e6e6e6;
+  color: #616161;
+  border-top: 1px solid #c8c8c8;
+  padding: 5px;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.flowbee-configurator-light .flowbee-config-footer input[type=button] {
+  margin-right: 10px;
+}
+
+
+
 /* customized flowbee styles */
 .flowbee-configurator {
   width: calc(100% - 200px);
@@ -158,3 +190,4 @@ body {
   left: 15px;
   bottom: 25px;
 }
+

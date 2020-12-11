@@ -124,10 +124,12 @@ export class Flow {
         this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
         const handleFlowAction = (e: FlowActionEvent) => {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
-                drawingTools.switchMode('runtime');
-                this.flowDiagram.mode = 'runtime';
                 Flow.configurator?.close();
-                this.flowDiagram.render(this.options.diagramOptions);
+                if (!e.target) {
+                    drawingTools.switchMode('runtime');
+                    this.flowDiagram.mode = 'runtime';
+                    this.flowDiagram.render(this.options.diagramOptions);
+                }
             }
             if (e.action === 'submit') {
                 this.onFlowAction({ action: 'run', options: { submit: true }});
@@ -189,7 +191,7 @@ export class Flow {
         this.flowDiagram.render(this.options.diagramOptions);
     }
 
-    onFlowAction(e: FlowActionEvent) {
+    async onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
         if (e.target && e.target.startsWith('s')) {
             let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
@@ -204,9 +206,13 @@ export class Flow {
                 }
             }
             if (step && e.action === 'run') {
-                console.log("PLY VALUES: " + JSON.stringify(this.values?.values, null, 2));
-                const neededValues = this.values?.getNeeded(step);
-                console.log("NEEDED VALUES: " + JSON.stringify(neededValues, null, 2));
+                if (this.values) {
+                    const values = await this.values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
+                    console.log("ENTERED VALUES: " + JSON.stringify(values, null, 2));
+                    if (!values) {
+                        return; // canceled
+                    }
+                }
             }
         }
         vscode.postMessage({
@@ -251,7 +257,7 @@ window.addEventListener('message', async (event) => {
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
         if (message.values) {
-            flow.values = new Values(message.values, flow.flowDiagram.flow);
+            flow.values = new Values(flow.options.iconBase, message.values, flow.flowDiagram.flow);
         }
         // save state
         const { base, websocketPort, file, readonly, instance, values } = message;
@@ -281,7 +287,7 @@ if (state) {
     flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
     flow.render();
     if (state.values) {
-        flow.values = new Values(state.values, flow.flowDiagram.flow);
+        flow.values = new Values(flow.options.iconBase, state.values, flow.flowDiagram.flow);
     }
 }
 

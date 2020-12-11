@@ -58,29 +58,31 @@ export class Values {
             if (suite.runtime.results.actual.exists) {
                 const yaml = suite.runtime.results.getActualYaml();
                 const obj = ply.loadYaml(resultUri.toString(), yaml.text);
-                // TODO cases
-                if (suite.type === 'request') {
-                    for (const key of Object.keys(obj)) {
-                        if (obj.request) {
-                            resultValues[key] = this.getResult(obj);
-                        }
-                    }
-                } else if (suite.type === 'flow') {
-                    for (const key of Object.keys(obj)) {
-                        const flowObj = obj[key];
-                        if (flowObj.id?.startsWith('f')) {
-                            for (const subKey of Object.keys(flowObj)) {
-                                const subObj = flowObj[subKey];
-                                if (subObj.request) {
-                                    resultValues[`${flowObj.id}.${subObj.id}`] = this.getResult(subObj);
-                                }
+                if (typeof obj === 'object') {
+                    // TODO cases
+                    if (suite.type === 'request') {
+                        for (const key of Object.keys(obj)) {
+                            if (obj.request) {
+                                resultValues[key] = this.getResult(obj);
                             }
-                        } else if (flowObj.id?.startsWith('s') && flowObj.request) {
-                            resultValues[flowObj.id] = this.getResult(flowObj);
+                        }
+                    } else if (suite.type === 'flow') {
+                        for (const key of Object.keys(obj)) {
+                            const flowObj = obj[key];
+                            if (flowObj.id?.startsWith('f')) {
+                                for (const subKey of Object.keys(flowObj)) {
+                                    const subObj = flowObj[subKey];
+                                    if (subObj.request) {
+                                        resultValues[`${flowObj.id}.${subObj.id}`] = this.getResult(subObj);
+                                    }
+                                }
+                            } else if (flowObj.id?.startsWith('s') && flowObj.request) {
+                                resultValues[flowObj.id] = this.getResult(flowObj);
+                            }
                         }
                     }
+                    values.__ply_results = resultValues;
                 }
-                values.__ply_results = resultValues;
                 this.resultValues.set(resultUri.toString(), values || {});
             }
         }
