@@ -32,7 +32,7 @@ export class PlyRunner {
     ) { }
 
     // TODO: run a suite directly (esp. flow) rather than by collecting its tests
-    async runTests(testIds: string[], debug = false, runOptions?: ply.RunOptions): Promise<void> {
+    async runTests(testIds: string[], plyValues: object, debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
 
@@ -80,7 +80,7 @@ export class PlyRunner {
             });
             this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
 
-            await this.runPlyees(plyees, debug, runOptions);
+            await this.runPlyees(plyees, plyValues, debug, runOptions);
 
             for (const ancestor of ancestors) {
                 this.fire(<TestSuiteEvent>{ type: 'suite', suite: ancestor.id, state: 'completed', testRunId } );
@@ -94,12 +94,11 @@ export class PlyRunner {
         }
     }
 
-    async runPlyees(plyees: string[], debug = false, runOptions?: object): Promise<void> {
+    async runPlyees(plyees: string[], plyValues: object, debug = false, runOptions?: object): Promise<void> {
 
         let childProcessFinished = false;
 
         const nodePath = await this.config.getNodePath();
-        const plyValues = {}; // currently vscode-ply doesn't add any extra values
 
         this.outputChannel.clear();
         this.outputChannel.show(true);

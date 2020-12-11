@@ -127,13 +127,13 @@ export class PlyAdapter implements TestAdapter {
         this._onceValues.emit({ values: this.values });
     }
 
-    async run(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {
+    async run(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
                 this.plyRoots, this.log, this.testStatesEmitter);
             this.runner.onFlow(evt => this._onFlow.emit(evt));
-            await this.runner.runTests(testIds, false, runOptions);
+            await this.runner.runTests(testIds, values, false, runOptions);
         } catch (err) {
             console.error(err);
             this.log.error(err);
@@ -141,14 +141,14 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
-    async debug(testIds: string[], runOptions?: ply.RunOptions): Promise<void> {
+    async debug(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
         // start a test run in a child process and attach the debugger to it...
         this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
         this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
             this.plyRoots, this.log, this.testStatesEmitter);
         this.runner.onFlow(evt => this._onFlow.emit(evt));
-		const testRunPromise = this.runner.runTests(testIds, true, runOptions);
+		const testRunPromise = this.runner.runTests(testIds, values, true, runOptions);
 
 		this.log.info('Starting debug session');
 		let debugSession: any;

@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (!adapter) {
                     throw new Error(`No test adapter found for workspace folder: ${item.workspaceFolder.uri}`);
                 }
-                await adapter.run([item.id], { submit: true });
+                await adapter.run([item.id], {}, { submit: true });
             }
         } catch (err) {
             console.error(err);

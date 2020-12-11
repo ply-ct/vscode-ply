@@ -1,8 +1,13 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
+import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
+
+export interface ValuesUpdateEvent {
+    resultUri: vscode.Uri;
+}
 
 /**
  * Caches latest result values so they're known at design-time.
@@ -17,10 +22,15 @@ export class Values {
     // result file uri to values object
     private resultValues = new Map<string,object>();
 
+    private _onValuesUpdate = new Event<ValuesUpdateEvent>();
+    onValuesUpdate(listener: Listener<ValuesUpdateEvent>): Disposable {
+        return this._onValuesUpdate.on(listener);
+    }
+
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
         readonly plyRoots: PlyRoots,
-        private readonly log: Log
+        log: Log
     ) {
         this.config = new PlyConfig(workspaceFolder, log, async () => {
             this._plyValues = undefined;
@@ -110,6 +120,7 @@ export class Values {
 
     private onResultChange(resultUri: vscode.Uri) {
         this.resultValues.delete(resultUri.toString());
+        this._onValuesUpdate.emit({ resultUri });
     }
 
     dispose() {
@@ -118,5 +129,4 @@ export class Values {
         }
         this.disposables = [];
     }
-
 }

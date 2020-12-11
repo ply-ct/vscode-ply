@@ -105,19 +105,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
             } as any;
-            const adapter = this.getAdapter(document.uri);
-            if (adapter) {
-                if (adapter.values) {
-                    msg.values = await adapter.values.getResultValues(this.getId(document.uri));
-                } else {
-                    adapter.onceValues(_v => updateWebview());
-                }
-            }
             if (instance) {
                 msg.instance = instance;
             }
             if (select) {
                 msg.select = select;
+            }
+            const adapter = this.getAdapter(document.uri);
+            if (adapter?.values) {
+                msg.values = await adapter.values.getResultValues(this.getId(document.uri));
             }
             webviewPanel.webview.postMessage(msg);
         };
@@ -204,6 +200,35 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
         }));
 
+        const onValuesUpdate = async (resultUri: vscode.Uri) => {
+            const adapter = this.getAdapter(document.uri);
+            if (adapter) {
+                if (resultUri) {
+                    const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
+                    if (suite) {
+                        if (suite.runtime.results.actual.toString() === resultUri.fsPath) {
+                            updateWebview(this.getInstance(document.uri)); // TODO instance state
+                            if (adapter.values) {
+                                // const values = await adapter.values.getResultValues(this.getId(document.uri));
+                                // webviewPanel.webview.postMessage({ type: 'values', values });
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const adapter = this.getAdapter(document.uri);
+        if (adapter.values) {
+            this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
+        } else {
+            adapter.onceValues(e => {
+                // webviewPanel.webview.postMessage({ type: 'values', values: e.values });
+                updateWebview();
+                this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
+            });
+        }
+
         webviewPanel.onDidDispose(() => {
             for (const disposable of this.disposables) {
                 disposable.dispose();
@@ -212,6 +237,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         });
 
         updateWebview();
+    }
+
+    updateWebviewValues() {
+
     }
 
     getNonce(): string {
@@ -240,7 +269,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             const id = this.getId(uri, target);
             console.debug(`run: ${id}`);
             const adapter = this.getAdapter(uri);
-            await adapter.run([id], runOptions);
+            const values = target ? adapter.values?.getResultValues(this.getId(uri)) : {};
+            await adapter.run([id], values, runOptions);
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);

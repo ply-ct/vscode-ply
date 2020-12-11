@@ -242,6 +242,8 @@ export class Flow {
     }
 }
 
+// let flow: Flow | undefined = undefined;
+
 window.addEventListener('message', async (event) => {
     const message = event.data; // json message data from extension
     console.debug(`message: ${JSON.stringify(message, null, 2)}`);
@@ -256,6 +258,7 @@ window.addEventListener('message', async (event) => {
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
+        // const values = vscode.getState()?.values;
         if (message.values) {
             flow.values = new Values(flow.options.iconBase, message.values, flow.flowDiagram.flow);
         }
@@ -273,7 +276,19 @@ window.addEventListener('message', async (event) => {
                 flow.flowDiagram.select(id, true);
             }, 100);
         }
-    } else if (message.type === 'confirm') {
+    }
+    // else if (message.type === 'values') {
+    //     if (flow) {
+    //         const values = message.values;
+    //         const state = vscode.getState();
+    //         flow.values = new Values(flow.options.iconBase, values, flow.flowDiagram.flow);
+    //         if (state) {
+    //             const { base, websocketPort, file, text, readonly, instance, mode } = state;
+    //             vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values });
+    //         }
+    //     }
+    // }
+    else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
 });
