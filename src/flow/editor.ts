@@ -148,7 +148,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     result: res === 'OK'
                 });
             } else if (message.type === 'run' || message.type === 'debug') {
-                this.run(document.uri, message.target, message.options, message.type === 'debug');
+                this.run(document.uri, message.target, message.values, message.options, message.type === 'debug');
             } else if (message.type === 'expected') {
                 this.expectedResults(document.uri, message.target);
             } else if (message.type === 'compare') {
@@ -264,13 +264,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         return adapter;
     }
 
-    async run(uri: vscode.Uri, target?: string, runOptions?: RunOptions, debug = false) {
+    async run(uri: vscode.Uri, target?: string, values: object = {}, runOptions?: RunOptions, debug = false) {
         try {
             const id = this.getId(uri, target);
             console.debug(`run: ${id}`);
             const adapter = this.getAdapter(uri);
-            const values = target ? adapter.values?.getResultValues(this.getId(uri)) : {};
-            await adapter.run([id], values, runOptions);
+            await adapter?.run([id], values, runOptions);
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);

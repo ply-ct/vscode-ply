@@ -193,6 +193,7 @@ export class Flow {
 
     async onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
+        let values: object | undefined;
         if (e.target && e.target.startsWith('s')) {
             let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
             if (!step && this.flowDiagram.flow.subflows) {
@@ -207,8 +208,7 @@ export class Flow {
             }
             if (step && e.action === 'run') {
                 if (this.values) {
-                    const values = await this.values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
-                    console.log("ENTERED VALUES: " + JSON.stringify(values, null, 2));
+                    values = await this.values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
                     if (!values) {
                         return; // canceled
                     }
@@ -219,7 +219,8 @@ export class Flow {
             type: flowAction,
             flow: this.flowDiagram.flow.path,
             ...(e.target) && { target: e.target },
-            ...(e.options) && { options: e.options }
+            ...(e.options) && { options: e.options },
+            ...(values) && { values }
         });
     }
 

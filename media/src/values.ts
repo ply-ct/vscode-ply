@@ -52,7 +52,7 @@ export class Values {
     }
 
     /**
-     * TODO: duplicated from ply/src/subst.ts
+     * duplicated from ply/src/subst.ts
      */
     get(input: string, context: object): string {
 
@@ -109,7 +109,11 @@ export class Values {
             const val: any = {};
             const rows = JSON.parse(value);
             for (const row of rows) {
-                val[row[0]] = row[1];
+                let key = row[0].substring(2, row[0].length - 1); // trim expr tokens
+                if (key.startsWith('@')) {
+                    key = `__ply_results.${key.substring(1)}`;
+                }
+                val[key] = row[1];
             }
             return val;
         }
