@@ -252,13 +252,23 @@ window.addEventListener('message', async (event) => {
         if (!templates) {
             templates = new Templates(message.base);
         }
-        const text = message.text?.trim() || (await templates.get('default.flow'));
+        let text = message.text?.trim();
+        let isNew = false;
+        if (!text) {
+            // new flow
+            isNew = true;
+            text = await templates.get('default.flow');
+        }
         const mode = message.instance ? 'runtime' : 'select';
         const flow = new Flow(message.base, message.websocketPort, text, message.file, mode);
         flow.flowDiagram.instance = message.instance;
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
+        if (isNew) {
+            console.debug(`Saving new flow: ${message.file}`);
+            flow.updateFlow();
+        }
         // const values = vscode.getState()?.values;
         if (message.values) {
             flow.values = new Values(flow.options.iconBase, message.values, flow.flowDiagram.flow);

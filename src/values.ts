@@ -58,7 +58,7 @@ export class Values {
     async getResultValues(suiteId: string): Promise<object> {
         const suite = this.plyRoots.getSuite(suiteId);
         if (!suite) {
-            throw new Error(`No suite found: ${suiteId}`);
+            return {};
         }
         const resultUri = vscode.Uri.file(suite.runtime.results.actual.toString());
         let values: any = this.resultValues.get(resultUri.toString());

@@ -120,13 +120,19 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         this.disposables.push(webviewPanel.webview.onDidReceiveMessage(async message => {
             if (message.type === 'change') {
-                const edit = new vscode.WorkspaceEdit();
-                edit.replace(
-                    document.uri,
-                    new vscode.Range(0, 0, document.lineCount, 0),
-                    message.text
-                );
-                return vscode.workspace.applyEdit(edit);
+                const isNew = !document.getText().trim();
+                if (isNew) {
+                    // applyEdit does not update file -- why?
+                    fs.writeFileSync(document.uri.fsPath, message.text);
+                } else {
+                    const edit = new vscode.WorkspaceEdit();
+                    edit.replace(
+                        document.uri,
+                        new vscode.Range(0, 0, document.lineCount, 0),
+                        message.text
+                    );
+                    await vscode.workspace.applyEdit(edit);
+                }
             } else if (message.type === 'alert' || message.type === 'confirm') {
                 const options: vscode.MessageOptions = {};
                 const items: string[] = [];

@@ -120,7 +120,7 @@ export class Values {
     }
 
     renderTable(title: string, action: string, initialValue?: string): Promise<string | void> {
-        return new Promise<string>(resolve => {
+        return new Promise<string | void>(resolve => {
             // build html
             const div = document.getElementById('flow-values') as HTMLDivElement;
             const theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
