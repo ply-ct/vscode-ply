@@ -38,10 +38,14 @@ export class PlyRunner {
 
         try {
             const testInfos: TestInfo[] = [];
+            const flowSuites: TestSuiteInfo[] = [];
             for (const testId of testIds) {
                 const testOrSuite = this.plyRoots.find(i => i.id === testId);
                 if (testOrSuite) {
                     this.collectTests(testOrSuite, testInfos);
+                    if (testOrSuite.type === 'suite' && testOrSuite.id.endsWith('.flow')) {
+                        flowSuites.push(testOrSuite);
+                    }
                 } else {
                     throw new Error(`No such ply test: ${testId}`);
                 }
@@ -55,6 +59,16 @@ export class PlyRunner {
             }
             if (this.config.useDist) {
                 runOptions.useDist = true;
+            }
+            if (flowSuites.length > 0) {
+                const openFlow = this.config.openFlowWhenRun;
+                if (openFlow === 'Always' || (openFlow === 'If Single' && flowSuites.length === 1)) {
+                    for (const flowSuite of flowSuites) {
+                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
+                        // const flowUri = PlyRoots.toUri(flowSuite.id);
+                        // await vscode.commands.executeCommand('vscode.openWith', flowUri, 'ply.flow.diagram');
+                    }
+                }
             }
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });

@@ -175,6 +175,17 @@
           "default": false,
           "scope": "resource"
         },
+        "ply.openFlowWhenRun": {
+          "description": "Automatically open flows for live view when executing from Test Explorer",
+          "type": "string",
+          "enum": [
+            "If Single",
+            "Always",
+            "Never"
+          ],
+          "default": "If Single",
+          "scope": "window"
+        },
         "ply.enableDiffEditorCodeLens": {
           "descripton": "How to handle when vscode setting 'diffEditor.codeLens' is not enabled for a workspace folder that contains ply tests",
           "type": "string",

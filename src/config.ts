@@ -19,6 +19,7 @@ export enum Setting {
     plyPath = 'plyPath',
     cwd = 'cwd',
     useDist = 'useDist',
+    openFlowWhenRun = 'openFlowWhenRun',
     websocketPort = 'websocketPort'
 }
 
@@ -104,6 +105,10 @@ export class PlyConfig {
 
     get useDist(): boolean {
         return this.getConfiguration().get(Setting.useDist, false);
+    }
+
+    get openFlowWhenRun(): string {
+        return this.getConfiguration().get(Setting.openFlowWhenRun, 'If Single');
     }
 
     val(name: string, defaultVal: string): string {
