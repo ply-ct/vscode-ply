@@ -164,30 +164,9 @@ body {
   height: 100%;
 }
 
-/* TODO: move these to flowbee */
-.flowbee-configurator-light .flowbee-config-footer {
-  display: flex;
-  justify-content: flex-end;
-  height: 32px;
-  background-color: #e6e6e6;
-  color: #616161;
-  border-top: 1px solid #c8c8c8;
-  padding: 5px;
-  font-weight: 500;
-  box-sizing: border-box;
-}
-
-.flowbee-configurator-light .flowbee-config-footer input[type=button] {
-  margin-right: 10px;
-}
-
-
-
 /* customized flowbee styles */
 .flowbee-configurator {
   width: calc(100% - 200px);
-  height: 200px; /* enough for six tabs */
-  left: 15px;
-  bottom: 25px;
+  height: 167px; /* enough for five tabs */
 }
 

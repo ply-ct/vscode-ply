@@ -283,14 +283,15 @@
   height: 200px;
   position: fixed;
   left: 15px;
-  bottom: 15px;
+  top: 15px;
   flex-direction: column;
   background-color: #ffffff;
   color: #616161;
   border: 1px solid #c8c8c8;
   box-shadow: 0 2px 8px #a8a8a8;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
-  font-size: 13px; }
+  font-size: 13px;
+  box-sizing: border-box; }
   .flowbee-configurator-light .flowbee-config-header {
     display: flex;
     height: 30px;
@@ -301,12 +302,15 @@
     font-weight: 500;
     box-sizing: border-box; }
   .flowbee-configurator-light .flowbee-config-title {
-    flex-grow: 1; }
+    flex-grow: 1;
+    user-select: none; }
   .flowbee-configurator-light .flowbee-config-close {
-    cursor: pointer; }
+    cursor: pointer;
+    user-select: none; }
   .flowbee-configurator-light .flowbee-config-content {
     display: flex;
-    flex-direction: column; }
+    flex-direction: column;
+    box-sizing: border-box; }
   .flowbee-configurator-light .flowbee-config-tabbed-content {
     display: flex; }
   .flowbee-configurator-light .flowbee-config-tabs {
@@ -315,7 +319,8 @@
     background-color: #ececec;
     padding: 0;
     margin: 0;
-    overflow: hidden; }
+    overflow: hidden;
+    user-select: none; }
   .flowbee-configurator-light .flowbee-config-tab {
     background-color: #ececec;
     color: #6a6a6a;
@@ -359,6 +364,18 @@
     padding-right: 10px;
     position: relative;
     top: -2px; }
+  .flowbee-configurator-light .flowbee-config-footer {
+    display: flex;
+    justify-content: flex-end;
+    height: 32px;
+    background-color: #e6e6e6;
+    color: #616161;
+    border-top: 1px solid #c8c8c8;
+    padding: 5px;
+    font-weight: 500;
+    box-sizing: border-box; }
+  .flowbee-configurator-light .flowbee-config-footer input[type=button] {
+    margin-right: 10px; }
 
 .flowbee-configurator-dark {
   display: none;
@@ -366,7 +383,7 @@
   height: 200px;
   position: fixed;
   left: 15px;
-  bottom: 15px;
+  top: 15px;
   flex-direction: column;
   background-color: #ffffff;
   color: #616161;
@@ -374,6 +391,7 @@
   box-shadow: 0 2px 8px #a8a8a8;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
   font-size: 13px;
+  box-sizing: border-box;
   background-color: #1e1e1e;
   color: #cccccc;
   border: 1px solid #454545;
@@ -388,12 +406,15 @@
     font-weight: 500;
     box-sizing: border-box; }
   .flowbee-configurator-dark .flowbee-config-title {
-    flex-grow: 1; }
+    flex-grow: 1;
+    user-select: none; }
   .flowbee-configurator-dark .flowbee-config-close {
-    cursor: pointer; }
+    cursor: pointer;
+    user-select: none; }
   .flowbee-configurator-dark .flowbee-config-content {
     display: flex;
-    flex-direction: column; }
+    flex-direction: column;
+    box-sizing: border-box; }
   .flowbee-configurator-dark .flowbee-config-tabbed-content {
     display: flex; }
   .flowbee-configurator-dark .flowbee-config-tabs {
@@ -402,7 +423,8 @@
     background-color: #ececec;
     padding: 0;
     margin: 0;
-    overflow: hidden; }
+    overflow: hidden;
+    user-select: none; }
   .flowbee-configurator-dark .flowbee-config-tab {
     background-color: #ececec;
     color: #6a6a6a;
@@ -446,6 +468,18 @@
     padding-right: 10px;
     position: relative;
     top: -2px; }
+  .flowbee-configurator-dark .flowbee-config-footer {
+    display: flex;
+    justify-content: flex-end;
+    height: 32px;
+    background-color: #e6e6e6;
+    color: #616161;
+    border-top: 1px solid #c8c8c8;
+    padding: 5px;
+    font-weight: 500;
+    box-sizing: border-box; }
+  .flowbee-configurator-dark .flowbee-config-footer input[type=button] {
+    margin-right: 10px; }
   .flowbee-configurator-dark .flowbee-config-header {
     background-color: #323232;
     color: #c8c8c8;

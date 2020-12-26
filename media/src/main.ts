@@ -55,7 +55,7 @@ export class Flow {
         // configurator
         if (!Flow.configurator) {
             // TODO dispose listener
-            Flow.configurator = new flowbee.Configurator();
+            Flow.configurator = new flowbee.Configurator(document.getElementById('flow-diagram') as HTMLElement);
             Flow.configurator.onFlowElementUpdate(_e => this.updateFlow());
         }
 

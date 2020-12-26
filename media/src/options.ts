@@ -35,7 +35,8 @@ export class Options {
     get configuratorOptions(): flowbee.ConfiguratorOptions {
         return {
             theme: this.theme,
-            sourceTab: 'yaml'
+            sourceTab: 'yaml',
+            moveAndResize: true
         };
     }
 }
