@@ -194,7 +194,7 @@ export class Flow {
     async onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
         let values: object | undefined;
-        if (e.target && e.target.startsWith('s')) {
+        if (typeof e.target === 'string' && e.target.startsWith('s')) {
             let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
             if (!step && this.flowDiagram.flow.subflows) {
                 // check subflows for target

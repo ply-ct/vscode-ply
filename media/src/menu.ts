@@ -17,7 +17,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         private options: Options
     ) {
         super(flowDiagram);
-    }
+     }
 
     getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
         const element = flowElementEvent.element;
@@ -26,7 +26,6 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         if (type === 'step') {
             step = element as flowbee.Step;
         }
-        let items = super.getItems(flowElementEvent) || [];
         const hasSubmit = type === 'flow' || step?.path === 'request';
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
@@ -40,22 +39,10 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             ];
         }
 
-        const isMac = navigator.platform.startsWith('Mac');
-        let stroke;
-        if (isMac === true) {
-            stroke = '⌘';
-        }
-        else {
-            stroke = 'Ctrl';
-        }
-
-        items = [
+        let items: (flowbee.MenuItem | 'separator')[] = [
             ...designItems,
             'separator',
-            ...items,
-            { id: 'cut', label: 'Cut', key: stroke + ' X'},
-            { id: 'copy', label: 'Copy', key: stroke + ' C'},
-            { id: 'paste', label: 'Paste', key: stroke + ' V'}
+            ...super.getItems(flowElementEvent) || []
         ];
         if (flowElementEvent.instances) {
             const hasCompare = type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');
@@ -70,9 +57,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     }
 
     async onSelectItem(selectEvent: flowbee.ContextMenuSelectEvent): Promise<boolean> {
-        if (super.onSelectItem(selectEvent)) {
-            return true;
-        } else if (selectEvent.item.id === 'configure') {
+        if (selectEvent.item.id === 'configure') {
             if (selectEvent.element) {
                 const template = (await this.templates.get(selectEvent.element, 'config')) || '{}';
                 this.configurator.render(selectEvent.element, [], template, this.options.configuratorOptions);
@@ -105,9 +90,8 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             const target = selectEvent.element.type === 'flow' ? null : selectEvent.element.id;
             this._onFlowAction.emit({ action: selectEvent.item.id, target });
             return true;
-        }
-        else {
-            return false;
+        } else {
+            return super.onSelectItem(selectEvent);
         }
     }
 }

@@ -161,6 +161,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 this.compareResults(document.uri, message.target);
             } else if (message.type === 'instance') {
                 updateWebview(this.getInstance(document.uri));
+            } else if (message.type === 'paste') {
+                const txt = await vscode.env.clipboard.readText();
+                console.log("PASTING: " + txt);
             }
         }));
 
