@@ -39,10 +39,11 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             ];
         }
 
+        const superItems = super.getItems(flowElementEvent);
         let items: (flowbee.MenuItem | 'separator')[] = [
             ...designItems,
-            'separator',
-            ...super.getItems(flowElementEvent) || []
+            ...(superItems?.length ? ['separator'] as (flowbee.MenuItem | 'separator')[] : []),
+            ...superItems || []
         ];
         if (flowElementEvent.instances) {
             const hasCompare = type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');

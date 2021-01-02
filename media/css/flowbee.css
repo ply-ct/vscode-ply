@@ -25,9 +25,21 @@
   .flowbee-diagram-light .drag {
     min-width: 3px; }
   .flowbee-diagram-light .meta {
-    color: gray; }
-  .flowbee-diagram-light .state {
-    border-radius: 12px; }
+    color: #808080; }
+  .flowbee-diagram-light .status .pending {
+    color: #1a75ff; }
+  .flowbee-diagram-light .status .in-progress {
+    color: #009900; }
+  .flowbee-diagram-light .status .waiting {
+    color: #ffff00; }
+  .flowbee-diagram-light .status .failed {
+    color: #e60000; }
+  .flowbee-diagram-light .status .errored {
+    color: #e60000; }
+  .flowbee-diagram-light .status .completed {
+    color: #0d0d0d; }
+  .flowbee-diagram-light .status .canceled {
+    color: #a9a9a9; }
   .flowbee-diagram-light .step {
     border-color: #000000;
     border-radius: 12px;
@@ -53,9 +65,9 @@
       color: #008000; }
     .flowbee-diagram-light .link .hit {
       width: 8px; }
-    .flowbee-diagram-light .link .state .initiated {
+    .flowbee-diagram-light .link .status .initiated {
       color: #0000ff; }
-    .flowbee-diagram-light .link .state .traversed {
+    .flowbee-diagram-light .link .status .traversed {
       color: #000000; }
   .flowbee-diagram-light .subflow {
     border-radius: 12px;
@@ -122,9 +134,21 @@
   .flowbee-diagram-dark .drag {
     min-width: 3px; }
   .flowbee-diagram-dark .meta {
-    color: gray; }
-  .flowbee-diagram-dark .state {
-    border-radius: 12px; }
+    color: #808080; }
+  .flowbee-diagram-dark .status .pending {
+    color: #1a75ff; }
+  .flowbee-diagram-dark .status .in-progress {
+    color: #009900; }
+  .flowbee-diagram-dark .status .waiting {
+    color: #ffff00; }
+  .flowbee-diagram-dark .status .failed {
+    color: #e60000; }
+  .flowbee-diagram-dark .status .errored {
+    color: #e60000; }
+  .flowbee-diagram-dark .status .completed {
+    color: #0d0d0d; }
+  .flowbee-diagram-dark .status .canceled {
+    color: #a9a9a9; }
   .flowbee-diagram-dark .step {
     border-color: #000000;
     border-radius: 12px;
@@ -150,9 +174,9 @@
       color: #008000; }
     .flowbee-diagram-dark .link .hit {
       width: 8px; }
-    .flowbee-diagram-dark .link .state .initiated {
+    .flowbee-diagram-dark .link .status .initiated {
       color: #0000ff; }
-    .flowbee-diagram-dark .link .state .traversed {
+    .flowbee-diagram-dark .link .status .traversed {
       color: #000000; }
   .flowbee-diagram-dark .subflow {
     border-radius: 12px;
@@ -194,12 +218,28 @@
     color: #303030; }
   .flowbee-diagram-dark .title {
     color: #d4d4d4; }
+  .flowbee-diagram-dark .status .pending {
+    color: #1a75ff; }
+  .flowbee-diagram-dark .status .in-progress {
+    color: #00cc00; }
+  .flowbee-diagram-dark .status .waiting {
+    color: #fff44f; }
+  .flowbee-diagram-dark .status .failed {
+    color: #cc0000; }
+  .flowbee-diagram-dark .status .errored {
+    color: #cc0000; }
+  .flowbee-diagram-dark .status .completed {
+    color: #cccccc; }
+  .flowbee-diagram-dark .status .canceled {
+    color: #595959; }
   .flowbee-diagram-dark .step {
     border-color: #bbbbbb; }
   .flowbee-diagram-dark .link {
     color: #9e9e9e; }
-    .flowbee-diagram-dark .link .state .traversed {
-      color: #ffffff; }
+    .flowbee-diagram-dark .link .status .initiated {
+      color: #0000ff; }
+    .flowbee-diagram-dark .link .status .traversed {
+      color: #cccccc; }
   .flowbee-diagram-dark .subflow {
     border-color: #4ba5c7; }
   .flowbee-diagram-dark .note {
@@ -511,6 +551,13 @@
     color: #cccccc; }
   .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
     border: 1px solid #cccccc; }
+  .flowbee-configurator-dark .flowbee-config-footer {
+    background-color: #323232;
+    color: #c8c8c8;
+    border-bottom: 1px solid #454545; }
+  .flowbee-configurator-dark .flowbee-config-footer input[type=button] {
+    margin-right: 10px;
+    background-color: #c8c8c8; }
 
 .flowbee-tree-light {
   height: 100%;
