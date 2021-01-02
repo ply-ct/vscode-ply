@@ -166,7 +166,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(configChange => {
             if (configChange.affectsConfiguration('workbench.colorTheme')) {
-                updateWebview();
+                webviewPanel.webview.postMessage({
+                    type: 'theme-change'
+                });
             }
         }));
 

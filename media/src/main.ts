@@ -44,13 +44,13 @@ export class Flow {
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions: FlowActions;
     values?: Values;
-    readonly toolbox?: flowbee.Toolbox;
+    readonly toolbox: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
 
     constructor(private base: string, websocketPort: number, text: string, private file: string, mode: DrawingMode) {
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
-        this.options.theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
+        this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
 
         // configurator
         if (!Flow.configurator) {
@@ -61,7 +61,7 @@ export class Flow {
 
         // theme-based icons
         for (const toolIcon of document.querySelectorAll('input[type=image]')) {
-            if (!toolIcon.getAttribute('src') && toolIcon.hasAttribute('data-icon')) {
+            if (toolIcon.hasAttribute('data-icon')) {
                 const icon = toolIcon.getAttribute('data-icon') as string;
                 toolIcon.setAttribute('src', `${this.options.iconBase}/${icon}`);
             }
@@ -86,13 +86,9 @@ export class Flow {
             }
         });
 
-        // toolbox
         const toolboxElement = document.getElementById('flow-toolbox') as HTMLDivElement;
-        // instantiated twice if left open then restart -- avoid dup toolbox
-        const flowbeeToolboxElement = toolboxElement.querySelector('.flowbee-toolbox');
-        if (!flowbeeToolboxElement) {
-            this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
-        }
+        toolboxElement.innerHTML = '';
+        this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
 
         // open/close toolbox
         const toolboxContainer = document.getElementById('toolbox-container') as HTMLDivElement;
@@ -143,7 +139,14 @@ export class Flow {
 
     render() {
         this.flowDiagram.render(this.options.diagramOptions);
-        this.toolbox?.render(this.options.toolboxOptions);
+        this.toolbox.render(this.options.toolboxOptions);
+        if (Flow.configurator?.isOpen) {
+            const cfgr = Flow.configurator;
+            cfgr.render(cfgr.flowElement, cfgr.instance ? [cfgr.instance] : [], cfgr.template || {}, this.options.configuratorOptions);
+            if (cfgr.flowElement.id) {
+                this.flowDiagram.select(cfgr.flowElement.id);
+            }
+        }
     }
 
     async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[]) {
@@ -282,38 +285,30 @@ window.addEventListener('message', async (event) => {
             if (dot > 0) {
                 id = id.substring(dot + 1);
             }
-            // delay until after container resize event
-            setTimeout(() => {
-                flow.flowDiagram.select(id, true);
-            }, 100);
+            flow.flowDiagram.select(id, true);
         }
+    } else if (message.type === 'theme-change') {
+        updateFromState();
     }
-    // else if (message.type === 'values') {
-    //     if (flow) {
-    //         const values = message.values;
-    //         const state = vscode.getState();
-    //         flow.values = new Values(flow.options.iconBase, values, flow.flowDiagram.flow);
-    //         if (state) {
-    //             const { base, websocketPort, file, text, readonly, instance, mode } = state;
-    //             vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values });
-    //         }
-    //     }
-    // }
     else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
 });
 
-const state = vscode.getState();
-if (state) {
-    templates = new Templates(state.base);
-    const flow = new Flow(state.base, state.websocketPort, state.text, state.file, state.mode);
-    flow.flowDiagram.readonly = state.readonly;
-    flow.flowDiagram.instance = state.instance;
-    flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
-    flow.render();
-    if (state.values) {
-        flow.values = new Values(flow.options.iconBase, state.values, flow.flowDiagram.flow);
+function updateFromState() {
+    const state = vscode.getState();
+    if (state) {
+        templates = new Templates(state.base);
+        const flow = new Flow(state.base, state.websocketPort, state.text, state.file, state.mode);
+        flow.flowDiagram.readonly = state.readonly;
+        flow.flowDiagram.instance = state.instance;
+        flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
+        flow.render();
+        if (state.values) {
+            flow.values = new Values(flow.options.iconBase, state.values, flow.flowDiagram.flow);
+        }
     }
 }
+
+updateFromState();
 
