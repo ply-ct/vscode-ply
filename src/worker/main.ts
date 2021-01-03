@@ -5,7 +5,6 @@ import { WorkerArgs } from './args';
 import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
 
 (async () => {
-
     if (process.send) {
         const args = await new Promise<WorkerArgs>(resolve => {
             process.once('message', resolve);

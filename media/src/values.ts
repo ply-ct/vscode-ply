@@ -2,16 +2,7 @@ import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Values {
 
-    private values: any;
-
-    constructor(readonly iconBase: string, plyValues: object, flow: flowbee.Flow) {
-        this.values = plyValues;
-        if (flow.attributes?.values) {
-            const rows = JSON.parse(flow.attributes?.values);
-            for (const row of rows) {
-                this.values[row[0]] = row[1];
-            }
-        }
+    constructor(readonly iconBase: string, readonly defaults: object) {
     }
 
     async promptIfNeeded(step: flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
@@ -39,7 +30,7 @@ export class Values {
             if (expressions.length > 0) {
                 const needed: {[key: string]: string} = {};
                 for (const expression of expressions) {
-                    const res = this.get(expression, this.values);
+                    const res = this.get(expression, this.defaults);
                     needed[expression] = res === expression ? '' : res || '';
                 }
                 return needed;

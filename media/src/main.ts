@@ -17,6 +17,7 @@ import { Values } from './values';
 const vscode = acquireVsCodeApi();
 
 let templates: Templates;
+let values: Values;
 
 interface Confirmation { result: boolean }
 const evt = new flowbee.TypedEvent<Confirmation>();
@@ -43,7 +44,6 @@ export class Flow {
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions: FlowActions;
-    values?: Values;
     readonly toolbox: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
 
@@ -69,7 +69,7 @@ export class Flow {
 
         // diagram
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
-        this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors);
+        this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors, this.options.diagramOptions);
         this.flowDiagram.mode = mode;
         this.flowDiagram.onFlowChange(_e => this.updateFlow());
         this.flowDiagram.dialogProvider = new DialogProvider();
@@ -196,7 +196,7 @@ export class Flow {
 
     async onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
-        let values: object | undefined;
+        let vals: object | undefined;
         if (typeof e.target === 'string' && e.target.startsWith('s')) {
             let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
             if (!step && this.flowDiagram.flow.subflows) {
@@ -210,9 +210,9 @@ export class Flow {
                 }
             }
             if (step && e.action === 'run') {
-                if (this.values) {
-                    values = await this.values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
-                    if (!values) {
+                if (values) {
+                    vals = await values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
+                    if (!vals) {
                         return; // canceled
                     }
                 }
@@ -223,7 +223,7 @@ export class Flow {
             flow: this.flowDiagram.flow.path,
             ...(e.target) && { target: e.target },
             ...(e.options) && { options: e.options },
-            ...(values) && { values }
+            ...(vals) && { values: vals }
         });
     }
 
@@ -272,13 +272,9 @@ window.addEventListener('message', async (event) => {
             console.debug(`Saving new flow: ${message.file}`);
             flow.updateFlow();
         }
-        // const values = vscode.getState()?.values;
-        if (message.values) {
-            flow.values = new Values(flow.options.iconBase, message.values, flow.flowDiagram.flow);
-        }
         // save state
-        const { base, websocketPort, file, readonly, instance, values } = message;
-        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values });
+        const { base, websocketPort, file, readonly, instance } = message;
+        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values: values?.defaults });
         if (message.select) {
             let id = message.select;
             const dot = id.indexOf('.');
@@ -289,8 +285,12 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'theme-change') {
         updateFromState();
-    }
-    else if (message.type === 'confirm') {
+    } else if (message.type === 'values') {
+        const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
+        const iconBase = `${message.base}/icons/${theme}`;
+        values = new Values(iconBase, message.values);
+        vscode.setState({ ...vscode.getState(), values: message.values });
+    } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
 });
@@ -305,7 +305,7 @@ function updateFromState() {
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
         if (state.values) {
-            flow.values = new Values(flow.options.iconBase, state.values, flow.flowDiagram.flow);
+            values = new Values(flow.options.iconBase, state.values);
         }
     }
 }

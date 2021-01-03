@@ -111,10 +111,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             if (select) {
                 msg.select = select;
             }
-            const adapter = this.getAdapter(document.uri);
-            if (adapter?.values) {
-                msg.values = await adapter.values.getResultValues(this.getId(document.uri));
-            }
             webviewPanel.webview.postMessage(msg);
         };
 
@@ -210,16 +206,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const onValuesUpdate = async (resultUri: vscode.Uri) => {
             const adapter = this.getAdapter(document.uri);
-            if (adapter) {
+            if (adapter?.values) {
                 if (resultUri) {
                     const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
                     if (suite) {
                         if (suite.runtime.results.actual.toString() === resultUri.fsPath) {
-                            updateWebview(this.getInstance(document.uri)); // TODO instance state
-                            if (adapter.values) {
-                                // const values = await adapter.values.getResultValues(this.getId(document.uri));
-                                // webviewPanel.webview.postMessage({ type: 'values', values });
-                            }
+                            webviewPanel.webview.postMessage({
+                                type: 'values',
+                                base: baseUri.toString(),
+                                values: await adapter.values.getResultValues(this.getId(document.uri))
+                            });
                         }
                     }
                 }
@@ -230,9 +226,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (adapter.values) {
             this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
         } else {
-            adapter.onceValues(e => {
-                // webviewPanel.webview.postMessage({ type: 'values', values: e.values });
-                updateWebview();
+            adapter.onceValues(async e => {
+                webviewPanel.webview.postMessage({
+                    type: 'values',
+                    base: baseUri.toString(),
+                    values: await e.values.getResultValues(this.getId(document.uri))
+                });
                 this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
             });
         }

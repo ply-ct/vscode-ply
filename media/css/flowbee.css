@@ -415,6 +415,7 @@
     font-weight: 500;
     box-sizing: border-box; }
   .flowbee-configurator-light .flowbee-config-footer input[type=button] {
+    border-width: 1px;
     margin-right: 10px; }
 
 .flowbee-configurator-dark {
@@ -519,6 +520,7 @@
     font-weight: 500;
     box-sizing: border-box; }
   .flowbee-configurator-dark .flowbee-config-footer input[type=button] {
+    border-width: 1px;
     margin-right: 10px; }
   .flowbee-configurator-dark .flowbee-config-header {
     background-color: #323232;
@@ -556,7 +558,6 @@
     color: #c8c8c8;
     border-bottom: 1px solid #454545; }
   .flowbee-configurator-dark .flowbee-config-footer input[type=button] {
-    margin-right: 10px;
     background-color: #c8c8c8; }
 
 .flowbee-tree-light {

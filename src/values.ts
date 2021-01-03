@@ -58,12 +58,21 @@ export class Values {
     async getResultValues(suiteId: string): Promise<object> {
         const suite = this.plyRoots.getSuite(suiteId);
         if (!suite) {
-            return {};
+            return JSON.parse(JSON.stringify(await this.getPlyValues())); // clone
         }
         const resultUri = vscode.Uri.file(suite.runtime.results.actual.toString());
         let values: any = this.resultValues.get(resultUri.toString());
         if (!values) {
-            values = JSON.parse(JSON.stringify(await this.getPlyValues()));
+            values = JSON.parse(JSON.stringify(await this.getPlyValues())); // clone
+            if (suite.type === 'flow') {
+                const plyFlow = (suite as any).plyFlow as ply.Flow;
+                if (plyFlow?.flow?.attributes?.values) {
+                    const rows = JSON.parse(plyFlow.flow.attributes.values);
+                    for (const row of rows) {
+                        values[row[0]] = row[1];
+                    }
+                }
+            }
             const resultValues: any = {};
             if (suite.runtime.results.actual.exists) {
                 const yaml = suite.runtime.results.getActualYaml();
