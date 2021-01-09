@@ -257,6 +257,10 @@
           "dark": "./icons/json-dark.svg",
           "light": "./icons/json-light.svg"
         }
+      },
+      {
+        "command": "ply.new.flow",
+        "title": "New Ply Flow"
       }
     ],
     "menus": {
@@ -337,6 +341,11 @@
           "command": "ply.import.postman-item",
           "group": "6_postman",
           "when": "view == test-explorer && viewItem == collection"
+        },
+        {
+          "command": "ply.new.flow",
+          "group": "1_plytest",
+          "when": "view == test-explorer && viewItem == suite"
         }
       ],
       "commandPalette": [
