@@ -64,6 +64,19 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }));
 
+    // register for ply-flow scheme (dummy provider)
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ply-flow', {
+        provideTextDocumentContent() {
+            return '';
+        }
+    }));
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async editor => {
+        if (editor?.document.uri.scheme === 'ply-flow') {
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            vscode.commands.executeCommand('ply.open-flow', { uri: editor.document.uri.with({ scheme: 'file' })});
+        }
+    }));
+
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
         testExplorerExtension.exports,
@@ -104,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
-    // register for ply.result scheme
+    // register for ply-result scheme
     const contentProvider = new ResultContentProvider();
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(Result.URI_SCHEME, contentProvider));
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(change => contentProvider.update(change.document.uri)));
@@ -261,7 +274,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 openLabel: 'Select',
                 canSelectMany: false,
                 filters: {
-                    'Ply Requests/Cases': ['yaml', 'yml', 'ts']
+                    'Ply Requests/Cases/Flows': ['yaml', 'yml', 'ts', 'flow']
                 },
                 title: 'Select Ply suite'
             });

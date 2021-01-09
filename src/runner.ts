@@ -65,8 +65,6 @@ export class PlyRunner {
                 if (openFlow === 'Always' || (openFlow === 'If Single' && flowSuites.length === 1)) {
                     for (const flowSuite of flowSuites) {
                         await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
-                        // const flowUri = PlyRoots.toUri(flowSuite.id);
-                        // await vscode.commands.executeCommand('vscode.openWith', flowUri, 'ply.flow.diagram');
                     }
                 }
             }

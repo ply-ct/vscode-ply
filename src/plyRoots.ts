@@ -52,8 +52,10 @@ export class PlyRoot {
                 line: testUris[i][1],
                 debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
-            if (this.id !== 'flows') {
+            if (this.id === 'flows') {
                 // flows should not be opened in text editor
+                test.file = testUri.scheme === 'file' ? testUri.with({ scheme: 'ply-flow' }).toString(true) : testUri.toString(true);
+            } else {
                 test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
             }
             if (testLabeler) {
@@ -79,8 +81,11 @@ export class PlyRoot {
                     line: 0,
                     children: []
                 };
-                if (this.id !== 'flows') {
+                if (this.id === 'flows') {
                     // flows should not be opened in text editor
+                    suite.file = fileUri.scheme === 'file' ? fileUri.with({ scheme: 'ply-flow' }).toString(true) : fileUri.toString(true);
+
+                } else {
                     suite.file = fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
                 }
                 if (suiteLabeler) {
