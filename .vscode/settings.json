@@ -1,14 +1,28 @@
-// Place your settings in this file to overwrite default and user settings.
 {
-    "files.exclude": {
-        "out": false // set this to true to hide the "out" folder with the compiled JS files
-    },
-    "search.exclude": {
-        "out": true // set this to false to include "out" folder in search results
-    },
-    // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off",
-    "mochaExplorer.env": {
-        "TS_NODE_TRANSPILE_ONLY": "1"
-    }
+  "files.trimTrailingWhitespace": true,
+  "files.exclude": {
+    "out": false
+  },
+  "search.exclude": {
+      "out": true	  
+  },
+  "typescript.preferences.quoteStyle": "single",
+  "[html]": {
+    "editor.tabSize": 2
+  },
+  "[css]": {
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  },
+  "mochaExplorer.env": {
+      "TS_NODE_TRANSPILE_ONLY": "1"
+  }  
 }
