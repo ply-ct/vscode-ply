@@ -11,12 +11,7 @@ import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { FlowEditor, FlowItemSelectEvent } from './flow/editor';
 import { Postman } from './postman';
-
-interface Item {
-    id: string;
-    uri: vscode.Uri;
-    workspaceFolder: vscode.WorkspaceFolder;
-}
+import { PlyItem } from './item';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -51,9 +46,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const flowEditor = new FlowEditor(context, testAdapters, onFlowItemSelect);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
-
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
-        const item = await getItem(...args);
+        const item = await PlyItem.getItem(...args);
         if (item?.uri) {
             const fileUri = vscode.Uri.file(item.uri.fsPath);
             await vscode.commands.executeCommand('vscode.openWith', fileUri, 'ply.flow.diagram');
@@ -63,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    // register for ply-flow scheme (dummy provider)
+    // register for ply-flow scheme (dummy provider to prevent test explorer from opening as text)
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ply-flow', {
         provideTextDocumentContent() {
             return '';
@@ -75,6 +69,12 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand('ply.open-flow', { uri: editor.document.uri.with({ scheme: 'file' })});
         }
     }));
+
+    // new test commands
+    context.subscriptions.push(new PlyItem().command);
+    context.subscriptions.push(new PlyItem('request').command);
+    context.subscriptions.push(new PlyItem('case').command);
+    context.subscriptions.push(new PlyItem('flow').command);
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
@@ -98,7 +98,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const submitCommand = async (...args: any[]) => {
         try {
-            const item = await getItem(...args);
+            const item = await PlyItem.getItem(...args);
             console.debug('ply.submit item: ' + JSON.stringify(item));
             if (item) {
                 const adapter = testAdapters.get(item.workspaceFolder.uri.toString());
@@ -126,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const diffCommand = async (...args: any[]) => {
         try {
-            const item = await getItem(...args);
+            const item = await PlyItem.getItem(...args);
             console.debug('ply.diff item: ' + JSON.stringify(item));
             if (item) {
                 const diffHandler = diffHandlers.get(item.workspaceFolder.uri.toString());
@@ -195,56 +195,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const importPostmanCommand = async (...args: any[]) => await postman.import(args);
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', importPostmanCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand));
-
-    /**
-     * Returns a test/suite item.
-     */
-    async function getItem(...args: any[]): Promise<Item | undefined > {
-        if (args.length === 1) {
-            if (typeof args[0] === 'string') {
-                const id = args[0];
-                const uri = PlyRoots.toUri(id);
-                const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-                if (workspaceFolder) {
-                    return { id: args[0], uri, workspaceFolder };
-                }
-            } else if (args[0] as Item) {
-                return args[0];
-            }
-        }
-
-        let uri: vscode.Uri | undefined = undefined;
-        let id: string | undefined = undefined;
-        if (args.length > 0) {
-            const node = args[0];
-            if (node.adapterIds && node.adapterIds.length > 0) {
-                id = node.adapterIds[0];
-                if (id) {
-                    uri = PlyRoots.toUri(id);
-                }
-            }
-        } else {
-            const uris = await vscode.window.showOpenDialog({
-                openLabel: 'Select',
-                canSelectMany: false,
-                filters: {
-                    'Ply Requests/Cases/Flows': ['yaml', 'yml', 'ts', 'flow']
-                },
-                title: 'Select Ply suite'
-            });
-            if (uris && uris.length > 0) {
-                uri = uris[0];
-                id = PlyRoots.fromUri(uri);
-            }
-        }
-        if (id && uri) {
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-            if (!workspaceFolder) {
-                throw new Error(`No workspace folder found for URI: ${uri}`);
-            }
-            return { id, uri, workspaceFolder };
-        }
-    }
 
     console.log('vscode-ply is active');
 }
