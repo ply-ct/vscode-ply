@@ -189,7 +189,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             let flowInstanceId: string | null = null;
             const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                 if (flowEvent.flowPath === flowPath) {
-                    console.debug(`flowEvent: ${JSON.stringify(flowEvent)}`);
                     if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
                         flowInstanceId = null;
                         // set the diagram instance so it'll start listening for websocket updates

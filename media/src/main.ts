@@ -80,6 +80,11 @@ export class Flow {
                 this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
             }
         });
+        this.flowDiagram.onFlowElementDrill(async flowElementDrill => {
+            if (Flow.configurator) {
+                this.updateConfigurator(flowElementDrill.element, flowElementDrill.instances, true);
+            }
+        });
         this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
                 this.updateConfigurator(flowElementUpdate.element);
@@ -149,8 +154,8 @@ export class Flow {
         }
     }
 
-    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[]) {
-        if (Flow.configurator?.isOpen) {
+    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[], doOpen = false) {
+        if (Flow.configurator && (doOpen || Flow.configurator?.isOpen)) {
             const template = await templates.get(flowElement, this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config');
             if (instances && instances.length > 0) {
                 const instance = instances[instances.length - 1] as any;
