@@ -43,8 +43,14 @@ export class PlyRunner {
                 const testOrSuite = this.plyRoots.find(i => i.id === testId);
                 if (testOrSuite) {
                     this.collectTests(testOrSuite, testInfos);
+                    let flowSuite: TestSuiteInfo | undefined;
                     if (testOrSuite.type === 'suite' && testOrSuite.id.endsWith('.flow')) {
-                        flowSuites.push(testOrSuite);
+                        flowSuite = testOrSuite;
+                    } else if (testOrSuite.type === 'test' && testOrSuite.file?.startsWith('ply-flow')) {
+                        flowSuite = this.plyRoots.getParent(testOrSuite.id);
+                    }
+                    if (flowSuite && !flowSuites.find(fs => fs.id === flowSuite?.id)) {
+                        flowSuites.push(testOrSuite as TestSuiteInfo);
                     }
                 } else {
                     throw new Error(`No such ply test: ${testId}`);
@@ -63,9 +69,7 @@ export class PlyRunner {
             if (flowSuites.length > 0) {
                 const openFlow = this.config.openFlowWhenRun;
                 if (openFlow === 'Always' || (openFlow === 'If Single' && flowSuites.length === 1)) {
-                    for (const flowSuite of flowSuites) {
-                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
-                    }
+                    await vscode.commands.executeCommand('ply.open-flow', flowSuites[0].id);
                 }
             }
 
