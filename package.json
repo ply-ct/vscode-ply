@@ -41,7 +41,7 @@
     "watch": "tsc -watch -p ./",
     "lint": "eslint",
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
-    "build-bundles": "rollup -c && cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css",
+    "build-bundles": "rollup -c && cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css ",
     "watch-bundles": "rollup --watch -c",
     "vscode:prepublish": "npm install && npm run build && npm prune --production",
     "package": "vsce package"
@@ -201,7 +201,7 @@
         "ply.websocketPort": {
           "description": "The WebSocket port for flow instance updates (0 to disable updates)",
           "type": "number",
-          "default": 7001,
+          "default": 9371,
           "scope": "window"
         }
       }
