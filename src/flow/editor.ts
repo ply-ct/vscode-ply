@@ -26,7 +26,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         readonly onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9371);
-        this.bindWebsocket();
     }
 
     private bindWebsocket() {
@@ -67,6 +66,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.options = {
             enableScripts: true
         };
+
+        this.bindWebsocket();
 
         const mediaPath = path.join(this.context.extensionPath, 'media');
 
