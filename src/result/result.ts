@@ -188,7 +188,14 @@ export class Result {
 
     async includedTestNames(): Promise<string[]> {
         const yamlObj = await this.loadYaml();
-        return yamlObj ? Object.keys(yamlObj) : [];
+        if (yamlObj) {
+            return Object.keys(yamlObj).filter(key => {
+                // id is only on flow elements, and only subflows start with f
+                return !yamlObj[key].id?.startsWith('f');
+            });
+        } else {
+            return [];
+        }
     }
 
     get label(): string {

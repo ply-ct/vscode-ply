@@ -260,7 +260,7 @@ export class DiffHandler {
             }
         }
 
-        this.decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
+        this.decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs, !!resultPair.testName);
     }
 
     async checkEnableDiffEditorCodeLens() {

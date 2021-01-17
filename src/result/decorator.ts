@@ -133,7 +133,7 @@ export class ResultDecorator {
      * @param actualEditor
      * @param resultDiffs
      */
-    applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[]) {
+    applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[], isFragment: boolean) {
         const ignoredDecorations = new Decorations();
         const legitDecorations = new Decorations();
 
@@ -221,9 +221,13 @@ export class ResultDecorator {
             }
             else {
                 // all diffs ignored
-                const expectedLines = expectedAll.slice(expectedLineNo, resultDiff.expectedEnd);
-                const actualLines = actualAll.slice(actualLineNo, resultDiff.actualEnd);
-                ignoredDecorations.undiff(expectedLineNo, actualLineNo, expectedLines, actualLines);
+                if (isFragment) {
+                    const expectedLines = expectedAll.slice(expectedLineNo, resultDiff.expectedEnd);
+                    const actualLines = actualAll.slice(actualLineNo, resultDiff.actualEnd);
+                    ignoredDecorations.undiff(expectedLineNo, actualLineNo, expectedLines, actualLines);
+                } else {
+                    ignoredDecorations.undiff(0, 0, expectedAll, actualAll);
+                }
             }
         }
 
