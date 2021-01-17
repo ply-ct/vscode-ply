@@ -46,9 +46,22 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     WebSocketSender.unsubscribe(webSocket);
                 });
             });
-            webSocketServer.on('error', error => {
+            webSocketServer.on('error', async error => {
                 console.error(error);
-                vscode.window.showErrorMessage(`Flow editor websocket error: ${error.message}`);
+                this.websocketBound = false;
+                if ((error as any).code === 'EADDRINUSE') {
+                    const modSettings = 'Modify in Settings';
+                    const res = await vscode.window.showErrorMessage(
+                        `Flow editor websocket port ${this.websocketPort} is already in use.`,
+                        modSettings,
+                        'Cancel'
+                    );
+                    if (res === modSettings) {
+                        await vscode.commands.executeCommand('workbench.action.openSettings', 'ply.websocketPort');
+                    }
+                } else {
+                    vscode.window.showErrorMessage(`Flow editor websocket error: ${error.message}`);
+                }
             });
             webSocketServer.on('close', () => {
                 WebSocketSender.unsubscribe();
@@ -97,18 +110,17 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             FlowEditor.html = FlowEditor.html.replace(/\${jsUri}/g, jsUri);
         }
 
-        // substitute the nonce every time
+        // substitute the nonce and websocket port every time
         let html = FlowEditor.html.replace(/\${cspSource}/g, webviewPanel.webview.cspSource);
         html = html.replace(/\${nonce}/g, this.getNonce());
         webviewPanel.webview.html = html;
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
-        const websocketPort = this.websocketPort;
         const updateWebview = async (instance?: flowbee.FlowInstance, select?: string) => {
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
-                websocketPort,
+                websocketPort: this.websocketPort,
                 file: document.uri.fsPath,
                 text: document.getText(),
                 readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
@@ -168,11 +180,23 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
         }));
 
+
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(configChange => {
             if (configChange.affectsConfiguration('workbench.colorTheme')) {
                 webviewPanel.webview.postMessage({
                     type: 'theme-change'
                 });
+            }
+            if (configChange.affectsConfiguration('ply.websocketPort')) {
+                const newPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9371);
+                if (newPort !== this.websocketPort) {
+                    html = html.replace(`ws://localhost:${this.websocketPort}`, `ws://localhost:${newPort}`);
+                    this.websocketPort = newPort;
+                    this.websocketBound = false;
+                    this.bindWebsocket();
+                    webviewPanel.webview.html = html;
+                    updateWebview();
+                }
             }
         }));
 

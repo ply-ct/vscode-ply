@@ -54,6 +54,7 @@ Setting | Description | Default
 `ply.logLocation` | Log file base dir | actualLocation
 `ply.logpanel` | Write detailed log output to the Ply Invoker output panel | false
 `ply.valuesFiles` | JSON files containing Ply values | 
+`ply.websocketPort` | WebSocket port for Ply flow live updates (0 to disable). Modify in **Workspace** settings to avoid conflicts. | 9371
 `ply.debugPort` | Port to use for debug connections | 9229
 `ply.debugConfig` | Name of a launch configuration to use for debugging | (see below)
 `ply.nodePath` | Path to node executable | Find on your PATH; if not found, use node shipped with VS Code
