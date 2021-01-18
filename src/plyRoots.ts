@@ -393,6 +393,32 @@ export class PlyRoots {
     }
 
     /**
+     * Get unique list of suite files for testOrSuiteIds.
+     * @param testOrSuiteIds
+     */
+    getSuiteFileInfos(testOrSuiteIds: string[], suites: TestSuiteInfo[] = []): TestSuiteInfo[] {
+        for (const testOrSuiteId of testOrSuiteIds) {
+            const testOrSuite = this.find(i => i.id === testOrSuiteId);
+            if (testOrSuite) {
+                if (testOrSuite.type === 'suite') {
+                    if (testOrSuite.file && !suites.find(suite => suite.id === testOrSuite.id)) {
+                        suites.push(testOrSuite);
+                    } else {
+                        suites = [ ...suites, ...this.getSuiteFileInfos(testOrSuite.children.map(c => c.id), suites) ];
+                    }
+
+                } else if (testOrSuite.type === 'test') {
+                    const suite = this.getParent(testOrSuiteId);
+                    if (suite && !suites.find(suite => suite.id === testOrSuite.id)) {
+                        suites.push(suite);
+                    }
+                }
+            }
+        }
+        return suites;
+    }
+
+    /**
      * Unique array of test parent suites (excluding direct parent).
      */
     getAncestorSuites(testInfos: TestInfo[]): TestSuiteInfo[] {

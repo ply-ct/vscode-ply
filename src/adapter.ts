@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { inspect } from 'util';
@@ -128,6 +129,9 @@ export class PlyAdapter implements TestAdapter {
     }
 
     async run(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
+        if (! await this.promptToSaveDirtySuites(testIds)) {
+            return;
+        }
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
@@ -142,6 +146,9 @@ export class PlyAdapter implements TestAdapter {
     }
 
     async debug(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
+        if (! await this.promptToSaveDirtySuites(testIds)) {
+            return;
+        }
         // start a test run in a child process and attach the debugger to it...
         this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
@@ -176,6 +183,38 @@ export class PlyAdapter implements TestAdapter {
             this.log.error(err);
             vscode.window.showErrorMessage(`Error running ply tests: ${err.message}`);
         }
+    }
+
+    /**
+     * Returns false if run is canceled.
+     */
+    private async promptToSaveDirtySuites(testIds: string[]): Promise<boolean> {
+        const suiteUris = this.plyRoots.getSuiteFileInfos(testIds).map(suite => PlyRoots.toUri(suite.id));
+        const dirtyDocs: vscode.TextDocument[] = [];
+        for (const doc of vscode.workspace.textDocuments) {
+            if (doc.isDirty && suiteUris.find(uri => uri.toString() === doc.uri.toString())) {
+                dirtyDocs.push(doc);
+            }
+        }
+
+        if (dirtyDocs.length > 0) {
+            const saveAndRun = 'Save and Run';
+            const docNames = dirtyDocs.map(d => path.basename(d.fileName));
+            const res = await vscode.window.showWarningMessage(
+                `File(s) must be saved before running: ${docNames.join(', ')}`,
+                saveAndRun,
+                'Cancel'
+            );
+            if (res === saveAndRun) {
+                for (const doc of dirtyDocs) {
+                    await doc.save();
+                }
+                await this.load();
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
 	private async startDebugging(): Promise<vscode.DebugSession> {

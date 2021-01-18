@@ -256,6 +256,23 @@ export class PlyRunner {
     }
 
     /**
+     * Returns a flattened list of all test ids
+     */
+    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], skip = false) {
+        if (testOrSuite.type === 'suite') {
+            for (const child of testOrSuite.children) {
+                // honor skip when executing from parent suite (not explicitly running test or suite)
+                const shouldSkip = skip || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.skip);
+                this.collectTests(child, testInfos, shouldSkip);
+            }
+        } else {
+            if (!skip) {
+                testInfos.push(testOrSuite);
+            }
+        }
+    }
+
+    /**
      * Check for missing expected result file(s).
      * @return If expected result file missing: runOptions with dispensation if selected; undefined if run is canceled.
      * If expected result file exists: empty runOptions object.
@@ -345,22 +362,5 @@ export class PlyRunner {
             }
         }
         return result;
-    }
-
-    /**
-     * Returns a flattened list of all test ids
-     */
-    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], skip = false) {
-        if (testOrSuite.type === 'suite') {
-            for (const child of testOrSuite.children) {
-                // honor skip when executing from parent suite (not explicitly running test or suite)
-                const shouldSkip = skip || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.skip);
-                this.collectTests(child, testInfos, shouldSkip);
-            }
-        } else {
-            if (!skip) {
-                testInfos.push(testOrSuite);
-            }
-        }
     }
 }
