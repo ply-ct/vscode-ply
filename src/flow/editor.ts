@@ -25,7 +25,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         readonly adapters: Map<string,PlyAdapter>,
         readonly onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
     ) {
-        this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9371);
+        this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
     }
 
     private bindWebsocket() {
@@ -50,15 +50,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 console.error(error);
                 this.websocketBound = false;
                 if ((error as any).code === 'EADDRINUSE') {
-                    const modSettings = 'Modify in Settings';
-                    const res = await vscode.window.showErrorMessage(
-                        `Flow editor websocket port ${this.websocketPort} is already in use.`,
-                        modSettings,
-                        'Cancel'
-                    );
-                    if (res === modSettings) {
-                        await vscode.commands.executeCommand('workbench.action.openSettings', 'ply.websocketPort');
-                    }
+                    // try auto-increment
+                    const plyConfig = vscode.workspace.getConfiguration('ply');
+                    const port = plyConfig.get(Setting.websocketPort, 9351) + 1;
+                    await plyConfig.update(Setting.websocketPort, port, vscode.ConfigurationTarget.Workspace);
                 } else {
                     vscode.window.showErrorMessage(`Flow editor websocket error: ${error.message}`);
                 }
@@ -189,7 +184,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 });
             }
             if (configChange.affectsConfiguration('ply.websocketPort')) {
-                const newPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9371);
+                const newPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
                 if (newPort !== this.websocketPort) {
                     html = html.replace(`ws://localhost:${this.websocketPort}`, `ws://localhost:${newPort}`);
                     this.websocketPort = newPort;

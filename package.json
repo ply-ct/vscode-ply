@@ -201,7 +201,7 @@
         "ply.websocketPort": {
           "description": "WebSocket port for Ply flow live updates (0 to disable).\nModify in **Workspace** settings to avoid conflicts.",
           "type": "number",
-          "default": 9371,
+          "default": 9351,
           "scope": "window"
         }
       }
