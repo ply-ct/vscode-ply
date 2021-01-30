@@ -105,7 +105,7 @@
         },
         "ply.flowFiles": {
           "type": "string",
-          "description": "Glob pattern for Ply flow files, relative to testsLocation ('**/*.ply.flow').",
+          "description": "Glob pattern for Ply flow files, relative to testsLocation ('**/*.flow').",
           "scope": "resource"
         },
         "ply.ignore": {

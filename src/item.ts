@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
+import { TestHub, testExplorerExtensionId, TestAdapter } from 'vscode-test-adapter-api';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
 
@@ -15,7 +16,7 @@ export class PlyItem {
 
     command: { dispose(): any };
 
-    constructor(private extensionPath: string, type?: ply.TestType) {
+    constructor(private context: vscode.ExtensionContext, type?: ply.TestType) {
         if (type) {
             this.command = vscode.commands.registerCommand(`ply.new.${type}`, async (...args: any[]) => {
                 this.newItem(type, args);
@@ -35,9 +36,9 @@ export class PlyItem {
 
     getFilters(type: ply.TestType): { [name: string]: string[] } | undefined {
         if (type === 'request') {
-            return { 'Ply Request': ['yaml', 'yml'] };
+            return { 'Ply Request': ['ply.yaml', 'ply.yml'] };
         } else if (type === 'case') {
-            return { 'Ply Case': ['ts'] };
+            return { 'Ply Case': ['ply.ts'] };
         } else if (type === 'flow') {
             return { 'Ply Flow': ['flow'] };
         }
@@ -69,17 +70,38 @@ export class PlyItem {
                         vscode.window.showErrorMessage(`New ${type} should reside under ply.testsLocation: ${testsLoc}`);
                         return;
                     }
-                } else {
-                    // need to create from template since adding workspace folder triggers adapter load (empty = no good)
+                } else { // add workspace folder
+
+                    // create from template since adding workspace folder triggers adapter load (empty flow = no good)
                     await fs.promises.writeFile(uri.fsPath, await this.defaultContents(type), 'utf8');
-                    const disp = vscode.workspace.onDidChangeWorkspaceFolders(async evt => {
-                        const wsFolder = evt.added.find(wsf => wsf.uri.toString() === vscode.Uri.file(dir).toString());
-                        if (wsFolder) {
-                            disp.dispose();
-                            await this.openItem(type, uri);
-                        }
-                    });
+
                     const pos = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+                    if (pos === 0) {
+                        // first ever folder added to workspace causes re-activation
+                        this.context.workspaceState.update('ply.to.open', uri.toString());
+                    } else {
+                        // wait for adapter to finish loading
+                        const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
+                        if (testExplorerExtension) {
+                            testExplorerExtension.exports.registerTestController({
+                                registerTestAdapter: (adapter: TestAdapter) => {
+                                    if (adapter.workspaceFolder?.uri.toString() === vscode.Uri.file(dir).toString()) {
+                                        // this folder's ply adapter
+                                        const disposable = adapter.tests(async testLoadEvent => {
+                                            if (testLoadEvent.type === 'finished') {
+                                                if (testLoadEvent.suite?.label === 'Ply') {
+                                                    await this.openItem(type, uri);
+                                                    disposable.dispose();
+                                                }
+                                            }
+                                        });
+                                    }
+                                },
+                                unregisterTestAdapter: (_adapter: TestAdapter) => { }
+                            });
+                        }
+                    }
+
                     if (!vscode.workspace.updateWorkspaceFolders(pos, null, { uri: vscode.Uri.file(dir) })) {
                         vscode.window.showErrorMessage(`Failed add workspace folder: ${dir}`);
                     }
@@ -90,11 +112,10 @@ export class PlyItem {
 
     async defaultContents(type: ply.TestType): Promise<string> {
         if (type === 'flow') {
-            return await fs.promises.readFile(path.join(this.extensionPath, 'media/templates/default.flow'), 'utf-8');
+            return await fs.promises.readFile(path.join(this.context.extensionPath, 'media/templates/default.flow'), 'utf-8');
         } else {
             return '';
         }
-
     }
 
     async openItem(type: ply.TestType, uri: vscode.Uri) {

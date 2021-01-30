@@ -71,10 +71,10 @@ export async function activate(context: vscode.ExtensionContext) {
     }));
 
     // new test commands
-    context.subscriptions.push(new PlyItem(context.extensionPath).command);
-    context.subscriptions.push(new PlyItem(context.extensionPath, 'request').command);
-    context.subscriptions.push(new PlyItem(context.extensionPath, 'case').command);
-    context.subscriptions.push(new PlyItem(context.extensionPath, 'flow').command);
+    context.subscriptions.push(new PlyItem(context).command);
+    context.subscriptions.push(new PlyItem(context, 'request').command);
+    context.subscriptions.push(new PlyItem(context, 'case').command);
+    context.subscriptions.push(new PlyItem(context, 'flow').command);
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
@@ -197,6 +197,18 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand));
 
     console.log('vscode-ply is active');
+
+    const toOpen = context.workspaceState.get('ply.to.open');
+    if (toOpen) {
+        context.workspaceState.update('ply.to.open', undefined);
+        const uri = vscode.Uri.parse('' + toOpen);
+        if (uri.path.endsWith('.flow')) {
+            vscode.commands.executeCommand('ply.open-flow', { uri });
+        } else {
+            const doc = await vscode.workspace.openTextDocument(uri);
+            vscode.window.showTextDocument(doc);
+        }
+    }
 }
 
 export function deactivate() {
