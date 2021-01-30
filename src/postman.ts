@@ -7,12 +7,14 @@ export class Postman {
     constructor(readonly log: Log) { }
 
     async import(...args: any[]) {
+        let workspaceFolder: vscode.WorkspaceFolder | undefined = undefined;
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders?.length) {
+            vscode.window.showErrorMessage('Ply needs your workspace to have a folder to import into.');
+            return;
+        }
         try {
-            let workspaceFolder: vscode.WorkspaceFolder | undefined = undefined;
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            if (workspaceFolders && workspaceFolders.length === 1) {
-                workspaceFolder = workspaceFolders[0];
-            }
+            workspaceFolder = workspaceFolders[0];
 
             if (args && args.length > 0 && args[0].adapterIds && args[0].adapterIds.length > 0) {
                 const id = args[0].adapterIds[0];
@@ -38,7 +40,7 @@ export class Postman {
                     title: 'Select Postman files'
                 });
                 if (uris && uris.length > 0) {
-                    const plyOptions = new PlyConfig(workspaceFolder, this.log).plyOptions;
+                    const plyOptions = new PlyConfig(workspaceFolder).plyOptions;
                     const importer = new ply.Import('postman', plyOptions.testsLocation, plyOptions.prettyIndent, this.log);
                     for (const uri of uris) {
                         this.log.info(`Importing postman file ${uri.fsPath}`);
@@ -49,6 +51,7 @@ export class Postman {
 
         } catch (err) {
             console.error(err);
+            this.log.error(err);
             vscode.window.showErrorMessage(err.message);
         }
     }

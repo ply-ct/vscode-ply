@@ -1,7 +1,9 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { PlyRoots } from './plyRoots';
+import { PlyConfig } from './config';
 
 interface Item {
     id: string;
@@ -13,7 +15,7 @@ export class PlyItem {
 
     command: { dispose(): any };
 
-    constructor(type?: ply.TestType) {
+    constructor(private extensionPath: string, type?: ply.TestType) {
         if (type) {
             this.command = vscode.commands.registerCommand(`ply.new.${type}`, async (...args: any[]) => {
                 this.newItem(type, args);
@@ -52,16 +54,55 @@ export class PlyItem {
             filters: this.getFilters(type)
         });
         if (uri) {
-            if (fs.existsSync(uri.fsPath)) {
-                vscode.window.showErrorMessage(`File already exists: ${uri.fsPath}`);
-            }
-            fs.writeFileSync(uri.fsPath, '', 'utf8');
-            if (type === 'flow') {
-                vscode.commands.executeCommand('ply.open-flow', { uri });
+            const dir = path.dirname(uri.fsPath);
+            if (!fs.existsSync(dir)) {
+                vscode.window.showErrorMessage(`Folder does not exist: ${dir}`);
             } else {
-                const doc = await vscode.workspace.openTextDocument(uri);
-                vscode.window.showTextDocument(doc);
+                const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(dir));
+                if (workspaceFolder) {
+                    const testsLoc = new PlyConfig(workspaceFolder).plyOptions.testsLocation;
+                    const fileLoc = new ply.Location(uri.fsPath);
+                    if (fileLoc.isChildOf(testsLoc)) {
+                        await fs.promises.writeFile(uri.fsPath, await this.defaultContents(type), 'utf8');
+                        this.openItem(type, uri);
+                    } else {
+                        vscode.window.showErrorMessage(`New ${type} should reside under ply.testsLocation: ${testsLoc}`);
+                        return;
+                    }
+                } else {
+                    // need to create from template since adding workspace folder triggers adapter load (empty = no good)
+                    await fs.promises.writeFile(uri.fsPath, await this.defaultContents(type), 'utf8');
+                    const disp = vscode.workspace.onDidChangeWorkspaceFolders(async evt => {
+                        const wsFolder = evt.added.find(wsf => wsf.uri.toString() === vscode.Uri.file(dir).toString());
+                        if (wsFolder) {
+                            disp.dispose();
+                            await this.openItem(type, uri);
+                        }
+                    });
+                    const pos = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+                    if (!vscode.workspace.updateWorkspaceFolders(pos, null, { uri: vscode.Uri.file(dir) })) {
+                        vscode.window.showErrorMessage(`Failed add workspace folder: ${dir}`);
+                    }
+                }
             }
+        }
+    }
+
+    async defaultContents(type: ply.TestType): Promise<string> {
+        if (type === 'flow') {
+            return await fs.promises.readFile(path.join(this.extensionPath, 'media/templates/default.flow'), 'utf-8');
+        } else {
+            return '';
+        }
+
+    }
+
+    async openItem(type: ply.TestType, uri: vscode.Uri) {
+        if (type === 'flow') {
+            await vscode.commands.executeCommand('ply.open-flow', { uri });
+        } else {
+            const doc = await vscode.workspace.openTextDocument(uri);
+            vscode.window.showTextDocument(doc);
         }
     }
 

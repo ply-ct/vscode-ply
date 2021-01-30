@@ -279,8 +279,23 @@
     "menus": {
       "view/title": [
         {
-          "command": "ply.import.postman-item",
+          "command": "ply.new.request",
           "group": "4_import@5",
+          "when": "view == test-explorer"
+        },
+        {
+          "command": "ply.new.case",
+          "group": "4_import@6",
+          "when": "view == test-explorer"
+        },
+        {
+          "command": "ply.new.flow",
+          "group": "4_import@7",
+          "when": "view == test-explorer"
+        },
+        {
+          "command": "ply.import.postman-item",
+          "group": "4_import@8",
           "when": "view == test-explorer"
         }
       ],

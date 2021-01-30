@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { detectNodePath, Log } from 'vscode-test-adapter-util';
+import { detectNodePath } from 'vscode-test-adapter-util';
 import * as ply from 'ply-ct';
 
 export enum Setting {
@@ -29,7 +29,6 @@ export class PlyConfig {
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly log: Log,
         private readonly reload: () => Promise<void> = async () => {},
         private readonly retire: () => void = () => {},
         private readonly resetDiffs: () => void = () => {},
@@ -79,7 +78,7 @@ export class PlyConfig {
         if (!nodePath) {
             nodePath = await detectNodePath();
         }
-        this.log.debug(`Node path: ${nodePath}`);
+        console.debug(`Node path: ${nodePath}`);
         return nodePath;
     }
 
@@ -87,19 +86,19 @@ export class PlyConfig {
         const dirname = this.workspaceFolder.uri.fsPath;
         const configCwd = this.getConfiguration().get<string>(Setting.cwd);
         const cwd = configCwd ? path.resolve(dirname, configCwd) : dirname;
-        this.log.debug(`Working directory: ${cwd}`);
+        console.debug(`Working directory: ${cwd}`);
         return cwd;
     }
 
     get debugPort(): number {
         const debugPort = this.getConfiguration().get(Setting.debugPort, 9229);
-        this.log.debug(`Debug port: ${debugPort}`);
+        console.debug(`Debug port: ${debugPort}`);
         return debugPort;
     }
 
     get debugConfig(): string | undefined {
         const debugConfig = this.getConfiguration().get(Setting.debugConfig, '');
-        this.log.debug(`Debug config: ${debugConfig}`);
+        console.debug(`Debug config: ${debugConfig}`);
         return debugConfig ? debugConfig : undefined;
     }
 
@@ -150,7 +149,7 @@ export class PlyConfig {
                 logLocation: abs(this.val('logLocation', options.logLocation || options.actualLocation)),
                 valuesFiles: this.arr('valuesFiles', options.valuesFiles).map(vf => abs(vf))
             });
-            this.log.debug(`plyOptions: ${JSON.stringify(options)}`);
+            console.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;
         }
 

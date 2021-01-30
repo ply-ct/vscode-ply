@@ -52,7 +52,6 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(this.retireEmitter);
         this.config = new PlyConfig(
             workspaceFolder,
-            log,
             () => this.load(),
             () => this.retireEmitter.fire({}),
             () => this.diffState.clearState()
@@ -123,7 +122,7 @@ export class PlyAdapter implements TestAdapter {
         }
 
         this.values?.dispose();
-        this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
+        this.values = new Values(this.workspaceFolder, this.plyRoots);
         this.disposables.push(this.values);
         this._onceValues.emit({ values: this.values });
     }

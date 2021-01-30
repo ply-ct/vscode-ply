@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
-import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
 
@@ -29,10 +28,9 @@ export class Values {
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,
-        readonly plyRoots: PlyRoots,
-        log: Log
+        readonly plyRoots: PlyRoots
     ) {
-        this.config = new PlyConfig(workspaceFolder, log, async () => {
+        this.config = new PlyConfig(workspaceFolder, async () => {
             this._plyValues = undefined;
             this.resultValues.clear();
             this.resultWatcher.dispose();

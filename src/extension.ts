@@ -71,10 +71,10 @@ export async function activate(context: vscode.ExtensionContext) {
     }));
 
     // new test commands
-    context.subscriptions.push(new PlyItem().command);
-    context.subscriptions.push(new PlyItem('request').command);
-    context.subscriptions.push(new PlyItem('case').command);
-    context.subscriptions.push(new PlyItem('flow').command);
+    context.subscriptions.push(new PlyItem(context.extensionPath).command);
+    context.subscriptions.push(new PlyItem(context.extensionPath, 'request').command);
+    context.subscriptions.push(new PlyItem(context.extensionPath, 'case').command);
+    context.subscriptions.push(new PlyItem(context.extensionPath, 'flow').command);
 
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(new TestAdapterRegistrar(
