@@ -120,7 +120,7 @@ export class Values {
         return { request, response };
     }
 
-    async getPlyValues(): Promise<object> {
+    async getPlyValues(): Promise<object | void> {
         if (!this._plyValues) {
             this._plyValues = await new ply.Values(this.config.plyOptions.valuesFiles, new ply.Logger()).read();
         }
