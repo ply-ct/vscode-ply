@@ -254,6 +254,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         const adapter = this.getAdapter(document.uri);
         if (adapter.values) {
             this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
+            // initial values
+            webviewPanel.webview.postMessage({
+                type: 'values',
+                base: baseUri.toString(),
+                values: await adapter.values.getResultValues(this.getId(document.uri))
+            });
         } else {
             adapter.onceValues(async e => {
                 webviewPanel.webview.postMessage({

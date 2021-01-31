@@ -15,6 +15,8 @@ import { PlyItem } from './item';
 
 export async function activate(context: vscode.ExtensionContext) {
 
+    const before = Date.now();
+
     // get the Test Explorer extension
     const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
     console.log(`Test Explorer extension ${testExplorerExtension ? '' : 'not '}found`);
@@ -196,7 +198,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman', importPostmanCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand));
 
-    console.log('vscode-ply is active');
+    console.log(`vscode-ply activated in ${Date.now() - before} ms`);
 
     const toOpen = context.workspaceState.get('ply.to.open');
     if (toOpen) {

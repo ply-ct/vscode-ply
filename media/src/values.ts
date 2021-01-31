@@ -5,15 +5,20 @@ export class Values {
     constructor(readonly iconBase: string, readonly defaults: object) {
     }
 
+    /**
+     * Prompts if needed and returns:
+     *  - undefined if run canceled
+     *  - empty object if no values needed
+     *  - otherwise map of name to defined value ('' if undefined)
+     */
     async promptIfNeeded(flowOrStep: flowbee.Flow | flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
-        let needed: {[key: string]: string};
+        let needed: {[key: string]: string} = {};
         let name: string;
         if (flowOrStep.type === 'step') {
             const step = flowOrStep as flowbee.Step;
-            needed = this.getNeeded(step) || {};
+            needed = this.getNeeded(step);
             name = step.name.replace(/\r?\n/g, ' ');
         } else {
-            needed = {};
             const flow = flowOrStep as flowbee.Flow;
             if (flow.steps) {
                 for (const step of flow.steps) {
@@ -36,12 +41,19 @@ export class Values {
             const val = await this.renderTable(title, action, this.toString(needed));
             if (val) {
                 return this.fromString(val);
+            } else {
+                return; // Canceled
             }
         }
         return needed;
     }
 
-    getNeeded(step: flowbee.Step): {[key: string]: string} | undefined {
+    /**
+     * Returns otherwise an object map of value name to empty-string
+     * (if not defined), or otherwise the defined value.
+     */
+    getNeeded(step: flowbee.Step): {[key: string]: string} {
+        const needed: {[key: string]: string} = {};
         if (step.path === 'request') {
             let expressions: string[] = [];
             if (step.attributes) {
@@ -53,14 +65,13 @@ export class Values {
                 }
             }
             if (expressions.length > 0) {
-                const needed: {[key: string]: string} = {};
                 for (const expression of expressions) {
                     const res = this.get(expression, this.defaults);
                     needed[expression] = res === expression ? '' : res || '';
                 }
-                return needed;
             }
         }
+        return needed;
     }
 
     private getExpressions(content: string): string[] | null {
