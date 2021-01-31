@@ -5,10 +5,34 @@ export class Values {
     constructor(readonly iconBase: string, readonly defaults: object) {
     }
 
-    async promptIfNeeded(step: flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
-        const needed = this.getNeeded(step);
-        if (needed) {
-            const title = `Values for '${step.name.replace(/\r?\n/g, ' ')}'`;
+    async promptIfNeeded(flowOrStep: flowbee.Flow | flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
+        let needed: {[key: string]: string};
+        let name: string;
+        if (flowOrStep.type === 'step') {
+            const step = flowOrStep as flowbee.Step;
+            needed = this.getNeeded(step) || {};
+            name = step.name.replace(/\r?\n/g, ' ');
+        } else {
+            needed = {};
+            const flow = flowOrStep as flowbee.Flow;
+            if (flow.steps) {
+                for (const step of flow.steps) {
+                    needed = { ...needed, ...this.getNeeded(step) };
+                }
+            }
+            if (flow.subflows) {
+                for (const subflow of flow.subflows) {
+                    if (subflow.steps) {
+                        for (const step of subflow.steps) {
+                            needed = { ...needed, ...this.getNeeded(step) };
+                        }
+                    }
+                }
+            }
+            name = flowbee.getFlowName(flow);
+        }
+        if (Object.keys(needed).length > 0) {
+            const title = `Values for '${name}'`;
             const val = await this.renderTable(title, action, this.toString(needed));
             if (val) {
                 return this.fromString(val);

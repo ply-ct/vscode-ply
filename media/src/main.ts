@@ -201,9 +201,9 @@ export class Flow {
 
     async onFlowAction(e: FlowActionEvent) {
         const flowAction = e.action;
-        let vals: object | undefined;
+        let step: flowbee.Step | undefined;
         if (typeof e.target === 'string' && e.target.startsWith('s')) {
-            let step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
+            step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
             if (!step && this.flowDiagram.flow.subflows) {
                 // check subflows for target
                 for (const subflow of this.flowDiagram.flow.subflows) {
@@ -214,12 +214,13 @@ export class Flow {
                     }
                 }
             }
-            if (step && e.action === 'run') {
-                if (values) {
-                    vals = await values.promptIfNeeded(step, e.options?.submit ? 'Submit' : 'Run');
-                    if (!vals) {
-                        return; // canceled
-                    }
+        }
+        let vals: object | undefined;
+        if (e.action === 'run') {
+            if (values) {
+                vals = await values.promptIfNeeded(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run');
+                if (!vals) {
+                    return; // canceled
                 }
             }
         }
