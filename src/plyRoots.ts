@@ -96,7 +96,12 @@ export class PlyRoot {
                 // find parent suite (dir)
                 const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
                 const dirUri = this.toUri(dirPath);
-                let parentSuite = this.findSuite(suite => suite.id === this.formSuiteId(dirUri));
+                let parentSuite: TestSuiteInfo | undefined;
+                if (dirPath === '') {
+                    parentSuite = this.baseSuite;
+                } else {
+                    parentSuite = this.findSuite(suite => suite.id === this.formSuiteId(dirUri));
+                }
                 if (!parentSuite) {
                     parentSuite = {
                         type: 'suite',
