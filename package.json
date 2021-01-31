@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.0.0-beta2",
+  "version": "2.0.0-beta3",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
