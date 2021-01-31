@@ -38,6 +38,7 @@ export class Values {
                 return this.fromString(val);
             }
         }
+        return needed;
     }
 
     getNeeded(step: flowbee.Step): {[key: string]: string} | undefined {

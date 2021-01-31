@@ -123,7 +123,7 @@ export class PlyItem {
             await vscode.commands.executeCommand('ply.open-flow', { uri });
         } else {
             const doc = await vscode.workspace.openTextDocument(uri);
-            vscode.window.showTextDocument(doc);
+            await vscode.window.showTextDocument(doc);
         }
     }
 
