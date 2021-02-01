@@ -294,7 +294,8 @@ window.addEventListener('message', async (event) => {
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
         const iconBase = `${message.base}/icons/${theme}`;
-        values = new Values(iconBase, message.values);
+        const path = `${message.flowPath}`;
+        values = new Values(path, iconBase, message.values);
         vscode.setState({ ...vscode.getState(), values: message.values });
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
@@ -311,7 +312,7 @@ function updateFromState() {
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
         if (state.values) {
-            values = new Values(flow.options.iconBase, state.values);
+            values = new Values(state.file, flow.options.iconBase, state.values);
         }
     }
 }

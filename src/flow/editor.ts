@@ -243,6 +243,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             webviewPanel.webview.postMessage({
                                 type: 'values',
                                 base: baseUri.toString(),
+                                flowPath: document.uri.fsPath,
                                 values: await adapter.values.getResultValues(this.getId(document.uri))
                             });
                         }
@@ -258,6 +259,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             webviewPanel.webview.postMessage({
                 type: 'values',
                 base: baseUri.toString(),
+                flowPath: document.uri.fsPath,
                 values: await adapter.values.getResultValues(this.getId(document.uri))
             });
         } else {
@@ -265,6 +267,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 webviewPanel.webview.postMessage({
                     type: 'values',
                     base: baseUri.toString(),
+                    flowPath: document.uri.fsPath,
                     values: await e.values.getResultValues(this.getId(document.uri))
                 });
                 this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));

@@ -2,7 +2,7 @@ import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Values {
 
-    constructor(readonly iconBase: string, readonly defaults: object) {
+    constructor(readonly flowFile: string, readonly iconBase: string, readonly defaults: object) {
     }
 
     /**
@@ -12,14 +12,18 @@ export class Values {
      *  - otherwise map of name to defined value ('' if undefined)
      */
     async promptIfNeeded(flowOrStep: flowbee.Flow | flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
-        let needed: {[key: string]: string} = {};
         let name: string;
+        let storageKey: string;
+        let needed: {[key: string]: string} = {};
         if (flowOrStep.type === 'step') {
             const step = flowOrStep as flowbee.Step;
-            needed = this.getNeeded(step);
             name = step.name.replace(/\r?\n/g, ' ');
+            storageKey = `${this.flowFile}#${name}.values`;
+            needed = this.getNeeded(step);
         } else {
             const flow = flowOrStep as flowbee.Flow;
+            name = flowbee.getFlowName(flow);
+            storageKey = `${flow.path}.values`;
             if (flow.steps) {
                 for (const step of flow.steps) {
                     needed = { ...needed, ...this.getNeeded(step) };
@@ -34,13 +38,33 @@ export class Values {
                     }
                 }
             }
-            name = flowbee.getFlowName(flow);
         }
         if (Object.keys(needed).length > 0) {
             const title = `Values for '${name}'`;
-            const val = await this.renderTable(title, action, this.toString(needed));
-            if (val) {
-                return this.fromString(val);
+            const initVals = { ...needed };
+            const storageVal = localStorage.getItem(storageKey);
+            if (storageVal) {
+                const storageObj = JSON.parse(storageVal);
+                for (const key of Object.keys(initVals)) {
+                    if (!initVals[key]) {
+                        initVals[key] = storageObj[key];
+                    }
+                }
+            }
+            const tableVal = await this.renderTable(title, action, this.toString(initVals));
+            if (tableVal) {
+                const vals = this.fromString(tableVal);
+                // save entered values in local storage
+                if (vals) {
+                    const storageVal = JSON.parse(tableVal).reduce((acc: {[key: string]: string} , cur: [ string, string]) => {
+                        acc[cur[0]] = cur[1];
+                        return acc;
+                    }, {});
+                    localStorage.setItem(storageKey, JSON.stringify(storageVal));
+                } else {
+                    localStorage.removeItem(storageKey);
+                }
+                return vals;
             } else {
                 return; // Canceled
             }
@@ -65,8 +89,9 @@ export class Values {
                 }
             }
             if (expressions.length > 0) {
+                const context = { ...this.defaults };
                 for (const expression of expressions) {
-                    const res = this.get(expression, this.defaults);
+                    const res = this.get(expression, context);
                     needed[expression] = res === expression ? '' : res || '';
                 }
             }
