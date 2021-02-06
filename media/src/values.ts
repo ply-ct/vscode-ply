@@ -7,13 +7,18 @@ export class Values {
 
     /**
      * Prompts if needed and returns:
-     *  - undefined if run canceled
+     *  - undefined if values just saved or run canceled
      *  - empty object if no values needed
      *  - otherwise map of name to defined value ('' if undefined)
      */
-    async promptIfNeeded(flowOrStep: flowbee.Flow | flowbee.Step, action: string): Promise<{[key: string]: string} | undefined> {
+    async prompt(flowOrStep: flowbee.Flow | flowbee.Step, action: string, onlyIfNeeded = false):
+      Promise<{[key: string]: string} | undefined> {
+        if (document.getElementById('flow-values')?.style?.display === 'flex') {
+            return;
+        }
         let name: string;
         let storageKey: string;
+        // needed values populated without user (storage) vals
         let needed: {[key: string]: string} = {};
         if (flowOrStep.type === 'step') {
             const step = flowOrStep as flowbee.Step;
@@ -39,32 +44,44 @@ export class Values {
                 }
             }
         }
+
         if (Object.keys(needed).length > 0) {
-            const title = `Values for '${name}'`;
-            const initVals = { ...needed };
-            const storageVal = localStorage.getItem(storageKey);
-            if (storageVal) {
-                const storageObj = JSON.parse(storageVal);
-                for (const key of Object.keys(initVals)) {
-                    if (!initVals[key]) {
-                        initVals[key] = storageObj[key];
-                    }
+            // sort by value name
+            needed = Object.keys(needed).sort((n1, n2) => n1.localeCompare(n2)).reduce((obj: {[key: string]: string}, key) => {
+                obj[key] = needed[key];
+                return obj;
+            }, {});
+
+            const suppVals = { ... needed };
+            this.supplementValues(storageKey, suppVals);
+
+            if (onlyIfNeeded) {
+                if (typeof Object.values(suppVals).find(v => v === '') === 'undefined') {
+                    return {}; // none needed
                 }
             }
-            const tableVal = await this.renderTable(title, action, this.toString(initVals));
+
+            const tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
             if (tableVal) {
-                const vals = this.fromString(tableVal);
+                const vals = tableVal[1];
                 // save entered values in local storage
                 if (vals) {
-                    const storageVal = JSON.parse(tableVal).reduce((acc: {[key: string]: string} , cur: [ string, string]) => {
-                        acc[cur[0]] = cur[1];
-                        return acc;
-                    }, {});
-                    localStorage.setItem(storageKey, JSON.stringify(storageVal));
+                    const storageVals: {[key: string]: string} = {};
+                    for (const key of Object.keys(vals)) {
+                        const expr = `\${${key}}`;
+                        if (needed[expr] !== vals[key]) {
+                            storageVals[expr] = vals[key];
+                        }
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(storageVals));
                 } else {
                     localStorage.removeItem(storageKey);
                 }
-                return vals;
+                if (tableVal[0] === 'Save') {
+                    return; // Saved only
+                } else {
+                    return vals;
+                }
             } else {
                 return; // Canceled
             }
@@ -73,7 +90,7 @@ export class Values {
     }
 
     /**
-     * Returns otherwise an object map of value name to empty-string
+     * Returns an object map of value name to empty-string
      * (if not defined), or otherwise the defined value.
      */
     getNeeded(step: flowbee.Step): {[key: string]: string} {
@@ -171,8 +188,24 @@ export class Values {
         }
     }
 
-    renderTable(title: string, action: string, initialValue?: string): Promise<string | void> {
-        return new Promise<string | void>(resolve => {
+    supplementValues(storageKey: string, initVals: {[key: string]: string}): string[] {
+        const userKeys: string[] = [];
+        const storageVal = localStorage.getItem(storageKey);
+        if (storageVal) {
+            const storageObj = JSON.parse(storageVal);
+            for (const key of Object.keys(initVals)) {
+                if (typeof storageObj[key] !== 'undefined' && storageObj[key] !== initVals[key]) {
+                    initVals[key] = storageObj[key];
+                    userKeys.push(key);
+                }
+            }
+        }
+        return userKeys;
+    }
+
+    renderTable(title: string, action: string, storageKey: string, needed: {[key: string]: string}):
+      Promise<[string, {[key: string]: string} | undefined] | void> {
+        return new Promise<[string, {[key: string]: string} | undefined] | void>(resolve => {
             // build html
             const div = document.getElementById('flow-values') as HTMLDivElement;
             const theme = document.body.className.endsWith('vscode-light') ? 'light': 'dark';
@@ -202,24 +235,50 @@ export class Values {
             const tableContent = document.createElement('div') as HTMLDivElement;
             tableContent.className = 'flowbee-config-tab-content';
             content.appendChild(tableContent);
-            let value = initialValue || '';
+            const suppVals = { ...needed };
+            let userKeys = this.supplementValues(storageKey, suppVals);
+            let value = this.toString(suppVals) || '';
             const table = new flowbee.Table(
                 [ { type: 'text', label: 'Expression' }, { type: 'text', label: 'Value' } ],
                 value,
-                false
+                false,
+                true
             );
-            table.onTableUpdate(updateEvent => value = updateEvent.value);
+            this.shadeUserTds(table, userKeys, theme === 'dark');
+            table.onTableUpdate(updateEvent => {
+                value = updateEvent.value;
+                const newVals = this.fromString(value);
+                if (newVals) {
+                    userKeys = [];
+                    for (const key of Object.keys(newVals)) {
+                        const expr = `\${${key}}`;
+                        if (needed[expr] !== newVals[key]) {
+                            userKeys.push(expr);
+                        }
+                    }
+                    this.shadeUserTds(table, userKeys, theme === 'dark');
+                }
+            });
             tableContent.appendChild(table.tableElement);
             div.appendChild(content);
             const footer = document.createElement('div') as HTMLDivElement;
             footer.className = 'flowbee-config-footer';
+            const saveButton = document.createElement('input') as HTMLInputElement;
+            saveButton.type = 'button';
+            saveButton.value = 'Save';
+            saveButton.onclick = _e => {
+                div.style.display = 'none';
+                div.innerHTML = '';
+                resolve(['Save', this.fromString(value)]);
+            };
+            footer.appendChild(saveButton);
             const okButton = document.createElement('input') as HTMLInputElement;
             okButton.type = 'button';
             okButton.value = action;
             okButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';
-                resolve(value);
+                resolve([action, this.fromString(value)]);
             };
             footer.appendChild(okButton);
             const cancelButton = document.createElement('input') as HTMLInputElement;
@@ -234,5 +293,20 @@ export class Values {
             div.appendChild(footer);
             div.style.display = 'flex';
         });
+    }
+
+    private shadeUserTds(table: flowbee.Table, userKeys: string[], dark = false) {
+        if (userKeys.length > 0) {
+            for (const tr of table.tableElement.querySelectorAll('tr')) {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length === 2) {
+                    if (userKeys.includes(tds[0].innerText)) {
+                        tds[1].style.backgroundColor = dark ? '#434e73' : '#123ec3';
+                    } else {
+                        tds[1].style.backgroundColor = '';
+                    }
+                }
+            }
+        }
     }
 }

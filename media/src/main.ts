@@ -216,11 +216,11 @@ export class Flow {
             }
         }
         let vals: object | undefined;
-        if (e.action === 'run') {
+        if (e.action === 'run' || e.action === 'values') {
             if (values) {
-                vals = await values.promptIfNeeded(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run');
+                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', e.action !== 'values');
                 if (!vals) {
-                    return; // canceled
+                    return; // canceled or just saved
                 }
             }
         }

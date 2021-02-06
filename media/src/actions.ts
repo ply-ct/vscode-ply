@@ -104,6 +104,7 @@ export class FlowActions {
         this._onFlowAction.on(listener);
     }
 
+    private values: HTMLInputElement;
     private submit: HTMLInputElement;
     private run: HTMLInputElement;
     private debug: HTMLInputElement;
@@ -116,6 +117,8 @@ export class FlowActions {
             this._onFlowAction.emit({ action });
         };
 
+        this.values = container.querySelector('#values') as HTMLInputElement;
+        this.values.onclick = actionClick;
         this.submit = container.querySelector('#submit') as HTMLInputElement;
         this.submit.onclick = actionClick;
         this.run = container.querySelector('#run') as HTMLInputElement;

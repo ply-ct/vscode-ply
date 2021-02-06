@@ -30,7 +30,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         let designItems: flowbee.MenuItem[] = [
             { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
             ...(hasSubmit ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
-            { id: 'run', label: 'Run', icon: 'start.svg' }
+            { id: 'run', label: 'Run', icon: 'run.svg' }
         ];
         if (!flowElementEvent.instances) {
             designItems = [
