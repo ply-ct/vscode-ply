@@ -187,6 +187,12 @@
           "default": "If Single",
           "scope": "window"
         },
+        "ply.saveBeforeRun": {
+          "descripton": "Automatically save dirty test files before running",
+          "type": "boolean",
+          "default": false,
+          "scope": "window"
+        },
         "ply.enableDiffEditorCodeLens": {
           "descripton": "How to handle when vscode setting 'diffEditor.codeLens' is not enabled for a workspace folder that contains ply tests",
           "type": "string",

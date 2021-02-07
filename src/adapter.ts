@@ -12,7 +12,6 @@ import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
 import { SubmitCodeLensProvider } from './codeLens';
 import { Values } from './values';
-import { Suite } from 'mocha';
 
 export class PlyAdapter implements TestAdapter {
 
@@ -129,28 +128,8 @@ export class PlyAdapter implements TestAdapter {
     }
 
     async run(testIds: string[], values = {}, runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<void> {
-        if (!(await this.promptToSaveDirtySuites(testIds))) {
+        if (!(await this.checkAndProceed(testIds, runOptions))) {
             return;
-        }
-
-        if (this.config.openFlowWhenRun !== 'Never') {
-            const flowSuites: TestSuiteInfo[] = this.getFlowSuites(testIds);
-            if (flowSuites.length > 0) {
-                if (flowSuites.length === 1) {
-                    await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
-                    if (!runOptions?.proceed) {
-                        // run through editor to prompt for values if needed
-                        vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
-                        return;
-                    }
-                } else if (this.config.openFlowWhenRun === 'Always') {
-                    // you asked for it -- open all flows
-                    flowSuites.forEach(async flowSuite => {
-                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
-                    });
-
-                }
-            }
         }
 
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
@@ -166,16 +145,11 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
-    private getFlowSuites(testIds: string[]): TestSuiteInfo[] {
-        return this.plyRoots.getSuiteFileInfos(testIds).filter(suiteFileInfo => {
-            return PlyRoots.toUri(suiteFileInfo.id).path.endsWith('.flow');
-        });
-    }
-
-    async debug(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
-        if (!(await this.promptToSaveDirtySuites(testIds))) {
+    async debug(testIds: string[], values = {}, runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<void> {
+        if (!(await this.checkAndProceed(testIds, runOptions))) {
             return;
         }
+
         // start a test run in a child process and attach the debugger to it...
         this.log.info(`Debugging: ${JSON.stringify(testIds)}`);
 
@@ -212,6 +186,39 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
+    private async checkAndProceed(testIds: string[], runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<boolean> {
+        if (!(await this.promptToSaveDirtySuites(testIds))) {
+            return false;
+        }
+
+        if (this.config.openFlowWhenRun !== 'Never') {
+            const flowSuites: TestSuiteInfo[] = this.getFlowSuites(testIds);
+            if (flowSuites.length > 0) {
+                if (flowSuites.length === 1) {
+                    await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
+                    if (!runOptions?.proceed) {
+                        // run through editor to prompt for values if needed
+                        vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
+                        return false;
+                    }
+                } else if (this.config.openFlowWhenRun === 'Always') {
+                    // you asked for it -- open all flows
+                    flowSuites.forEach(async flowSuite => {
+                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
+                    });
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private getFlowSuites(testIds: string[]): TestSuiteInfo[] {
+        return this.plyRoots.getSuiteFileInfos(testIds).filter(suiteFileInfo => {
+            return PlyRoots.toUri(suiteFileInfo.id).path.endsWith('.flow');
+        });
+    }
+
     /**
      * Returns false if run is canceled.
      */
@@ -225,14 +232,24 @@ export class PlyAdapter implements TestAdapter {
         }
 
         if (dirtyDocs.length > 0) {
-            const saveAndRun = 'Save and Run';
-            const docNames = dirtyDocs.map(d => path.basename(d.fileName));
-            const res = await vscode.window.showWarningMessage(
-                `File(s) must be saved before running: ${docNames.join(', ')}`,
-                saveAndRun,
-                'Cancel'
-            );
-            if (res === saveAndRun) {
+            let doSave = this.config.saveBeforeRun;
+            if (!doSave) {
+                const saveAndRun = 'Save and Run';
+                const alwaysSave = 'Always Save before Run';
+                const docNames = dirtyDocs.map(d => path.basename(d.fileName));
+                const res = await vscode.window.showWarningMessage(
+                    `File(s) must be saved before running: ${docNames.join(', ')}`,
+                    saveAndRun,
+                    alwaysSave,
+                    'Cancel'
+                );
+                doSave = res === saveAndRun || res === alwaysSave;
+                if (res === alwaysSave) {
+                    vscode.workspace.getConfiguration('ply').update('saveBeforeRun', true, vscode.ConfigurationTarget.Workspace);
+                }
+            }
+
+            if (doSave) {
                 for (const doc of dirtyDocs) {
                     await doc.save();
                 }

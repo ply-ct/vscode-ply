@@ -218,7 +218,7 @@ export class Flow {
         let vals: object | undefined;
         if (flowAction === 'run' || flowAction === 'values') {
             if (values) {
-                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', !!step || e.action !== 'values');
+                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', !step && e.action !== 'values');
                 if (!vals) {
                     return; // canceled or just saved
                 }
@@ -276,7 +276,7 @@ window.addEventListener('message', async (event) => {
         flow.render();
         if (isNew) {
             console.debug(`Saving new flow: ${message.file}`);
-            flow.updateFlow(false);
+            flow.updateFlow();
         }
         // save state
         const { base, websocketPort, file, readonly, instance } = message;

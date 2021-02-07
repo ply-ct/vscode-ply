@@ -8,7 +8,6 @@ import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { Result } from '../result/result';
-import { Options } from '../../media/src/options';
 
 interface InstanceSubscribed { instanceId: string; }
 export interface FlowItemSelectEvent { uri: vscode.Uri; }
