@@ -24,7 +24,7 @@ export class Values {
             const step = flowOrStep as flowbee.Step;
             name = step.name.replace(/\r?\n/g, ' ');
             storageKey = `${this.flowFile}#${name}.values`;
-            needed = this.getNeeded(step);
+            needed = this.getNeeded(step, true);
         } else {
             const flow = flowOrStep as flowbee.Flow;
             name = flowbee.getFlowName(flow);
@@ -57,7 +57,7 @@ export class Values {
 
             if (onlyIfNeeded) {
                 if (typeof Object.values(suppVals).find(v => v === '') === 'undefined') {
-                    return {}; // none needed
+                    return suppVals; // no more needed
                 }
             }
 
@@ -86,6 +86,7 @@ export class Values {
                 return; // Canceled
             }
         }
+
         return needed;
     }
 
@@ -93,7 +94,7 @@ export class Values {
      * Returns an object map of value name to empty-string
      * (if not defined), or otherwise the defined value.
      */
-    getNeeded(step: flowbee.Step): {[key: string]: string} {
+    getNeeded(step: flowbee.Step, inclRefs = false): {[key: string]: string} {
         const needed: {[key: string]: string} = {};
         if (step.path === 'request') {
             let expressions: string[] = [];
@@ -108,8 +109,10 @@ export class Values {
             if (expressions.length > 0) {
                 const context = { ...this.defaults };
                 for (const expression of expressions) {
-                    const res = this.get(expression, context);
-                    needed[expression] = res === expression ? '' : res || '';
+                    if (inclRefs || !expression.startsWith('${@')) {
+                        const res = this.get(expression, context);
+                        needed[expression] = res === expression ? '' : res || '';
+                    }
                 }
             }
         }
@@ -265,7 +268,7 @@ export class Values {
             footer.className = 'flowbee-config-footer';
             const saveButton = document.createElement('input') as HTMLInputElement;
             saveButton.type = 'button';
-            saveButton.value = 'Save';
+            saveButton.value = 'Set Values';
             saveButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';

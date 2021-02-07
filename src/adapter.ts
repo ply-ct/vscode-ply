@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { inspect } from 'util';
-import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent } from 'vscode-test-adapter-api';
+import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
@@ -12,6 +12,7 @@ import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
 import { SubmitCodeLensProvider } from './codeLens';
 import { Values } from './values';
+import { Suite } from 'mocha';
 
 export class PlyAdapter implements TestAdapter {
 
@@ -127,10 +128,31 @@ export class PlyAdapter implements TestAdapter {
         this._onceValues.emit({ values: this.values });
     }
 
-    async run(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
-        if (! await this.promptToSaveDirtySuites(testIds)) {
+    async run(testIds: string[], values = {}, runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<void> {
+        if (!(await this.promptToSaveDirtySuites(testIds))) {
             return;
         }
+
+        if (this.config.openFlowWhenRun !== 'Never') {
+            const flowSuites: TestSuiteInfo[] = this.getFlowSuites(testIds);
+            if (flowSuites.length > 0) {
+                if (flowSuites.length === 1) {
+                    await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
+                    if (!runOptions?.proceed) {
+                        // run through editor to prompt for values if needed
+                        vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
+                        return;
+                    }
+                } else if (this.config.openFlowWhenRun === 'Always') {
+                    // you asked for it -- open all flows
+                    flowSuites.forEach(async flowSuite => {
+                        await vscode.commands.executeCommand('ply.open-flow', flowSuite.id);
+                    });
+
+                }
+            }
+        }
+
         this.log.info(`Running: ${JSON.stringify(testIds)}`);
         try {
             this.runner = new PlyRunner(this.workspaceFolder, this.diffState, this.outputChannel, this.config,
@@ -144,8 +166,14 @@ export class PlyAdapter implements TestAdapter {
         }
     }
 
+    private getFlowSuites(testIds: string[]): TestSuiteInfo[] {
+        return this.plyRoots.getSuiteFileInfos(testIds).filter(suiteFileInfo => {
+            return PlyRoots.toUri(suiteFileInfo.id).path.endsWith('.flow');
+        });
+    }
+
     async debug(testIds: string[], values = {}, runOptions?: ply.RunOptions): Promise<void> {
-        if (! await this.promptToSaveDirtySuites(testIds)) {
+        if (!(await this.promptToSaveDirtySuites(testIds))) {
             return;
         }
         // start a test run in a child process and attach the debugger to it...

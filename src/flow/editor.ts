@@ -8,9 +8,11 @@ import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { Result } from '../result/result';
+import { Options } from '../../media/src/options';
 
 interface InstanceSubscribed { instanceId: string; }
 export interface FlowItemSelectEvent { uri: vscode.Uri; }
+export interface FlowActionEvent { uri: vscode.Uri; action: string; options?: any }
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
@@ -23,9 +25,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     constructor(
         readonly context: vscode.ExtensionContext,
         readonly adapters: Map<string,PlyAdapter>,
-        readonly onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
+        private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
+        private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
+
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
+
     }
 
     private bindWebsocket() {
@@ -227,12 +232,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             this.disposables.push(adapter.onFlow(listener));
         }
 
-        this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
-            if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {
-                updateWebview(undefined, flowItemSelect.uri.fragment);
-            }
-        }));
-
         const onValuesUpdate = async (resultUri: vscode.Uri) => {
             const adapter = this.getAdapter(document.uri);
             if (adapter?.values) {
@@ -256,7 +255,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (adapter.values) {
             this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
             // initial values
-            webviewPanel.webview.postMessage({
+            await webviewPanel.webview.postMessage({
                 type: 'values',
                 base: baseUri.toString(),
                 flowPath: document.uri.fsPath,
@@ -273,6 +272,25 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
             });
         }
+
+        this.disposables.push(this.onFlowAction(async flowAction => {
+            const flowUri = flowAction.uri.with( { fragment: undefined } );
+            if (flowUri.toString() === document.uri.toString()) {
+                webviewPanel.webview.postMessage({
+                    type: 'action',
+                    action: flowAction.action,
+                    target: flowAction.uri.fragment,
+                    options: flowAction.options
+
+                });
+            }
+        }));
+
+        this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
+            if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {
+                updateWebview(undefined, flowItemSelect.uri.fragment);
+            }
+        }));
 
         webviewPanel.onDidDispose(() => {
             for (const disposable of this.disposables) {
@@ -310,7 +328,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             const id = this.getId(uri, target);
             console.debug(`run: ${id}`);
             const adapter = this.getAdapter(uri);
-            await adapter?.run([id], values, runOptions);
+            await adapter?.run([id], values, { ...runOptions, proceed: true });
         } catch (err) {
             console.error(err);
             vscode.window.showErrorMessage(err.message);

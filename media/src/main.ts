@@ -216,16 +216,16 @@ export class Flow {
             }
         }
         let vals: object | undefined;
-        if (e.action === 'run' || e.action === 'values') {
+        if (flowAction === 'run' || flowAction === 'values') {
             if (values) {
-                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', e.action !== 'values');
+                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', !!step || e.action !== 'values');
                 if (!vals) {
                     return; // canceled or just saved
                 }
             }
         }
         vscode.postMessage({
-            type: flowAction,
+            type: flowAction === 'values' ? 'run' : flowAction, // can elect Run from values prompt even when launched as 'values' action
             flow: this.flowDiagram.flow.path,
             ...(e.target) && { target: e.target },
             ...(e.options) && { options: e.options },
@@ -234,7 +234,7 @@ export class Flow {
     }
 
     /**
-     * Save the flow diagram.
+     * Update the flow diagram document.
      */
     updateFlow() {
         const indent = this.options.indent;
@@ -276,7 +276,7 @@ window.addEventListener('message', async (event) => {
         flow.render();
         if (isNew) {
             console.debug(`Saving new flow: ${message.file}`);
-            flow.updateFlow();
+            flow.updateFlow(false);
         }
         // save state
         const { base, websocketPort, file, readonly, instance } = message;
@@ -297,12 +297,17 @@ window.addEventListener('message', async (event) => {
         const path = `${message.flowPath}`;
         values = new Values(path, iconBase, message.values);
         vscode.setState({ ...vscode.getState(), values: message.values });
+    } else if (message.type === 'action') {
+        const flow = updateFromState();
+        if (flow) {
+            flow.onFlowAction({ action: message.action, target: message.target, options: message.options });
+        }
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
 });
 
-function updateFromState() {
+function updateFromState(): Flow | undefined {
     const state = vscode.getState();
     if (state) {
         templates = new Templates(state.base);
@@ -314,6 +319,7 @@ function updateFromState() {
         if (state.values) {
             values = new Values(state.file, flow.options.iconBase, state.values);
         }
+        return flow;
     }
 }
 

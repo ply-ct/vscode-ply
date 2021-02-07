@@ -9,7 +9,7 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
-import { FlowEditor, FlowItemSelectEvent } from './flow/editor';
+import { FlowActionEvent, FlowEditor, FlowItemSelectEvent } from './flow/editor';
 import { Postman } from './postman';
 import { PlyItem } from './item';
 
@@ -41,12 +41,16 @@ export async function activate(context: vscode.ExtensionContext) {
     // workspace folder uri to diff handler
     const diffHandlers = new Map<string,DiffHandler>();
 
+    const _onFlowAction = new Event<FlowActionEvent>();
+    const onFlowAction = (listener: Listener<FlowActionEvent>): Disposable => {
+        return _onFlowAction.on(listener);
+    };
     const _onFlowItemSelect = new Event<FlowItemSelectEvent>();
     const onFlowItemSelect = (listener: Listener<FlowItemSelectEvent>): Disposable => {
         return _onFlowItemSelect.on(listener);
     };
 
-    const flowEditor = new FlowEditor(context, testAdapters, onFlowItemSelect);
+    const flowEditor = new FlowEditor(context, testAdapters, onFlowAction, onFlowItemSelect);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
         const item = await PlyItem.getItem(...args);
@@ -56,6 +60,13 @@ export async function activate(context: vscode.ExtensionContext) {
             if (item.uri.fragment) {
                 _onFlowItemSelect.emit({ uri: item.uri });
             }
+            return fileUri;
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.flow-action', async (...args: any[]) => {
+        const item = await PlyItem.getItem(args[0]);
+        if (item?.uri) {
+            _onFlowAction.emit({ uri: vscode.Uri.file(item.uri.fsPath), action: args[1]} );
         }
     }));
 

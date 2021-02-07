@@ -216,6 +216,10 @@
         }
       },
       {
+        "command": "ply.flow-action",
+        "title": "Ply: Flow Action"
+      },
+      {
         "command": "ply.submit",
         "title": "Ply: Submit"
       },

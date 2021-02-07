@@ -398,7 +398,7 @@ export class PlyRoots {
     }
 
     /**
-     * Get unique list of suite files for testOrSuiteIds.
+     * Get unique list of (not skipped) suite files for testOrSuiteIds.
      * @param testOrSuiteIds
      */
     getSuiteFileInfos(testOrSuiteIds: string[], suites: TestSuiteInfo[] = []): TestSuiteInfo[] {
@@ -409,7 +409,12 @@ export class PlyRoots {
                     if (testOrSuite.file && !suites.find(suite => suite.id === testOrSuite.id)) {
                         suites.push(testOrSuite);
                     } else {
-                        suites = [ ...suites, ...this.getSuiteFileInfos(testOrSuite.children.map(c => c.id), suites) ];
+                        const childSuites = this.getSuiteFileInfos(testOrSuite.children.map(c => c.id)).filter(s => {
+                            // honor skip when executing from parent suite (not explicitly running test or suite)
+                            const suite = this.getSuite(s.id);
+                            return suite && !suite.skip;
+                        });
+                        suites = [ ...suites, ...childSuites ];
                     }
 
                 } else if (testOrSuite.type === 'test') {
