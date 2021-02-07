@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.flow-action', async (...args: any[]) => {
         const item = await PlyItem.getItem(args[0]);
         if (item?.uri) {
-            _onFlowAction.emit({ uri: vscode.Uri.file(item.uri.fsPath), action: args[1]} );
+            _onFlowAction.emit({ uri: item.uri, action: args[1]} );
         }
     }));
 

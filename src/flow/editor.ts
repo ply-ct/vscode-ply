@@ -273,7 +273,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }
 
         this.disposables.push(this.onFlowAction(async flowAction => {
-            const flowUri = flowAction.uri.with( { fragment: undefined } );
+            const flowUri = flowAction.uri.with( { fragment: '' } );
             if (flowUri.toString() === document.uri.toString()) {
                 webviewPanel.webview.postMessage({
                     type: 'action',

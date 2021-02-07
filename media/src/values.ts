@@ -57,7 +57,12 @@ export class Values {
 
             if (onlyIfNeeded) {
                 if (typeof Object.values(suppVals).find(v => v === '') === 'undefined') {
-                    return suppVals; // no more needed
+                    // no more needed -- convert from expressions
+                    return Object.keys(suppVals).reduce((acc: {[key: string]: string}, cur) => {
+                        const key = cur.substring(2, cur.length - 1);
+                        acc[key] = suppVals[cur];
+                        return acc;
+                    }, {});
                 }
             }
 
@@ -87,7 +92,7 @@ export class Values {
             }
         }
 
-        return needed;
+        return {};
     }
 
     /**
