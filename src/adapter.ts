@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
 import { inspect } from 'util';
 import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, RetireEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
-import { Log } from 'vscode-test-adapter-util';
 import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
 import { PlyRoots } from './plyRoots';
@@ -44,7 +43,7 @@ export class PlyAdapter implements TestAdapter {
         readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
-        private readonly log: Log
+        private readonly log: ply.Log
     ) {
         this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
         this.disposables.push(this.testsEmitter);
@@ -97,7 +96,7 @@ export class PlyAdapter implements TestAdapter {
         try {
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-            const loader = new PlyLoader(this.config, this.log);
+            const loader = new PlyLoader(this.config);
             const requests = await loader.loadRequests();
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();
@@ -122,7 +121,7 @@ export class PlyAdapter implements TestAdapter {
         }
 
         this.values?.dispose();
-        this.values = new Values(this.workspaceFolder, this.plyRoots);
+        this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
         this.disposables.push(this.values);
         this._onceValues.emit({ values: this.values });
     }

@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
-import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots } from '../plyRoots';
 import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
@@ -90,7 +89,7 @@ export class DiffHandler {
         private readonly diffState: DiffState,
         private readonly decorator: ResultDecorator,
         private readonly retire: (testIds: string[]) => void,
-        private readonly log: Log
+        private readonly log: ply.Log
     ) {
 
         this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -140,7 +139,7 @@ export class DiffHandler {
         const info = this.plyRoots.findInfo(infoId);
         if (!info) {
             // could be a suite/test from another adapter (eg: mocha)
-            this.log.warn(`Ply test info not found for id: ${infoId} (not a ply test?)`);
+            this.log.error(`Ply test info not found for id: ${infoId} (not a ply test?)`);
             return;
         }
 

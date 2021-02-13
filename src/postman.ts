@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
-import { Log } from 'vscode-test-adapter-util';
 import { PlyConfig } from './config';
 
 export class Postman {
-    constructor(readonly log: Log) { }
+    constructor(readonly log: ply.Log) { }
 
     async import(...args: any[]) {
         let workspaceFolder: vscode.WorkspaceFolder | undefined = undefined;

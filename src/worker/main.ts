@@ -95,7 +95,7 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
             sendMessage('Running plyees');
         }
 
-        plier.run(args.plyees, args.plyValues, args.runOptions)
+        plier.run(args.plyees, args.runOptions)
         .then(() => {
             sendMessage({ type: 'finished' });
             if (onFinished) {

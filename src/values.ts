@@ -27,8 +27,9 @@ export class Values {
     }
 
     constructor(
-        readonly workspaceFolder: vscode.WorkspaceFolder,
-        readonly plyRoots: PlyRoots
+        workspaceFolder: vscode.WorkspaceFolder,
+        private readonly plyRoots: PlyRoots,
+        private readonly log: ply.Log
     ) {
         this.config = new PlyConfig(workspaceFolder, async () => {
             this._plyValues = undefined;
@@ -71,36 +72,42 @@ export class Values {
                     }
                 }
             }
-            const resultValues: any = {};
+            const actualResults: any = {};
             if (suite.runtime.results.actual.exists) {
-                const yaml = suite.runtime.results.getActualYaml();
-                const obj = ply.loadYaml(resultUri.toString(), yaml.text);
-                if (typeof obj === 'object') {
-                    // TODO cases
-                    if (suite.type === 'request') {
-                        for (const key of Object.keys(obj)) {
-                            if (obj.request) {
-                                resultValues[key] = this.getResult(obj);
-                            }
-                        }
-                    } else if (suite.type === 'flow') {
-                        for (const key of Object.keys(obj)) {
-                            const flowObj = obj[key];
-                            if (flowObj.id?.startsWith('f')) {
-                                for (const subKey of Object.keys(flowObj)) {
-                                    const subObj = flowObj[subKey];
-                                    if (subObj.request) {
-                                        resultValues[`${flowObj.id}.${subObj.id}`] = this.getResult(subObj);
-                                    }
+                try {
+                    const yaml = suite.runtime.results.getActualYaml();
+                    const obj = ply.loadYaml(resultUri.toString(), yaml.text);
+                    if (typeof obj === 'object') {
+                        // TODO cases
+                        if (suite.type === 'request') {
+                            for (const key of Object.keys(obj)) {
+                                if (obj.request) {
+                                    actualResults[key] = this.getResult(obj);
                                 }
-                            } else if (flowObj.id?.startsWith('s') && flowObj.request) {
-                                resultValues[flowObj.id] = this.getResult(flowObj);
+                            }
+                        } else if (suite.type === 'flow') {
+                            for (const key of Object.keys(obj)) {
+                                const flowObj = obj[key];
+                                if (flowObj.id?.startsWith('f')) {
+                                    for (const subKey of Object.keys(flowObj)) {
+                                        const subObj = flowObj[subKey];
+                                        if (subObj.request) {
+                                            actualResults[`${flowObj.id}.${subObj.id}`] = this.getResult(subObj);
+                                        }
+                                    }
+                                } else if (flowObj.id?.startsWith('s') && flowObj.request) {
+                                    actualResults[flowObj.id] = this.getResult(flowObj);
+                                }
                             }
                         }
+                        values.__ply_results = actualResults;
                     }
-                    values.__ply_results = resultValues;
+                    this.resultValues.set(resultUri.toString(), values || {});
+                } catch (err) {
+                    console.error(err);
+                    this.log.error(`Cannot process results for suite: ${suiteId}`);
+                    this.log.error(err);
                 }
-                this.resultValues.set(resultUri.toString(), values || {});
             }
         }
         return values;

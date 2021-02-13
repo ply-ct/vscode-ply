@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { URI as Uri } from 'vscode-uri';
-import { Log } from 'vscode-test-adapter-util';
 import { Ply, Suite, Request, Case, Step } from 'ply-ct';
 import { PlyConfig } from './config';
 
@@ -8,8 +7,7 @@ export class PlyLoader {
 
     private testsLocation: string;
     constructor(
-        private readonly config: PlyConfig,
-        private readonly log: Log) {
+        private readonly config: PlyConfig) {
             this.testsLocation = this.config.plyOptions.testsLocation;
     }
 

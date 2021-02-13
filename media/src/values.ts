@@ -58,11 +58,12 @@ export class Values {
             if (onlyIfNeeded) {
                 if (typeof Object.values(suppVals).find(v => v === '') === 'undefined') {
                     // no more needed -- convert from expressions
-                    return Object.keys(suppVals).reduce((acc: {[key: string]: string}, cur) => {
+                    const vals = Object.keys(suppVals).reduce((acc: {[key: string]: string}, cur) => {
                         const key = cur.substring(2, cur.length - 1);
                         acc[key] = suppVals[cur];
                         return acc;
                     }, {});
+                    return this.consolidateValues(vals);
                 }
             }
 
@@ -73,8 +74,11 @@ export class Values {
                 if (vals) {
                     const storageVals: {[key: string]: string} = {};
                     for (const key of Object.keys(vals)) {
-                        const expr = `\${${key}}`;
-                        if (needed[expr] !== vals[key]) {
+                        let expr = `\${${key}}`;
+                        if (expr.startsWith('${__ply_results.')) {
+                            expr = '${@' + expr.substring(16);
+                        }
+                        if (needed[expr] !== vals[key] || expr.startsWith('${@')) {
                             storageVals[expr] = vals[key];
                         }
                     }
@@ -85,7 +89,7 @@ export class Values {
                 if (tableVal[0] === 'Save') {
                     return; // Saved only
                 } else {
-                    return vals;
+                    return vals ? this.consolidateValues(vals) : vals;
                 }
             } else {
                 return; // Canceled
@@ -112,10 +116,9 @@ export class Values {
                 }
             }
             if (expressions.length > 0) {
-                const context = { ...this.defaults };
                 for (const expression of expressions) {
                     if (inclRefs || !expression.startsWith('${@')) {
-                        const res = this.get(expression, context);
+                        const res = this.get(expression, this.defaults);
                         needed[expression] = res === expression ? '' : res || '';
                     }
                 }
@@ -196,19 +199,38 @@ export class Values {
         }
     }
 
+    /**
+     * Adds values from local storage
+     */
     supplementValues(storageKey: string, initVals: {[key: string]: string}): string[] {
         const userKeys: string[] = [];
         const storageVal = localStorage.getItem(storageKey);
         if (storageVal) {
             const storageObj = JSON.parse(storageVal);
-            for (const key of Object.keys(initVals)) {
-                if (typeof storageObj[key] !== 'undefined' && storageObj[key] !== initVals[key]) {
+            for (const key of Object.keys(storageObj)) {
+                if (storageObj[key] !== initVals[key]) {
                     initVals[key] = storageObj[key];
                     userKeys.push(key);
                 }
             }
         }
         return userKeys;
+    }
+
+    /**
+     * Removes values that are the same as defaults, so that everything
+     * left is an exception.
+     */
+    private consolidateValues(vals: {[key: string]: string}): {[key: string]: string} {
+        const consol: {[key: string]: string} = {};
+        for (const key of Object.keys(vals)) {
+            const expr = `\${${key}}`;
+            const res = this.get(expr, this.defaults);
+            if (expr.startsWith('${__ply_') || '' + res !== vals[key]) {
+                consol[key] = vals[key];
+            }
+        }
+        return consol;
     }
 
     renderTable(title: string, action: string, storageKey: string, needed: {[key: string]: string}):
@@ -249,8 +271,7 @@ export class Values {
             const table = new flowbee.Table(
                 [ { type: 'text', label: 'Expression' }, { type: 'text', label: 'Value' } ],
                 value,
-                false,
-                true
+                false
             );
             this.shadeUserTds(table, userKeys, theme === 'dark');
             table.onTableUpdate(updateEvent => {
@@ -309,7 +330,7 @@ export class Values {
                 const tds = tr.querySelectorAll('td');
                 if (tds.length === 2) {
                     if (userKeys.includes(tds[0].innerText)) {
-                        tds[1].style.backgroundColor = dark ? '#434e73' : '#123ec3';
+                        tds[1].style.backgroundColor = dark ? '#434e73' : '#cce8fe'; // '#123ec3';
                     } else {
                         tds[1].style.backgroundColor = '';
                     }

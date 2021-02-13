@@ -3,7 +3,6 @@ import * as ply from 'ply-ct';
 import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
 import { ChildProcess, fork } from 'child_process';
 import { TestSuiteInfo, TestInfo, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent, TestDecoration } from 'vscode-test-adapter-api';
-import { Log } from 'vscode-test-adapter-util';
 import { PlyRoots} from './plyRoots';
 import { PlyConfig } from './config';
 import { WorkerArgs } from './worker/args';
@@ -27,12 +26,12 @@ export class PlyRunner {
         private readonly outputChannel: vscode.OutputChannel,
         private readonly config: PlyConfig,
         private readonly plyRoots: PlyRoots,
-        private readonly log: Log,
+        private readonly log: ply.Log,
         private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
     ) { }
 
     // TODO: run a suite directly (esp. flow) rather than by collecting its tests
-    async runTests(testIds: string[], plyValues: object, debug = false, runOptions?: ply.RunOptions): Promise<void> {
+    async runTests(testIds: string[], runValues: {[key: string]: string}, debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
 
@@ -56,6 +55,7 @@ export class PlyRunner {
             if (this.config.useDist) {
                 runOptions.useDist = true;
             }
+            runOptions.values = runValues;
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
@@ -80,7 +80,7 @@ export class PlyRunner {
             });
             this.log.debug(`Plyee(s): ${JSON.stringify(plyees, null, 2)}`);
 
-            await this.runPlyees(plyees, plyValues, debug, runOptions);
+            await this.runPlyees(plyees, debug, runOptions);
 
             for (const ancestor of ancestors) {
                 this.fire(<TestSuiteEvent>{ type: 'suite', suite: ancestor.id, state: 'completed', testRunId } );
@@ -94,7 +94,7 @@ export class PlyRunner {
         }
     }
 
-    async runPlyees(plyees: string[], plyValues: object, debug = false, runOptions?: object): Promise<void> {
+    async runPlyees(plyees: string[], debug = false, runOptions?: object): Promise<void> {
 
         let childProcessFinished = false;
 
@@ -117,7 +117,6 @@ export class PlyRunner {
             plyees,  // file locs and/or uris
             plyPath: this.config.plyPath,
             plyOptions: options,
-            plyValues,
             runOptions,
             logEnabled: this.log.enabled,
             workerScript: this.workerScript,
