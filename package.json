@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.0.0-beta5",
+  "version": "2.0.0-beta6",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -50,7 +50,7 @@
     "vscode": "^1.50.0"
   },
   "dependencies": {
-    "flowbee": "^0.2.3",
+    "flowbee": "^0.2.4",
     "ply-ct": "^2.2.5",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",

@@ -39,24 +39,28 @@ class DialogProvider implements flowbee.DialogProvider {
 
 export type DrawingMode = 'select' | 'connect' | 'runtime';
 
-export class Flow {
+let oldFlow: flowbee.Disposable;
+
+export class Flow implements flowbee.Disposable {
 
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions: FlowActions;
     readonly toolbox: flowbee.Toolbox;
     static configurator?: flowbee.Configurator;
+    private disposables: flowbee.Disposable[] = [];
 
     constructor(private base: string, websocketPort: number, text: string, private file: string, mode: DrawingMode) {
+        oldFlow?.dispose();
+        oldFlow = this;
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
         this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
 
         // configurator
         if (!Flow.configurator) {
-            // TODO dispose listener
             Flow.configurator = new flowbee.Configurator(document.getElementById('flow-diagram') as HTMLElement);
-            Flow.configurator.onFlowElementUpdate(_e => this.updateFlow());
+            this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
         }
 
         // theme-based icons
@@ -71,25 +75,25 @@ export class Flow {
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors, this.options.diagramOptions);
         this.flowDiagram.mode = mode;
-        this.flowDiagram.onFlowChange(_e => this.updateFlow());
+        this.disposables.push(this.flowDiagram.onFlowChange(_e => this.updateFlow()));
         this.flowDiagram.dialogProvider = new DialogProvider();
         const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
         this.flowDiagram.contextMenuProvider = menuProvider;
-        this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
+        this.disposables.push(this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
             if (Flow.configurator) {
                 this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
             }
-        });
-        this.flowDiagram.onFlowElementDrill(async flowElementDrill => {
+        }));
+        this.disposables.push(this.flowDiagram.onFlowElementDrill(async flowElementDrill => {
             if (Flow.configurator) {
                 this.updateConfigurator(flowElementDrill.element, flowElementDrill.instances, true);
             }
-        });
-        this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
+        }));
+        this.disposables.push(this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
             if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
                 this.updateConfigurator(flowElementUpdate.element);
             }
-        });
+        }));
 
         const toolboxElement = document.getElementById('flow-toolbox') as HTMLDivElement;
         toolboxElement.innerHTML = '';
@@ -240,6 +244,7 @@ export class Flow {
     updateFlow() {
         const indent = this.options.indent;
         const text = this.options.yaml ? this.flowDiagram.toYaml(indent) : this.flowDiagram.toJson(indent);
+
         vscode.postMessage({
             type: 'change',
             text
@@ -250,6 +255,13 @@ export class Flow {
             text,
             readonly: this.flowDiagram.readonly
         });
+    }
+
+    dispose() {
+        for (const disposable of this.disposables) {
+            disposable.dispose();
+        }
+        this.disposables = [];
     }
 }
 
@@ -276,7 +288,7 @@ window.addEventListener('message', async (event) => {
         flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
         flow.render();
         if (isNew) {
-            console.debug(`Saving new flow: ${message.file}`);
+            console.info(`Saving new flow: ${message.file}`);
             flow.updateFlow();
         }
         // save state
