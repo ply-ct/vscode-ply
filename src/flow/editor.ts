@@ -195,10 +195,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     this.websocketBound = false;
                     this.bindWebsocket();
                     webviewPanel.webview.html = html;
-                    webviewPanel.webview.postMessage({
-                        type: 'config',
-                        config: { websocketPort: this.websocketPort }
-                    });
+                    updateWebview();
                 }
             }
         }));

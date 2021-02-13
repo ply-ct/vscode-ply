@@ -331,8 +331,6 @@ window.addEventListener('message', async (event) => {
         updateState({ values: message.values });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
-    } else if (message.type === 'config') {
-        readState(true, message.config);
     } else if (message.type === 'theme-change') {
         readState();
     } else if (message.type === 'confirm') {
@@ -359,12 +357,11 @@ function updateState(delta: FlowState) {
     setState({ ...vscode.getState(), ...delta });
 }
 
-function readState(loadInstance = true, config: {[key: string]: string} = {} ): Flow | undefined {
+function readState(loadInstance = true): Flow | undefined {
     const state = vscode.getState();
-        if (state) {
+    if (state) {
         templates = new Templates(state.base);
-        const websocketPort = config.websocketPort || state.config.websocketPort;
-        const flow = new Flow(state.base, websocketPort, state.text, state.file, state.readonly);
+        const flow = new Flow(state.base, state.config.websocketPort, state.text, state.file, state.readonly);
         flow.flowDiagram.readonly = state.readonly;
         const mode = state.mode || 'select';
         if (mode === 'runtime' && loadInstance) {
