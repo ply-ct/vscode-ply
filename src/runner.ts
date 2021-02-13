@@ -30,7 +30,6 @@ export class PlyRunner {
         private readonly testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
     ) { }
 
-    // TODO: run a suite directly (esp. flow) rather than by collecting its tests
     async runTests(testIds: string[], runValues: {[key: string]: string}, debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
@@ -46,12 +45,14 @@ export class PlyRunner {
                 }
             }
 
-            if (!runOptions) {
-                runOptions = await this.checkMissingExpectedResults(testInfos);
+            let missingResultDispensation: ply.RunOptions | undefined = {};
+            if (!runOptions?.submit && !runOptions?.createExpectedIfMissing) {
+                missingResultDispensation = await this.checkMissingExpectedResults(testInfos);
             }
-            if (!runOptions) {
-                return; // canceled dispensation
+            if (!missingResultDispensation) {
+                return; // canceled
             }
+            runOptions = { ...missingResultDispensation, ...(runOptions || {}) };
             if (this.config.useDist) {
                 runOptions.useDist = true;
             }
@@ -249,7 +250,7 @@ export class PlyRunner {
                 this.collectTests(child, testInfos, shouldSkip);
             }
         } else {
-            if (!skip) {
+            if (!skip && !testInfos.find(ti => ti.id === testOrSuite.id)) {
                 testInfos.push(testOrSuite);
             }
         }

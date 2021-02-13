@@ -217,6 +217,7 @@ export class Flow {
         }
         let vals: object | undefined;
         if (flowAction === 'run' || flowAction === 'values') {
+            Flow.configurator?.close();
             if (values) {
                 vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', !step && e.action !== 'values');
                 if (!vals) {
