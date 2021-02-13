@@ -79,12 +79,12 @@ export class DrawingTools {
         const runtime = container.querySelector('#runtime') as HTMLInputElement;
         select.onclick = connect.onclick = runtime.onclick = e => {
             const mode = (e.target as HTMLInputElement).id;
-            this.switchMode(mode);
+            this.switchMode(mode as flowbee.Mode);
             this._onOptionToggle.emit({ option: mode });
         };
     }
 
-    switchMode(mode: string) {
+    switchMode(mode: flowbee.Mode) {
         (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
             if (input.id === mode) {
                 if (input.classList.contains('unselected')) {

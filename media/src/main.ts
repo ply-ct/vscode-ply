@@ -37,8 +37,6 @@ class DialogProvider implements flowbee.DialogProvider {
     }
 }
 
-export type DrawingMode = 'select' | 'connect' | 'runtime';
-
 let oldFlow: flowbee.Disposable;
 
 export class Flow implements flowbee.Disposable {
@@ -46,11 +44,15 @@ export class Flow implements flowbee.Disposable {
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions: FlowActions;
-    readonly toolbox: flowbee.Toolbox;
-    static configurator?: flowbee.Configurator;
+    private readonly drawingTools: DrawingTools;
+    private readonly toolbox: flowbee.Toolbox;
     private disposables: flowbee.Disposable[] = [];
+    static configurator?: flowbee.Configurator;
 
-    constructor(private base: string, websocketPort: number, text: string, private file: string, mode: DrawingMode) {
+    /**
+     * @param readonly file is readonly
+     */
+    constructor(private base: string, readonly websocketPort: number, text: string, private file: string, private readonly: boolean) {
         oldFlow?.dispose();
         oldFlow = this;
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
@@ -60,8 +62,8 @@ export class Flow implements flowbee.Disposable {
         // configurator
         if (!Flow.configurator) {
             Flow.configurator = new flowbee.Configurator(document.getElementById('flow-diagram') as HTMLElement);
-            this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
         }
+        this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
 
         // theme-based icons
         for (const toolIcon of document.querySelectorAll('input[type=image]')) {
@@ -74,7 +76,6 @@ export class Flow implements flowbee.Disposable {
         // diagram
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors, this.options.diagramOptions);
-        this.flowDiagram.mode = mode;
         this.disposables.push(this.flowDiagram.onFlowChange(_e => this.updateFlow()));
         this.flowDiagram.dialogProvider = new DialogProvider();
         const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
@@ -120,10 +121,9 @@ export class Flow implements flowbee.Disposable {
         new Splitter(containerElement, toolboxContainer, toolboxCaret);
 
         // actions
-        const drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
-        drawingTools.switchMode(mode);
-        drawingTools.onOptionToggle(e => this.onOptionToggle(e));
-        drawingTools.onZoomChange((e: ZoomChangeEvent) => {
+        this.drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
+        this.drawingTools.onOptionToggle(e => this.onOptionToggle(e));
+        this.drawingTools.onZoomChange((e: ZoomChangeEvent) => {
             this.flowDiagram.zoom = e.zoom;
         });
         this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
@@ -131,8 +131,7 @@ export class Flow implements flowbee.Disposable {
             if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                 Flow.configurator?.close();
                 if (!e.target) {
-                    drawingTools.switchMode('runtime');
-                    this.flowDiagram.mode = 'runtime';
+                    this.drawingTools.switchMode('runtime');
                     this.flowDiagram.render(this.options.diagramOptions);
                 }
             }
@@ -144,6 +143,12 @@ export class Flow implements flowbee.Disposable {
         };
         this.flowActions.onFlowAction(handleFlowAction);
         menuProvider.onFlowAction(handleFlowAction);
+    }
+
+    switchMode(mode: flowbee.Mode) {
+        this.flowDiagram.mode = mode;
+        this.drawingTools.switchMode(mode);
+        this.flowDiagram.readonly = mode === 'runtime' || this.readonly;
     }
 
     render() {
@@ -178,12 +183,10 @@ export class Flow implements flowbee.Disposable {
         const drawingOption = e.option;
         if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
             this.flowDiagram.mode = drawingOption;
-            if (drawingOption === 'select') {
-                if (Flow.configurator) {
-                    this.updateConfigurator(Flow.configurator.flowElement);
-                }
+            if (drawingOption === 'connect') {
+                Flow.configurator?.close();
                 this.flowDiagram.instance = null;
-                this.flowDiagram.readonly = false; // TODO could be readonly on file system
+                this.flowDiagram.readonly = this.readonly;
                 this.flowActions.enableCompare(false);
             } else if (drawingOption === 'runtime') {
                 Flow.configurator?.close();
@@ -191,11 +194,14 @@ export class Flow implements flowbee.Disposable {
                     type: 'instance'
                 });
             } else {
-                Flow.configurator?.close();
+                if (Flow.configurator) {
+                    this.updateConfigurator(Flow.configurator.flowElement);
+                }
                 this.flowDiagram.instance = null;
-                this.flowDiagram.readonly = false; // TODO could be readonly on file system
+                this.flowDiagram.readonly = this.readonly;
                 this.flowActions.enableCompare(false);
             }
+            updateState({ mode: drawingOption });
         }
         else {
             (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
@@ -249,11 +255,13 @@ export class Flow implements flowbee.Disposable {
             type: 'change',
             text
         });
-        vscode.setState({
+        setState({
             base: this.base,
             file: this.file,
             text,
-            readonly: this.flowDiagram.readonly
+            config: { websocketPort: this.websocketPort },
+            readonly: this.flowDiagram.readonly,
+            mode: 'select'
         });
     }
 
@@ -264,8 +272,6 @@ export class Flow implements flowbee.Disposable {
         this.disposables = [];
     }
 }
-
-// let flow: Flow | undefined = undefined;
 
 window.addEventListener('message', async (event) => {
     const message = event.data; // json message data from extension
@@ -281,19 +287,25 @@ window.addEventListener('message', async (event) => {
             isNew = true;
             text = await templates.get('default.flow');
         }
-        const mode = message.instance ? 'runtime' : 'select';
-        const flow = new Flow(message.base, message.websocketPort, text, message.file, mode);
-        flow.flowDiagram.instance = message.instance;
-        flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
-        flow.flowDiagram.readonly = message.readonly || mode === 'runtime';
+        const websocketPort = message.config.websocketPort;
+        const flow = new Flow(message.base, websocketPort, text, message.file, message.readonly);
+        flow.flowDiagram.mode = 'select';
+        flow.flowDiagram.readonly = message.readonly;
         flow.render();
         if (isNew) {
             console.info(`Saving new flow: ${message.file}`);
             flow.updateFlow();
         }
         // save state
-        const { base, websocketPort, file, readonly, instance } = message;
-        vscode.setState({ base, websocketPort, file, text, readonly, instance, mode, values: values?.defaults });
+        vscode.setState({
+            base: message.base,
+            file: message.file,
+            text,
+            readonly: message.readonly,
+            config: { websocketPort },
+            mode: 'select',
+            values: values?.defaults
+        });
         if (message.select) {
             let id = message.select;
             const dot = id.indexOf('.');
@@ -302,31 +314,65 @@ window.addEventListener('message', async (event) => {
             }
             flow.flowDiagram.select(id, true);
         }
-    } else if (message.type === 'theme-change') {
-        updateFromState();
+    } else if (message.type === 'instance') {
+        const flow = readState(false);
+        if (flow) {
+            flow.flowDiagram.instance = message.instance;
+            if (flow.flowDiagram.instance) {
+                flow.flowDiagram.readonly = true;
+            }
+            flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
+            flow.switchMode('runtime');
+            updateState({ mode: 'runtime' });
+        }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
-        const iconBase = `${message.base}/icons/${theme}`;
-        const path = `${message.flowPath}`;
-        values = new Values(path, iconBase, message.values);
-        vscode.setState({ ...vscode.getState(), values: message.values });
+        values = new Values(`${message.flowPath}`, `${message.base}/icons/${theme}`, message.values);
+        updateState({ values: message.values });
     } else if (message.type === 'action') {
-        const flow = updateFromState();
-        if (flow) {
-            flow.onFlowAction({ action: message.action, target: message.target, options: message.options });
-        }
+        readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
+    } else if (message.type === 'config') {
+        readState(true, message.config);
+    } else if (message.type === 'theme-change') {
+        readState();
     } else if (message.type === 'confirm') {
         evt.emit({ result: message.result });
     }
 });
 
-function updateFromState(): Flow | undefined {
+interface FlowState {
+    base?: string;
+    file?: string;
+    text?: string;
+    readonly?: boolean; // this means the file is readonly
+    mode?: flowbee.Mode;
+    config?: {
+        websocketPort: number;
+    };
+    values?: object;
+}
+
+function setState(state: FlowState) {
+    vscode.setState(state);
+}
+function updateState(delta: FlowState) {
+    setState({ ...vscode.getState(), ...delta });
+}
+
+function readState(loadInstance = true, config: {[key: string]: string} = {} ): Flow | undefined {
     const state = vscode.getState();
-    if (state) {
+        if (state) {
         templates = new Templates(state.base);
-        const flow = new Flow(state.base, state.websocketPort, state.text, state.file, state.mode);
+        const websocketPort = config.websocketPort || state.config.websocketPort;
+        const flow = new Flow(state.base, websocketPort, state.text, state.file, state.readonly);
         flow.flowDiagram.readonly = state.readonly;
-        flow.flowDiagram.instance = state.instance;
+        const mode = state.mode || 'select';
+        if (mode === 'runtime' && loadInstance) {
+            vscode.postMessage({
+                type: 'instance'
+            });
+        }
+        flow.switchMode(mode);
         flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
         if (state.values) {
@@ -336,5 +382,5 @@ function updateFromState(): Flow | undefined {
     }
 }
 
-updateFromState();
+readState();
 

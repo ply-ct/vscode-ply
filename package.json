@@ -19,11 +19,15 @@
     "url": "https://github.com/ply-ct/vscode-ply/issues"
   },
   "keywords": [
-    "REST",
-    "API",
-    "GraphQL",
-    "Test",
-    "Automated Testing"
+    "rest",
+    "api",
+    "graphql",
+    "automated",
+    "continuous",
+    "test",
+    "flow",
+    "yaml",
+    "ply"
   ],
   "categories": [
     "Programming Languages",
