@@ -116,13 +116,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(mediaPath));
         const updateWebview = async (select?: string) => {
+            const isFile = document.uri.scheme === 'file';
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
-                file: document.uri.fsPath,
+                file: isFile ? document.uri.fsPath : document.uri.toString(),
                 text: document.getText(),
                 config: { websocketPort: this.websocketPort },
-                readonly: (fs.statSync(document.uri.fsPath).mode & 146) === 0
+                readonly: !isFile || (fs.statSync(document.uri.fsPath).mode & 146) === 0
             } as any;
             if (select) {
                 msg.select = select;
@@ -209,93 +210,96 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
         }));
 
-        const awaitInstanceSubscribe = async () => {
-            const promise = new Promise<string>(resolve => {
-                this.subscribedEvent.once(e =>  {
-                    resolve(e.instanceId);
+        if (document.uri.scheme === 'file') {
+            const awaitInstanceSubscribe = async () => {
+                const promise = new Promise<string>(resolve => {
+                    this.subscribedEvent.once(e =>  {
+                        resolve(e.instanceId);
+                    });
                 });
-            });
-            return promise;
-        };
+                return promise;
+            };
 
-        const flowPath = document.uri.fsPath.replace(/\\/g, '/');
-        for (const adapter of this.adapters.values()) {
-            let flowInstanceId: string | null = null;
-            const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
-                if (flowEvent.flowPath === flowPath) {
-                    if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
-                        flowInstanceId = null;
-                        // set the diagram instance so it'll start listening for websocket updates
-                        webviewPanel.webview.postMessage({
-                            type: 'instance',
-                            instance: flowEvent.instance as flowbee.FlowInstance
-                        });
-                    } else {
-                        if (!flowInstanceId) {
-                            // wait until diagram is subscribed before sending updates
-                            flowInstanceId = await awaitInstanceSubscribe();
+            const flowPath = document.uri.fsPath.replace(/\\/g, '/');
+            for (const adapter of this.adapters.values()) {
+                let flowInstanceId: string | null = null;
+                const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
+                    if (flowEvent.flowPath === flowPath) {
+                        if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
+                            flowInstanceId = null;
+                            // set the diagram instance so it'll start listening for websocket updates
+                            webviewPanel.webview.postMessage({
+                                type: 'instance',
+                                instance: flowEvent.instance as flowbee.FlowInstance
+                            });
+                        } else {
+                            if (!flowInstanceId) {
+                                // wait until diagram is subscribed before sending updates
+                                flowInstanceId = await awaitInstanceSubscribe();
+                            }
+                            WebSocketSender.send(`flowInstance-${flowEvent.flowInstanceId}`, flowEvent);
                         }
-                        WebSocketSender.send(`flowInstance-${flowEvent.flowInstanceId}`, flowEvent);
+                    }
+                };
+                console.debug(`Adapter.onFlow() listener for: ${flowPath}`);
+                this.disposables.push(adapter.onFlow(listener));
+            }
+
+            const onValuesUpdate = async (resultUri: vscode.Uri) => {
+                const adapter = this.getAdapter(document.uri);
+                if (adapter?.values) {
+                    if (resultUri) {
+                        const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
+                        if (suite) {
+                            if (suite.runtime.results.actual.toString() === resultUri.fsPath) {
+                                webviewPanel.webview.postMessage({
+                                    type: 'values',
+                                    base: baseUri.toString(),
+                                    flowPath: document.uri.fsPath,
+                                    values: await adapter.values.getResultValues(this.getId(document.uri))
+                                });
+                            }
+                        }
                     }
                 }
             };
-            console.debug(`Adapter.onFlow() listener for: ${flowPath}`);
-            this.disposables.push(adapter.onFlow(listener));
-        }
 
-        const onValuesUpdate = async (resultUri: vscode.Uri) => {
             const adapter = this.getAdapter(document.uri);
-            if (adapter?.values) {
-                if (resultUri) {
-                    const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
-                    if (suite) {
-                        if (suite.runtime.results.actual.toString() === resultUri.fsPath) {
-                            webviewPanel.webview.postMessage({
-                                type: 'values',
-                                base: baseUri.toString(),
-                                flowPath: document.uri.fsPath,
-                                values: await adapter.values.getResultValues(this.getId(document.uri))
-                            });
-                        }
-                    }
-                }
-            }
-        };
-
-        const adapter = this.getAdapter(document.uri);
-        if (adapter.values) {
-            this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
-            // initial values
-            await webviewPanel.webview.postMessage({
-                type: 'values',
-                base: baseUri.toString(),
-                flowPath: document.uri.fsPath,
-                values: await adapter.values.getResultValues(this.getId(document.uri))
-            });
-        } else {
-            adapter.onceValues(async e => {
-                webviewPanel.webview.postMessage({
+            if (adapter.values) {
+                this.disposables.push(adapter.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
+                // initial values
+                await webviewPanel.webview.postMessage({
                     type: 'values',
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
-                    values: await e.values.getResultValues(this.getId(document.uri))
+                    values: await adapter.values.getResultValues(this.getId(document.uri))
                 });
-                this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
-            });
-        }
-
-        this.disposables.push(this.onFlowAction(async flowAction => {
-            const flowUri = flowAction.uri.with( { fragment: '' } );
-            if (flowUri.toString() === document.uri.toString()) {
-                webviewPanel.webview.postMessage({
-                    type: 'action',
-                    action: flowAction.action,
-                    target: flowAction.uri.fragment,
-                    options: flowAction.options
-
+            } else {
+                adapter.onceValues(async e => {
+                    webviewPanel.webview.postMessage({
+                        type: 'values',
+                        base: baseUri.toString(),
+                        flowPath: document.uri.fsPath,
+                        values: await e.values.getResultValues(this.getId(document.uri))
+                    });
+                    this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
                 });
             }
-        }));
+
+            this.disposables.push(this.onFlowAction(async flowAction => {
+                const flowUri = flowAction.uri.with( { fragment: '' } );
+                if (flowUri.toString() === document.uri.toString()) {
+                    webviewPanel.webview.postMessage({
+                        type: 'action',
+                        action: flowAction.action,
+                        target: flowAction.uri.fragment,
+                        options: flowAction.options
+
+                    });
+                }
+            }));
+        }
+
 
         this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
             if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {

@@ -43,9 +43,9 @@ export class Flow implements flowbee.Disposable {
 
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
-    readonly flowActions: FlowActions;
-    private readonly drawingTools: DrawingTools;
-    private readonly toolbox: flowbee.Toolbox;
+    readonly flowActions?: FlowActions;
+    private readonly drawingTools?: DrawingTools;
+    private readonly toolbox?: flowbee.Toolbox;
     private disposables: flowbee.Disposable[] = [];
     static configurator?: flowbee.Configurator;
 
@@ -96,64 +96,69 @@ export class Flow implements flowbee.Disposable {
             }
         }));
 
-        const toolboxElement = document.getElementById('flow-toolbox') as HTMLDivElement;
-        toolboxElement.innerHTML = '';
-        this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
-
-        // open/close toolbox
         const toolboxContainer = document.getElementById('toolbox-container') as HTMLDivElement;
-        const toolboxHeader = toolboxContainer.querySelector('.toolbox-header') as HTMLDivElement;
-        toolboxHeader.style.cursor = 'pointer';
         const flowHeader = document.querySelector('.flow-header') as HTMLDivElement;
-        const toolboxCaret = flowHeader.querySelector('.toolbox-caret') as HTMLSpanElement;
-        toolboxCaret.style.display = 'none';
-        toolboxHeader.onclick = (_e: MouseEvent) => {
+        if (readonly) {
             toolboxContainer.style.display = 'none';
-            toolboxCaret.style.display = 'inline-block';
-        };
-        toolboxCaret.onclick = (_e: MouseEvent) => {
+            flowHeader.innerHTML = '';
+        } else {
+            const toolboxElement = document.getElementById('flow-toolbox') as HTMLDivElement;
+            toolboxElement.innerHTML = '';
+            this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
+
+            // open/close toolbox
+            const toolboxHeader = toolboxContainer.querySelector('.toolbox-header') as HTMLDivElement;
+            toolboxHeader.style.cursor = 'pointer';
+            const toolboxCaret = flowHeader.querySelector('.toolbox-caret') as HTMLSpanElement;
             toolboxCaret.style.display = 'none';
-            toolboxContainer.style.display = 'inline-block';
-        };
+            toolboxHeader.onclick = (_e: MouseEvent) => {
+                toolboxContainer.style.display = 'none';
+                toolboxCaret.style.display = 'inline-block';
+            };
+            toolboxCaret.onclick = (_e: MouseEvent) => {
+                toolboxCaret.style.display = 'none';
+                toolboxContainer.style.display = 'inline-block';
+            };
 
-        // splitter
-        const containerElement = document.getElementById('container') as HTMLDivElement;
-        new Splitter(containerElement, toolboxContainer, toolboxCaret);
+            // splitter
+            const containerElement = document.getElementById('container') as HTMLDivElement;
+            new Splitter(containerElement, toolboxContainer, toolboxCaret);
 
-        // actions
-        this.drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
-        this.drawingTools.onOptionToggle(e => this.onOptionToggle(e));
-        this.drawingTools.onZoomChange((e: ZoomChangeEvent) => {
-            this.flowDiagram.zoom = e.zoom;
-        });
-        this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
-        const handleFlowAction = (e: FlowActionEvent) => {
-            if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
-                Flow.configurator?.close();
-                if (!e.target) {
-                    this.drawingTools.switchMode('runtime');
-                    this.flowDiagram.render(this.options.diagramOptions);
+            // actions
+            this.drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
+            this.drawingTools.onOptionToggle(e => this.onOptionToggle(e));
+            this.drawingTools.onZoomChange((e: ZoomChangeEvent) => {
+                this.flowDiagram.zoom = e.zoom;
+            });
+            this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
+            const handleFlowAction = (e: FlowActionEvent) => {
+                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
+                    Flow.configurator?.close();
+                    if (!e.target) {
+                        this.drawingTools?.switchMode('runtime');
+                        this.flowDiagram.render(this.options.diagramOptions);
+                    }
                 }
-            }
-            if (e.action === 'submit') {
-                this.onFlowAction({ action: 'run', options: { submit: true }});
-            } else {
-                this.onFlowAction(e);
-            }
-        };
-        this.flowActions.onFlowAction(handleFlowAction);
-        menuProvider.onFlowAction(handleFlowAction);
+                if (e.action === 'submit') {
+                    this.onFlowAction({ action: 'run', options: { submit: true }});
+                } else {
+                    this.onFlowAction(e);
+                }
+            };
+            this.flowActions.onFlowAction(handleFlowAction);
+            menuProvider.onFlowAction(handleFlowAction);
+        }
     }
 
     switchMode(mode: flowbee.Mode) {
         this.flowDiagram.mode = mode;
-        this.drawingTools.switchMode(mode);
+        this.drawingTools?.switchMode(mode);
         this.flowDiagram.readonly = mode === 'runtime' || this.readonly;
     }
 
     render() {
         this.flowDiagram.render(this.options.diagramOptions);
-        this.toolbox.render(this.options.toolboxOptions);
+        this.toolbox?.render(this.options.toolboxOptions);
         if (Flow.configurator?.isOpen) {
             const cfgr = Flow.configurator;
             cfgr.render(cfgr.flowElement, cfgr.instance ? [cfgr.instance] : [], cfgr.template || {}, this.options.configuratorOptions);
@@ -187,7 +192,7 @@ export class Flow implements flowbee.Disposable {
                 Flow.configurator?.close();
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = this.readonly;
-                this.flowActions.enableCompare(false);
+                this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
             } else if (drawingOption === 'runtime') {
                 Flow.configurator?.close();
@@ -201,7 +206,7 @@ export class Flow implements flowbee.Disposable {
                 }
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = this.readonly;
-                this.flowActions.enableCompare(false);
+                this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
             }
         }
@@ -328,7 +333,7 @@ window.addEventListener('message', async (event) => {
             } else {
                 flow.switchMode( flow.flowDiagram.mode );
             }
-            flow.flowActions.enableCompare(hasInstance);
+            flow.flowActions?.enableCompare(hasInstance);
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
@@ -375,7 +380,7 @@ function readState(loadInstance = true): Flow | undefined {
             });
         }
         flow.switchMode(mode);
-        flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
+        flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
         if (state.values) {
             values = new Values(state.file, flow.options.iconBase, state.values);
