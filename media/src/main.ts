@@ -188,11 +188,13 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = this.readonly;
                 this.flowActions.enableCompare(false);
+                updateState({ mode: drawingOption });
             } else if (drawingOption === 'runtime') {
                 Flow.configurator?.close();
                 vscode.postMessage({
                     type: 'instance'
                 });
+                // state update pending instance postback
             } else {
                 if (Flow.configurator) {
                     this.updateConfigurator(Flow.configurator.flowElement);
@@ -200,8 +202,8 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = this.readonly;
                 this.flowActions.enableCompare(false);
+                updateState({ mode: drawingOption });
             }
-            updateState({ mode: drawingOption });
         }
         else {
             (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
@@ -318,12 +320,15 @@ window.addEventListener('message', async (event) => {
         const flow = readState(false);
         if (flow) {
             flow.flowDiagram.instance = message.instance;
-            if (flow.flowDiagram.instance) {
+            const hasInstance = !!flow.flowDiagram.instance;
+            if (hasInstance) {
                 flow.flowDiagram.readonly = true;
+                flow.switchMode('runtime');
+                updateState({ mode: 'runtime' });
+            } else {
+                flow.switchMode( flow.flowDiagram.mode );
             }
-            flow.flowActions.enableCompare(!!flow.flowDiagram.instance);
-            flow.switchMode('runtime');
-            updateState({ mode: 'runtime' });
+            flow.flowActions.enableCompare(hasInstance);
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';

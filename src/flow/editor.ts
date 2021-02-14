@@ -145,6 +145,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     );
                     await vscode.workspace.applyEdit(edit);
                 }
+                this.removeActualResult(document.uri);
             } else if (message.type === 'alert' || message.type === 'confirm') {
                 const options: vscode.MessageOptions = {};
                 const items: string[] = [];
@@ -169,17 +170,25 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 const debug = message.type === 'debug';
                 this.run(document.uri, message.target, message.values, message.options, debug);
             } else if (message.type === 'expected') {
-                this.expectedResults(document.uri, message.target);
+                this.expectedResult(document.uri, message.target);
             } else if (message.type === 'compare') {
                 this.compareResults(document.uri, message.target);
             } else if (message.type === 'instance') {
-                webviewPanel.webview.postMessage({
-                    type: 'instance',
-                    instance: this.getInstance(document.uri)
-                });
+                const instance = this.getInstance(document.uri);
+                webviewPanel.webview.postMessage({ type: 'instance', instance });
+                if (!instance) {
+                    const runFlow = 'Run flow to inspect results';
+                    const resumeEdit = 'Resume editing';
+                    const res = await vscode.window.showQuickPick(
+                        [ runFlow, resumeEdit ],
+                        { placeHolder: 'No results to inspect' }
+                    );
+                    if (res === runFlow) {
+                        this.run(document.uri);
+                    }
+                }
             }
         }));
-
 
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(configChange => {
             if (configChange.affectsConfiguration('workbench.colorTheme')) {
@@ -337,11 +346,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }
     }
 
-    expectedResults(uri: vscode.Uri, target?: string) {
+    expectedResult(uri: vscode.Uri, target?: string) {
         const id = this.getId(uri, target);
         console.debug(`expected: ${id}`);
         const adapter = this.getAdapter(uri);
-        const suite = adapter.plyRoots.getSuite(id);
+        const suite = adapter?.plyRoots.getSuite(id);
         if (suite) {
             let fileUri = vscode.Uri.file(suite.runtime.results.expected.toString());
             if (target) {
@@ -358,6 +367,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         const id = this.getId(uri, target);
         console.debug(`compare: ${id}`);
         vscode.commands.executeCommand('ply.diff', id);
+    }
+
+    async removeActualResult(uri: vscode.Uri) {
+        const id = this.getId(uri);
+        const adapter = this.getAdapter(uri);
+        const suite = adapter?.plyRoots.getSuite(id);
+        if (suite) {
+            return fs.promises.unlink(suite.runtime.results.actual.toString());
+        }
     }
 
     getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
