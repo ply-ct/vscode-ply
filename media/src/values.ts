@@ -45,7 +45,7 @@ export class Values {
             }
         }
 
-        if (Object.keys(needed).length > 0) {
+        if (!onlyIfNeeded || Object.keys(needed).length > 0) {
             // sort by value name
             needed = Object.keys(needed).sort((n1, n2) => n1.localeCompare(n2)).reduce((obj: {[key: string]: string}, key) => {
                 obj[key] = needed[key];
@@ -68,7 +68,7 @@ export class Values {
             }
 
             const tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
-            if (tableVal) {
+            if (tableVal && tableVal.length === 2) {
                 const vals = tableVal[1];
                 // save entered values in local storage
                 if (vals) {
@@ -89,7 +89,11 @@ export class Values {
                 if (tableVal[0] === 'Save') {
                     return; // Saved only
                 } else {
-                    return vals ? this.consolidateValues(vals) : vals;
+                    if (vals) {
+                        return this.consolidateValues(vals);
+                    } else {
+                        return tableVal[0] === 'Run' ? {} : vals;
+                    }
                 }
             } else {
                 return; // Canceled

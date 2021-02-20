@@ -240,6 +240,9 @@ export class Flow implements flowbee.Disposable {
                 if (!vals) {
                     return; // canceled or just saved
                 }
+            } else if (flowAction === 'values') {
+                vscode.postMessage({ type: 'alert', message: { text: 'No values known' } });
+                return;
             }
         }
         vscode.postMessage({
