@@ -265,7 +265,7 @@ export class Flow implements flowbee.Disposable {
             type: 'change',
             text
         });
-        setState({
+        updateState({
             base: this.base,
             file: this.file,
             text,
@@ -307,13 +307,13 @@ window.addEventListener('message', async (event) => {
             flow.updateFlow();
         }
         // save state
-        vscode.setState({
+        updateState({
             base: message.base,
             file: message.file,
             text,
             readonly: message.readonly,
-            config: { websocketPort },
             mode: 'select',
+            config: { websocketPort },
             values: values?.defaults
         });
         if (message.select) {
@@ -363,11 +363,8 @@ interface FlowState {
     values?: object;
 }
 
-function setState(state: FlowState) {
-    vscode.setState(state);
-}
 function updateState(delta: FlowState) {
-    setState({ ...vscode.getState(), ...delta });
+    vscode.setState({ ...vscode.getState(), ...delta });
 }
 
 function readState(loadInstance = true): Flow | undefined {
