@@ -120,10 +120,18 @@ export class PlyAdapter implements TestAdapter {
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', errorMessage: inspect(err) });
         }
 
-        this.values?.dispose();
-        this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
-        this.disposables.push(this.values);
-        this._onceValues.emit({ values: this.values });
+        if (!this.values) {
+            this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
+            this.disposables.push(this.values);
+            this._onceValues.emit({ values: this.values });
+            this.disposables.push(this.values.onValuesUpdate(valuesUpdateEvent => {
+                if (!valuesUpdateEvent.resultUri) {
+                    // it's a values file change -- need to reload
+                    this.retireEmitter.fire({});
+                    this.diffState.clearState();
+                }
+            }));
+        }
     }
 
     async run(testIds: string[], values = {}, runOptions?: ply.RunOptions & { proceed?: boolean }): Promise<void> {

@@ -4,22 +4,27 @@ import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
 
+/**
+ * No resultUri means a values file change (potentially)
+ * affects all tests' values.
+ */
 export interface ValuesUpdateEvent {
-    resultUri: vscode.Uri;
+    resultUri?: vscode.Uri;
 }
 
 /**
  * Caches latest result values so they're known at design-time.
  * Also keeps a copy of values from ply values files
  */
-export class Values {
+export class Values implements Disposable {
 
     private disposables: { dispose(): void }[] = [];
     private config: PlyConfig;
     private _plyValues: object | undefined;
-    private resultWatcher: vscode.FileSystemWatcher;
+    private resultWatcher?: vscode.FileSystemWatcher;
     // result file uri to values object
     private resultValues = new Map<string,object>();
+    private valuesWatchers = new Map<string,vscode.FileSystemWatcher>();
 
     private _onValuesUpdate = new Event<ValuesUpdateEvent>();
     onValuesUpdate(listener: Listener<ValuesUpdateEvent>): Disposable {
@@ -33,22 +38,63 @@ export class Values {
     ) {
         this.config = new PlyConfig(workspaceFolder, async () => {
             this._plyValues = undefined;
-            this.resultValues.clear();
-            this.resultWatcher.dispose();
+            this.watchResultFiles();
+            this.watchValuesFiles();
         });
+
+        this.watchResultFiles();
+        this.watchValuesFiles();
+    }
+
+    /**
+     * watch for result changes
+     */
+    private watchResultFiles() {
+        this.resultValues.clear();
+        this.resultWatcher?.dispose();
         let resultsLoc = this.config.plyOptions.actualLocation;
         if (process.platform.startsWith('win')) {
             // watcher needs backslashes in RelativePattern base on windows
             resultsLoc = resultsLoc.replace(/\//g, '\\');
-
         }
         this.resultWatcher = vscode.workspace.createFileSystemWatcher(
             new vscode.RelativePattern(resultsLoc, '**/*.{yml,yaml}')
         );
         this.disposables.push(this.resultWatcher);
-        this.resultWatcher.onDidCreate(uri => this.onResultChange(uri));
-        this.resultWatcher.onDidChange(uri => this.onResultChange(uri));
-        this.resultWatcher.onDidDelete(uri => this.onResultChange(uri));
+        const onResultFileChange = (resultFileUri: vscode.Uri) => {
+            this.resultValues.delete(resultFileUri.toString());
+            this._onValuesUpdate.emit({ resultUri: resultFileUri });
+        };
+        this.resultWatcher.onDidCreate(uri => onResultFileChange(uri));
+        this.resultWatcher.onDidChange(uri => onResultFileChange(uri));
+        this.resultWatcher.onDidDelete(uri => onResultFileChange(uri));
+    }
+
+    /**
+     * watch for values file changes
+     */
+    private watchValuesFiles() {
+        this.valuesWatchers.forEach(watcher => watcher.dispose());
+        this.valuesWatchers.clear();
+        for (let file of this.config.plyOptions.valuesFiles) {
+            if (process.platform.startsWith('win')) {
+                file = file.replace(/\//g, '\\');
+            }
+            const valuesWatcher = vscode.workspace.createFileSystemWatcher(file);
+            this.disposables.push(valuesWatcher);
+            const onValuesFileChange = () => {
+                this.resultValues.clear();
+                this._plyValues = undefined;
+                this._onValuesUpdate.emit({});
+            };
+            valuesWatcher.onDidChange(_uri => onValuesFileChange());
+            valuesWatcher.onDidDelete(uri => {
+                valuesWatcher.dispose();
+                this.valuesWatchers.delete(uri.toString());
+                onValuesFileChange();
+            });
+            this.valuesWatchers.set(vscode.Uri.file(file).toString(), valuesWatcher);
+        }
     }
 
     /**
@@ -130,11 +176,6 @@ export class Values {
             this._plyValues = await new ply.Values(this.config.plyOptions.valuesFiles, new ply.Logger()).read();
         }
         return this._plyValues || {};
-    }
-
-    private onResultChange(resultUri: vscode.Uri) {
-        this.resultValues.delete(resultUri.toString());
-        this._onValuesUpdate.emit({ resultUri });
     }
 
     dispose() {

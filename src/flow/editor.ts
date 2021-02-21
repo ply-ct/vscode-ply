@@ -69,6 +69,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }
     }
 
+    /**
+     * This is called once when flow is opened (not called again on lose/regain focus).
+     */
     async resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
@@ -245,20 +248,19 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 this.disposables.push(adapter.onFlow(listener));
             }
 
-            const onValuesUpdate = async (resultUri: vscode.Uri) => {
+            const onValuesUpdate = async (resultUri?: vscode.Uri) => {
                 const adapter = this.getAdapter(document.uri);
                 if (adapter?.values) {
-                    if (resultUri) {
-                        const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
-                        if (suite) {
-                            if (suite.runtime.results.actual.toString() === resultUri.fsPath) {
-                                webviewPanel.webview.postMessage({
-                                    type: 'values',
-                                    base: baseUri.toString(),
-                                    flowPath: document.uri.fsPath,
-                                    values: await adapter.values.getResultValues(this.getId(document.uri))
-                                });
-                            }
+                    const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
+                    if (suite) {
+                        const actualPath = suite.runtime.results.actual.toString();
+                        if (!resultUri || actualPath === resultUri.fsPath) {
+                            webviewPanel.webview.postMessage({
+                                type: 'values',
+                                base: baseUri.toString(),
+                                flowPath: document.uri.fsPath,
+                                values: await adapter.values.getResultValues(this.getId(document.uri))
+                            });
                         }
                     }
                 }
@@ -378,7 +380,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         const adapter = this.getAdapter(uri);
         const suite = adapter?.plyRoots.getSuite(id);
         if (suite) {
-            return fs.promises.unlink(suite.runtime.results.actual.toString());
+            const actual = suite.runtime.results.actual.toString();
+            if (fs.existsSync(actual)) {
+                fs.promises.unlink(actual);
+            }
         }
     }
 
