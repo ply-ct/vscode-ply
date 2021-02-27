@@ -91,8 +91,7 @@ export class DrawingTools {
             }
         };
         for (const modeOption of modeMenu.querySelectorAll('li')) {
-            const imgInput = modeMenu.querySelector('input') as HTMLInputElement;
-            modeOption.onclick = imgInput.onclick = () => {
+            modeOption.onclick = () => {
                 const mode = modeOption.id.substring(0, modeOption.id.length - 5);
                 this.switchMode(mode as flowbee.Mode);
                 if (!modeMenu.classList.contains('hidden')) {

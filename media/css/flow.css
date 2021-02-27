@@ -120,11 +120,10 @@ body {
   color: var(--vscode-list-activeSelectionForeground);
   background-color: var(--vscode-list-activeSelectionBackground);
 }
-.mode-menu input[type=image] {
+.mode-menu img {
   width: 12px;
   vertical-align: middle;
   margin-right: 5px;
-  cursor: default;
 }
 .drop-caret {
   transform: scale(1,.5);
