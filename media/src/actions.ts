@@ -74,24 +74,43 @@ export class DrawingTools {
             }
         }, { passive: false });
         // mode select
-        const select = container.querySelector('#select') as HTMLInputElement;
-        const connect = container.querySelector('#connect') as HTMLInputElement;
-        const runtime = container.querySelector('#runtime') as HTMLInputElement;
-        select.onclick = connect.onclick = runtime.onclick = e => {
-            const mode = (e.target as HTMLInputElement).id;
-            this.switchMode(mode as flowbee.Mode);
-            this._onOptionToggle.emit({ option: mode });
+        const modeSelect = container.querySelector('#mode-select') as HTMLInputElement;
+        const modeDrop = container.querySelector('#mode-drop') as HTMLElement;
+        modeSelect.onmouseover = () => modeDrop.style.opacity = '1';
+        modeSelect.onmouseout = () => modeDrop.style.opacity = '0.5';
+        const modeMenu = container.querySelector('#mode-menu') as HTMLUListElement;
+        modeSelect.onclick = () => {
+            if (modeMenu.classList.contains('hidden')) {
+                modeMenu.classList.remove('hidden');
+                modeMenu.focus();
+            }
         };
+        modeMenu.onblur = () => {
+            if (!modeMenu.classList.contains('hidden')) {
+                modeMenu.classList.add('hidden');
+            }
+        };
+        for (const modeOption of modeMenu.querySelectorAll('li')) {
+            const imgInput = modeMenu.querySelector('input') as HTMLInputElement;
+            modeOption.onclick = imgInput.onclick = () => {
+                const mode = modeOption.id.substring(0, modeOption.id.length - 5);
+                this.switchMode(mode as flowbee.Mode);
+                if (!modeMenu.classList.contains('hidden')) {
+                    modeMenu.classList.add('hidden');
+                }
+                this._onOptionToggle.emit({ option: mode });
+            };
+        }
     }
 
     switchMode(mode: flowbee.Mode) {
         (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
             if (input.id === mode) {
-                if (input.classList.contains('unselected')) {
-                    input.classList.toggle('unselected');
+                if (input.classList.contains('hidden')) {
+                    input.classList.remove('hidden');
                 }
-            } else if (!input.classList.contains('unselected')) {
-                input.classList.toggle('unselected');
+            } else if (!input.classList.contains('hidden')) {
+                input.classList.add('hidden');
             }
         });
     }

@@ -66,10 +66,11 @@ export class Flow implements flowbee.Disposable {
         this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
 
         // theme-based icons
-        for (const toolIcon of document.querySelectorAll('input[type=image]')) {
-            if (toolIcon.hasAttribute('data-icon')) {
-                const icon = toolIcon.getAttribute('data-icon') as string;
-                toolIcon.setAttribute('src', `${this.options.iconBase}/${icon}`);
+        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ];
+        for (const toolImg of toolImgs) {
+            if (toolImg.hasAttribute('data-icon')) {
+                const icon = toolImg.getAttribute('data-icon') as string;
+                toolImg.setAttribute('src', `${this.options.iconBase}/${icon}`);
             }
         }
 
@@ -371,7 +372,7 @@ function readState(loadInstance = true): Flow | undefined {
     const state = vscode.getState();
     if (state) {
         templates = new Templates(state.base);
-        const flow = new Flow(state.base, state.config.websocketPort, state.text, state.file, state.readonly);
+        const flow = new Flow(state.base, state.config?.websocketPort || 0, state.text, state.file, state.readonly);
         flow.flowDiagram.readonly = state.readonly;
         const mode = state.mode || 'select';
         if (mode === 'runtime' && loadInstance) {
