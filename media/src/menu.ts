@@ -26,23 +26,26 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         if (type === 'step') {
             step = element as flowbee.Step;
         }
-        const hasSubmit = type === 'flow' || step?.path === 'request';
-        let designItems: flowbee.MenuItem[] = [
-            { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
-            ...(hasSubmit ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
-            { id: 'run', label: 'Run', icon: 'run.svg' }
-        ];
-        if (!flowElementEvent.instances) {
+        let designItems: flowbee.MenuItem[] | undefined;
+        if (type !== 'link' && this.flowDiagram.mode !== 'connect') {
+            const canRun = type === 'flow' || step?.path === 'request';
             designItems = [
-                { id: 'configure', label: 'Configure' },
-                ...designItems
+                { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
+                ...(canRun ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
+                ...(canRun ? [{ id: 'run', label: 'Run', icon: 'run.svg' }] : [])
             ];
+            if (this.flowDiagram.mode === 'select') {
+                designItems = [
+                    { id: 'configure', label: 'Configure' },
+                    ...designItems
+                ];
+            }
         }
 
         const superItems = super.getItems(flowElementEvent);
         let items: (flowbee.MenuItem | 'separator')[] = [
-            ...designItems,
-            ...(superItems?.length ? ['separator'] as (flowbee.MenuItem | 'separator')[] : []),
+            ...designItems || [],
+            ...(superItems?.length && designItems?.length ? ['separator'] as (flowbee.MenuItem | 'separator')[] : []),
             ...superItems || []
         ];
         if (flowElementEvent.instances) {
@@ -65,12 +68,11 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             }
             return true;
         } else if (selectEvent.item.id === 'inspect') {
-            const elementOrPath = (selectEvent.element as any).path === 'request' ? selectEvent.element : 'default.yaml';
             const instances = selectEvent.instances || [];
             const instance: any = instances.length > 0 ? instances[instances.length - 1] : null;
             let template = '{}';
             if (instance) {
-                template = (await this.templates.get(elementOrPath, 'inspect')) || '{}';
+                template = (await this.templates.get(selectEvent.element, 'inspect')) || '{}';
                 if (instance.data?.request) {
                     instance.request = instance.data.request;
                     if (instance.data.response) {

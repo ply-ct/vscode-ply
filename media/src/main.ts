@@ -87,7 +87,7 @@ export class Flow implements flowbee.Disposable {
             }
         }));
         this.disposables.push(this.flowDiagram.onFlowElementDrill(async flowElementDrill => {
-            if (Flow.configurator) {
+            if (Flow.configurator && this.flowDiagram.mode !== 'connect') {
                 this.updateConfigurator(flowElementDrill.element, flowElementDrill.instances, true);
             }
         }));

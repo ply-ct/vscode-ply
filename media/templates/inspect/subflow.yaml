@@ -1,5 +1,4 @@
-# default inspect template
-Step:
+Subflow:
   widgets:
   - type: text
     instanceProp: status

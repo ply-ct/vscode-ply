@@ -19,26 +19,24 @@ export class Templates {
             prefix += '/';
         }
         if (typeof pathOrElement === 'string') {
-            path = `${prefix}/${pathOrElement}`;
-        } else if (pathOrElement.type === 'flow') {
-            path = `${prefix}/flow.yaml`;
-        } else if (pathOrElement.type === 'link') {
-            path = `${prefix}/link.yaml`;
-        } else if (pathOrElement.type === 'subflow') {
-            path = `${prefix}/subflow.yaml`;
-        } else if (pathOrElement.type === 'note') {
-            path = `${prefix}/note.yaml`;
+            path = `${prefix}${pathOrElement}`;
         } else {
-            path = `${prefix}/${(pathOrElement as any).path + '.yaml'}`;
+            const flowElement: flowbee.FlowElement = pathOrElement;
+            const flowElementPath = flowElement.type === 'flow' ? 'flow' : (flowElement as any).path || flowElement.type;
+            path = `${prefix}${flowElementPath}.yaml`;
+
         }
         let template = this.templates.get(path);
         if (!template) {
-            const resp = await fetch(`${this.templatePath}/${path}`);
+            let resp = await fetch(`${this.templatePath}/${path}`);
             if (resp.status === 404) {
-                template = '{}';
-            } else {
-                template = await resp.text();
+                const elementType = (pathOrElement as any).type;
+                if (elementType && path !== elementType) {
+                    // fall back to generic element type template
+                    resp = await fetch(`${this.templatePath}/${prefix}${elementType}.yaml`);
+                }
             }
+            template = resp.status === 404 ? '{}' : await resp.text();
             this.templates.set(path, template);
         }
         return template;
