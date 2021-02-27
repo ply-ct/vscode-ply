@@ -191,6 +191,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         this.run(document.uri);
                     }
                 }
+            } else if (message.type === 'configurator') {
+                await vscode.commands.executeCommand("workbench.action.closePanel");
+                webviewPanel.webview.postMessage({ type: 'confirm', id: 'configurator', result: true });
             }
         }));
 

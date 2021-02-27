@@ -12,7 +12,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
 
     constructor(
         flowDiagram: flowbee.FlowDiagram,
-        private configurator: flowbee.Configurator,
+        private updateConfigurator: (flowElement: flowbee.FlowElement, instances: flowbee.FlowElementInstance[], doOpen: boolean) => void,
         private templates: Templates,
         private options: Options
     ) {
@@ -63,24 +63,12 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
     async onSelectItem(selectEvent: flowbee.ContextMenuSelectEvent): Promise<boolean> {
         if (selectEvent.item.id === 'configure') {
             if (selectEvent.element) {
-                const template = (await this.templates.get(selectEvent.element, 'config')) || '{}';
-                this.configurator.render(selectEvent.element, [], template, this.options.configuratorOptions);
+                this.updateConfigurator(selectEvent.element, [], true);
             }
             return true;
         } else if (selectEvent.item.id === 'inspect') {
             const instances = selectEvent.instances || [];
-            const instance: any = instances.length > 0 ? instances[instances.length - 1] : null;
-            let template = '{}';
-            if (instance) {
-                template = (await this.templates.get(selectEvent.element, 'inspect')) || '{}';
-                if (instance.data?.request) {
-                    instance.request = instance.data.request;
-                    if (instance.data.response) {
-                        instance.response = instance.data.response;
-                    }
-                }
-            }
-            this.configurator.render(selectEvent.element, instances, template, this.options.configuratorOptions);
+            this.updateConfigurator(selectEvent.element, instances, true);
             return true;
         } else if (selectEvent.item.id === 'run' || selectEvent.item.id === 'submit') {
             // TODO target in subflow

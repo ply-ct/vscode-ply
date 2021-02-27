@@ -79,7 +79,7 @@ export class Flow implements flowbee.Disposable {
         this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors, this.options.diagramOptions);
         this.disposables.push(this.flowDiagram.onFlowChange(_e => this.updateFlow()));
         this.flowDiagram.dialogProvider = new DialogProvider();
-        const menuProvider = new MenuProvider(this.flowDiagram, Flow.configurator, templates, this.options);
+        const menuProvider = new MenuProvider(this.flowDiagram, this.updateConfigurator, templates, this.options);
         this.flowDiagram.contextMenuProvider = menuProvider;
         this.disposables.push(this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
             if (Flow.configurator) {
@@ -181,6 +181,17 @@ export class Flow implements flowbee.Disposable {
                     }
                 }
             }
+            if (!Flow.configurator.isOpen) {
+                const promise = new Promise<boolean>(resolve => {
+                    evt.once(e => {
+                        resolve(e.result);
+                    });
+                });
+                vscode.postMessage({ type: 'configurator' });
+                // await panel close to position configurator
+                await promise;
+            }
+
             Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions);
         }
     }
