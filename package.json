@@ -165,7 +165,7 @@
           "scope": "resource"
         },
         "ply.plyPath": {
-          "description": "Path to ply package (relative to workspace folder). Default is to use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct\"",
+          "description": "Path to ply package (relative to workspace folder). Default is to use a bundled version of ply.  To use ply-ct installed in your project's node_modules folder, specify \"node_modules/ply-ct/dist\"",
           "type": "string",
           "scope": "resource"
         },
