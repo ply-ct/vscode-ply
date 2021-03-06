@@ -248,7 +248,12 @@ export class Flow implements flowbee.Disposable {
         if (flowAction === 'run' || flowAction === 'values') {
             Flow.configurator?.close();
             if (values) {
-                vals = await values.prompt(step || this.flowDiagram.flow, e.options?.submit ? 'Submit' : 'Run', !step && e.action !== 'values');
+                const action = e.options?.submit ? 'Submit' : 'Run';
+                const onlyIfNeeded = !step && e.action !== 'values';
+                const storageCall = async (key: string, storeVals?: { [key: string]: string }) => {
+                    vscode.postMessage({ type: 'values', key, storeVals });
+                };
+                vals = await values.prompt(step || this.flowDiagram.flow, action, onlyIfNeeded, storageCall);
                 if (!vals) {
                     return; // canceled or just saved
                 }
@@ -352,8 +357,8 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
-        values = new Values(`${message.flowPath}`, `${message.base}/icons/${theme}`, message.values);
-        updateState({ values: message.values });
+        values = new Values(`${message.flowPath}`, `${message.base}/icons/${theme}`, message.values, message.storeVals);
+        updateState({ values: message.values, storeVals: message.storeVals });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
     } else if (message.type === 'theme-change') {
@@ -373,6 +378,7 @@ interface FlowState {
         websocketPort: number;
     };
     values?: object;
+    storeVals?: any;
 }
 
 function updateState(delta: FlowState) {
@@ -395,7 +401,7 @@ function readState(loadInstance = true): Flow | undefined {
         flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
         if (state.values) {
-            values = new Values(state.file, flow.options.iconBase, state.values);
+            values = new Values(state.file, flow.options.iconBase, state.values, state.storeVals);
         }
         return flow;
     }

@@ -194,6 +194,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             } else if (message.type === 'configurator') {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
                 webviewPanel.webview.postMessage({ type: 'confirm', id: 'configurator', result: true });
+            } else if (message.type === 'values') {
+                // store values
+                const plyValues = this.context.workspaceState.get('ply-user-values') || {} as any;
+                if (message.storeVals) {
+                    plyValues[message.key] = message.storeVals;
+                } else {
+                    delete plyValues[message.key];
+                }
+                this.context.workspaceState.update('ply-user-values', plyValues);
             }
         }));
 
@@ -262,7 +271,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 type: 'values',
                                 base: baseUri.toString(),
                                 flowPath: document.uri.fsPath,
-                                values: await adapter.values.getResultValues(this.getId(document.uri))
+                                values: await adapter.values.getResultValues(this.getId(document.uri)),
+                                storeVals: this.context.workspaceState.get('ply-user-values')
                             });
                         }
                     }
@@ -277,7 +287,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     type: 'values',
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
-                    values: await adapter.values.getResultValues(this.getId(document.uri))
+                    values: await adapter.values.getResultValues(this.getId(document.uri)),
+                    storeVals: this.context.workspaceState.get('ply-user-values')
                 });
             } else {
                 adapter.onceValues(async e => {
@@ -285,7 +296,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         type: 'values',
                         base: baseUri.toString(),
                         flowPath: document.uri.fsPath,
-                        values: await e.values.getResultValues(this.getId(document.uri))
+                        values: await e.values.getResultValues(this.getId(document.uri)),
+                        storeVals: this.context.workspaceState.get('ply-user-values')
                     });
                     this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
                 });

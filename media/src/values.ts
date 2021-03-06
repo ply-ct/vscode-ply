@@ -2,8 +2,12 @@ import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Values {
 
-    constructor(readonly flowFile: string, readonly iconBase: string, readonly defaults: object) {
-    }
+    constructor(
+        readonly flowFile: string,
+        readonly iconBase: string,
+        readonly defaults: object,
+        readonly storeVals: any
+    ) { }
 
     /**
      * Prompts if needed and returns:
@@ -11,19 +15,28 @@ export class Values {
      *  - empty object if no values needed
      *  - otherwise map of name to defined value ('' if undefined)
      */
-    async prompt(flowOrStep: flowbee.Flow | flowbee.Step, action: string, onlyIfNeeded = false):
+    async prompt(flowOrStep: flowbee.Flow | flowbee.Step, action: string, onlyIfNeeded: boolean,
+        storageCall: (key: string, storeVals?: { [key: string]: string }) => void):
       Promise<{[key: string]: string} | undefined> {
         if (document.getElementById('flow-values')?.style?.display === 'flex') {
             return;
         }
         let name: string;
         let storageKey = `${this.flowFile}.values`;
+        // flow-level workspace storage values
+        if (this.storeVals && this.storeVals[storageKey]) {
+            localStorage.setItem(storageKey, JSON.stringify(this.storeVals[storageKey]));
+        }
         // needed values populated without user (storage) vals
         let needed: {[key: string]: string} = {};
         if (flowOrStep.type === 'step') {
             const step = flowOrStep as flowbee.Step;
             name = step.name.replace(/\r?\n/g, ' ');
             storageKey = `${this.flowFile}#${name}.values`;
+            // step-level workspace storage values
+            if (this.storeVals && this.storeVals[storageKey]) {
+                localStorage.setItem(storageKey, JSON.stringify(this.storeVals[storageKey]));
+            }
             needed = this.getNeeded(step, true);
         } else {
             const flow = flowOrStep as flowbee.Flow;
@@ -82,8 +95,10 @@ export class Values {
                         }
                     }
                     localStorage.setItem(storageKey, JSON.stringify(storageVals));
+                    storageCall(storageKey, storageVals);
                 } else {
                     localStorage.removeItem(storageKey);
+                    storageCall(storageKey);
                 }
                 if (tableVal[0] === 'Save') {
                     return; // Saved only
