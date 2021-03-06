@@ -17,7 +17,7 @@ export class Values {
             return;
         }
         let name: string;
-        let storageKey: string;
+        let storageKey = `${this.flowFile}.values`;
         // needed values populated without user (storage) vals
         let needed: {[key: string]: string} = {};
         if (flowOrStep.type === 'step') {
@@ -28,7 +28,6 @@ export class Values {
         } else {
             const flow = flowOrStep as flowbee.Flow;
             name = flowbee.getFlowName(flow);
-            storageKey = `${flow.path}.values`;
             if (flow.steps) {
                 for (const step of flow.steps) {
                     needed = { ...needed, ...this.getNeeded(step) };
@@ -206,14 +205,18 @@ export class Values {
     /**
      * Adds values from local storage
      */
-    supplementValues(storageKey: string, initVals: {[key: string]: string}): string[] {
-        const userKeys: string[] = [];
+    supplementValues(storageKey: string, vals: {[key: string]: string}): string[] {
+        let userKeys: string[] = [];
+        if (storageKey.indexOf('#') > 0) {
+            // step user values default to flow-level, before overridden by step storage
+            userKeys = this.supplementValues(`${this.flowFile}.values`, vals);
+        }
         const storageVal = localStorage.getItem(storageKey);
         if (storageVal) {
             const storageObj = JSON.parse(storageVal);
             for (const key of Object.keys(storageObj)) {
-                if (storageObj[key] !== initVals[key]) {
-                    initVals[key] = storageObj[key];
+                if (storageObj[key] !== vals[key]) {
+                    vals[key] = storageObj[key];
                     userKeys.push(key);
                 }
             }
