@@ -248,7 +248,17 @@ export class Values {
             header.className = 'flowbee-config-header';
             const titleElem = document.createElement('div') as HTMLDivElement;
             titleElem.className = 'flowbee-config-title';
-            titleElem.innerText = title;
+            const titleSpan = document.createElement('span') as HTMLSpanElement;
+            titleSpan.innerText = title;
+            titleElem.appendChild(titleSpan);
+            const helpAnchor = document.createElement('a') as HTMLAnchorElement;
+            helpAnchor.className = 'flow-values-help';
+            helpAnchor.href = 'https://ply-ct.com/ply/topics/values#precedence';
+            const helpImg = document.createElement('img') as HTMLImageElement;
+            helpImg.alt = 'Values help';
+            helpImg.src = `${this.iconBase}/help.svg`;
+            helpAnchor.appendChild(helpImg);
+            titleElem.appendChild(helpAnchor);
             header.appendChild(titleElem);
             const close = document.createElement('div') as HTMLDivElement;
             close.className = 'flowbee-config-close';

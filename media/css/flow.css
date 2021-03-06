@@ -194,7 +194,14 @@ body {
   left: 20px;
   display: none;
 }
-
+.flow-values-help {
+  margin-left: 10px;
+  vertical-align: middle;
+  outline: none;
+}
+.flow-values-help:focus {
+  outline: none;
+}
 .flow-values-content {
   height: 100%;
 }
