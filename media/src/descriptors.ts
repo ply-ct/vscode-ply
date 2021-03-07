@@ -4,7 +4,7 @@ import * as flowbee from 'flowbee/dist/nostyles';
 export const descriptors: flowbee.Descriptor[] = [
     flowbee.start,
     flowbee.stop,
-    flowbee.decide,
+    // flowbee.decide,
     flowbee.embedded,
     { ...flowbee.note, icon: 'note.svg' },
     {
@@ -13,6 +13,7 @@ export const descriptors: flowbee.Descriptor[] = [
         name: 'Request',
         icon: 'request.svg'
     },
+    /*
     {
         type: 'step',
         path: 'sync',
@@ -25,4 +26,5 @@ export const descriptors: flowbee.Descriptor[] = [
         name: 'Script',
         icon: 'typescript.svg'
     }
+    */
 ];
