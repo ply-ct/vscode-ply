@@ -316,7 +316,7 @@ window.addEventListener('message', async (event) => {
         }
         const websocketPort = message.config.websocketPort;
         const flow = new Flow(message.base, websocketPort, text, message.file, message.readonly);
-        flow.flowDiagram.mode = 'select';
+        flow.switchMode('select');
         flow.flowDiagram.readonly = message.readonly;
         flow.render();
         if (isNew) {

@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "flowbee": "^0.2.7",
-    "ply-ct": "^2.2.7",
+    "ply-ct": "^2.2.8",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
     "vscode-uri": "^2.1.2",
