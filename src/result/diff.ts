@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as ply from 'ply-ct';
-import { PlyRoots } from '../plyRoots';
+import { PlyRoots, Info } from '../plyRoots';
 import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
 
@@ -133,16 +133,9 @@ export class DiffHandler {
 
     /**
      * Perform diff.
-     * @param infoId test or suite id
+     * @param info test or suite info
      */
-    async doDiff(infoId: string) {
-        const info = this.plyRoots.findInfo(infoId);
-        if (!info) {
-            // could be a suite/test from another adapter (eg: mocha)
-            this.log.error(`Ply test info not found for id: ${infoId} (not a ply test?)`);
-            return;
-        }
-
+    async doDiff(info: Info) {
         const suite = this.plyRoots.getSuite(info.id);
         if (!suite) {
             throw new Error(`Ply suite not found for id: ${info.id}`);

@@ -118,7 +118,14 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (!adapter) {
                     throw new Error(`No test adapter found for workspace folder: ${item.workspaceFolder.uri}`);
                 }
-                await adapter.run([item.id], {}, { submit: true });
+                if (adapter.plyRoots.find(i => i.id === item.id)) {
+                    await adapter.run([item.id], {}, { submit: true });
+                } else {
+                    // could be a suite/test from another adapter (eg: mocha)
+                    // workaround pending https://github.com/hbenl/vscode-test-explorer/issues/158
+                    console.warn(`Ply test info not found for id: ${item.id} (not a ply test?)`);
+                    vscode.commands.executeCommand('test-explorer.run', args[0]);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -146,7 +153,15 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (!diffHandler) {
                     throw new Error(`No diff handler found for workspace folder: ${item.workspaceFolder.uri}`);
                 }
-                await diffHandler.doDiff(item.id);
+                const info = diffHandler.plyRoots.findInfo(item.id);
+                if (info) {
+                    await diffHandler.doDiff(info);
+                } else {
+                    // could be a suite/test from another adapter (eg: mocha)
+                    // workaround pending https://github.com/hbenl/vscode-test-explorer/issues/158
+                    console.warn(`Ply test info not found for id: ${item.id} (not a ply test?)`);
+                    vscode.commands.executeCommand('test-explorer.show-source', args[0]);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -175,7 +190,10 @@ export async function activate(context: vscode.ExtensionContext) {
                                 suiteId = diffHandler.plyRoots.getSuiteIdForActualResult(fileUri);
                             }
                             if (suiteId) {
-                                await diffHandler.doDiff(suiteId);
+                                const info = diffHandler.plyRoots.findInfo(suiteId);
+                                if (info) {
+                                    await diffHandler.doDiff(info);
+                                }
                             }
                         }
                     }
@@ -193,7 +211,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     return docUri.toString() === fileUri.toString();
                 });
                 if (editor) {
-                    await vscode.commands.executeCommand("revealLine", { lineNumber, at: 'top' });
+                    await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
                 }
             }
         } catch (err) {

@@ -2,7 +2,7 @@ import { URI as Uri } from 'vscode-uri';
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
 import { Suite, Request, Case, Step, Test } from 'ply-ct';
 
-type Info = TestInfo | TestSuiteInfo;
+export type Info = TestInfo | TestSuiteInfo;
 
 /**
  * A root test suite for plyees.
