@@ -149,6 +149,7 @@ body {
   min-width: 150px;
 }
 .toolbox-header {
+  user-select: none;
   height: 25px;
   font-weight: bold;
   font-size: 12px;

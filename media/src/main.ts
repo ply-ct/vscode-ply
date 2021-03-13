@@ -20,7 +20,7 @@ let templates: Templates;
 let values: Values;
 
 interface Confirmation { result: boolean }
-const evt = new flowbee.TypedEvent<Confirmation>();
+const dlgEvt = new flowbee.TypedEvent<Confirmation>();
 
 class DialogProvider implements flowbee.DialogProvider {
     alert(message: flowbee.DialogMessage) {
@@ -28,7 +28,7 @@ class DialogProvider implements flowbee.DialogProvider {
     }
     async confirm(message: flowbee.DialogMessage): Promise<boolean> {
         const promise = new Promise<boolean>(resolve => {
-            evt.once(e =>  {
+            dlgEvt.once(e =>  {
                 resolve(e.result);
             });
         });
@@ -64,6 +64,14 @@ export class Flow implements flowbee.Disposable {
             Flow.configurator = new flowbee.Configurator(document.getElementById('flow-diagram') as HTMLElement);
         }
         this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
+        this.disposables.push(Flow.configurator.onReposition(repositionEvent => {
+            updateState( {
+                configurator: {
+                    open: !!repositionEvent.position,
+                    position: repositionEvent.position
+                }
+            });
+        }));
 
         // theme-based icons
         const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ];
@@ -82,6 +90,7 @@ export class Flow implements flowbee.Disposable {
         const menuProvider = new MenuProvider(this.flowDiagram, this.updateConfigurator, templates, this.options);
         this.flowDiagram.contextMenuProvider = menuProvider;
         this.disposables.push(this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
+            updateState( { selected: { id: flowElementSelect.element.id }});
             if (Flow.configurator) {
                 this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
             }
@@ -134,7 +143,7 @@ export class Flow implements flowbee.Disposable {
             this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
             const handleFlowAction = (e: FlowActionEvent) => {
                 if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
-                    Flow.configurator?.close();
+                    this.closeConfigurator();
                     if (!e.target) {
                         this.drawingTools?.switchMode('runtime');
                         this.flowDiagram.render(this.options.diagramOptions);
@@ -169,7 +178,8 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[], doOpen = false) {
+    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[], doOpen = false,
+          position?: { left: number, top: number, width: number, height: number }) {
         if (Flow.configurator && (doOpen || Flow.configurator?.isOpen)) {
             const template = await templates.get(flowElement, this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config');
             if (instances && instances.length > 0) {
@@ -182,18 +192,32 @@ export class Flow implements flowbee.Disposable {
                 }
             }
             if (!Flow.configurator.isOpen) {
-                const promise = new Promise<boolean>(resolve => {
-                    evt.once(e => {
-                        resolve(e.result);
-                    });
-                });
+                // close bottom panel to avoid obscuring configurator
                 vscode.postMessage({ type: 'configurator' });
-                // await panel close to position configurator
-                await promise;
             }
 
-            Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions);
+            Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions, position);
+            updateState({
+                selected: {
+                    id: flowElement.id,
+                    instances: instances
+                },
+                configurator: {
+                    open: true,
+                    position: {
+                        left: Flow.configurator.left,
+                        top: Flow.configurator.top,
+                        width: Flow.configurator.width,
+                        height: Flow.configurator.height
+                    }
+                }
+            });
         }
+    }
+
+    closeConfigurator() {
+        Flow.configurator?.close();
+        updateState({ configurator: { open: false }});
     }
 
     onOptionToggle(e: OptionToggleEvent) {
@@ -201,13 +225,13 @@ export class Flow implements flowbee.Disposable {
         if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
             this.flowDiagram.mode = drawingOption;
             if (drawingOption === 'connect') {
-                Flow.configurator?.close();
+                this.closeConfigurator();
                 this.flowDiagram.instance = null;
                 this.flowDiagram.readonly = this.readonly;
                 this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
             } else if (drawingOption === 'runtime') {
-                Flow.configurator?.close();
+                this.closeConfigurator();
                 vscode.postMessage({
                     type: 'instance'
                 });
@@ -246,7 +270,7 @@ export class Flow implements flowbee.Disposable {
         }
         let vals: object | undefined;
         if (flowAction === 'run' || flowAction === 'values') {
-            Flow.configurator?.close();
+            this.closeConfigurator();
             if (values) {
                 const action = e.options?.submit ? 'Submit' : 'Run';
                 const onlyIfNeeded = !step && e.action !== 'values';
@@ -364,7 +388,7 @@ window.addEventListener('message', async (event) => {
     } else if (message.type === 'theme-change') {
         readState();
     } else if (message.type === 'confirm') {
-        evt.emit({ result: message.result });
+        dlgEvt.emit({ result: message.result });
     }
 });
 
@@ -377,6 +401,14 @@ interface FlowState {
     config?: {
         websocketPort: number;
     };
+    selected?: {
+        id?: string; // selected but no id means flow selected
+        instances?: flowbee.FlowElementInstance[];
+    }
+    configurator?: {
+        open: boolean;
+        position?: { left: number, top: number, width: number, height: number };
+    }
     values?: object;
     storeVals?: any;
 }
@@ -400,6 +432,19 @@ function readState(loadInstance = true): Flow | undefined {
         flow.switchMode(mode);
         flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
         flow.render();
+        if (state.selected) {
+            if (state.selected.id) {
+                flow.flowDiagram.select(state.selected.id, false);
+            }
+            if (state.configurator?.open) {
+                const selected = flow.flowDiagram.selected;
+                const flowElem = selected.length === 1 ? selected[0] : flow.flowDiagram.flow;
+                const instances = state.selected.instances || [];
+                if (instances.length > 0 || flow.flowDiagram.mode !== 'runtime') {
+                    flow.updateConfigurator(flowElem, instances, true, state.configurator.position);
+                }
+            }
+        }
         if (state.values) {
             values = new Values(state.file, flow.options.iconBase, state.values, state.storeVals);
         }
