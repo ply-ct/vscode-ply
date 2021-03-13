@@ -266,7 +266,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     const suite = adapter.plyRoots.getSuite(this.getId(document.uri));
                     if (suite) {
                         const actualPath = suite.runtime.results.actual.toString();
-                        if (!resultUri || actualPath === resultUri.fsPath) {
+                        if (!resultUri || actualPath === resultUri.fsPath.replace(/\\/g, '/')) {
                             webviewPanel.webview.postMessage({
                                 type: 'values',
                                 base: baseUri.toString(),
