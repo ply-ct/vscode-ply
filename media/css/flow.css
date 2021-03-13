@@ -110,6 +110,7 @@ body {
   border-radius: 3px;
   user-select: none;
   outline: none;
+  z-index: 1000;
 }
 .mode-menu li {
   white-space: nowrap;
