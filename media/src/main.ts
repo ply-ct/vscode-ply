@@ -74,11 +74,12 @@ export class Flow implements flowbee.Disposable {
         }));
 
         // theme-based icons
-        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ];
+        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLImageElement[];
         for (const toolImg of toolImgs) {
             if (toolImg.hasAttribute('data-icon')) {
                 const icon = toolImg.getAttribute('data-icon') as string;
                 toolImg.setAttribute('src', `${this.options.iconBase}/${icon}`);
+                toolImg.style.display = 'inline-block';
             }
         }
 
@@ -140,12 +141,13 @@ export class Flow implements flowbee.Disposable {
             this.drawingTools.onZoomChange((e: ZoomChangeEvent) => {
                 this.flowDiagram.zoom = e.zoom;
             });
+            this.switchMode('select');
+
             this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
             const handleFlowAction = (e: FlowActionEvent) => {
                 if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
                     this.closeConfigurator();
                     if (!e.target) {
-                        this.drawingTools?.switchMode('runtime');
                         this.flowDiagram.render(this.options.diagramOptions);
                     }
                 }
@@ -385,6 +387,12 @@ window.addEventListener('message', async (event) => {
         updateState({ values: message.values, storeVals: message.storeVals });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
+    } else if (message.type === 'mode') {
+        updateState({ mode: message.mode });
+        const flow = readState();
+        if (flow) {
+            flow.switchMode(message.mode);
+        }
     } else if (message.type === 'theme-change') {
         readState();
     } else if (message.type === 'confirm') {

@@ -105,11 +105,11 @@ export class DrawingTools {
     switchMode(mode: flowbee.Mode) {
         (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
             if (input.id === mode) {
-                if (input.classList.contains('hidden')) {
-                    input.classList.remove('hidden');
+                if (input.style.display === 'none') {
+                    input.style.display = 'inline-block';
                 }
-            } else if (!input.classList.contains('hidden')) {
-                input.classList.add('hidden');
+            } else if (input.style.display !== 'none') {
+                input.style.display = 'none';
             }
         });
     }

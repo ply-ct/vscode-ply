@@ -288,6 +288,38 @@
       {
         "command": "ply.new.flow",
         "title": "New Ply Flow"
+      },
+      {
+        "command": "ply.flow.mode.select",
+        "title": "Ply: Select Mode",
+        "enablement": "resourceExtname == .flow"
+      },
+      {
+        "command": "ply.flow.mode.connect",
+        "title": "Ply: Connect Mode",
+        "enablement": "resourceExtname == .flow"
+      },
+      {
+        "command": "ply.flow.mode.inspect",
+        "title": "Ply: Inspect Mode",
+        "enablement": "resourceExtname == .flow"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "ply.flow.mode.select",
+        "key": "shift+alt+s",
+        "mac": "cmd+alt+s"
+      },
+      {
+        "command": "ply.flow.mode.connect",
+        "key": "shift+alt+c",
+        "mac": "cmd+alt+c"
+      },
+      {
+        "command": "ply.flow.mode.inspect",
+        "key": "shift+alt+i",
+        "mac": "cmd+alt+i"
       }
     ],
     "menus": {

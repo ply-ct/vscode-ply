@@ -32,6 +32,7 @@ body {
 .drawing-tools input[type=image] {
   margin-right: 10px;
   width: 16px;
+  display: none;
 }
 .drawing-tools #zoom-out {
   margin-right: 0;
@@ -95,6 +96,7 @@ body {
 .mode-select input[type=image] {
   width: 14px;
   margin-right: 0;
+  display: inline-block;
 }
 #runtime {
   width: 15px;

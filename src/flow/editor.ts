@@ -12,6 +12,7 @@ import { Result } from '../result/result';
 interface InstanceSubscribed { instanceId: string; }
 export interface FlowItemSelectEvent { uri: vscode.Uri; }
 export interface FlowActionEvent { uri: vscode.Uri; action: string; options?: any }
+export interface FlowModeChangeEvent { mode: flowbee.Mode }
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
@@ -25,11 +26,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         readonly context: vscode.ExtensionContext,
         readonly adapters: Map<string,PlyAdapter>,
         private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
-        private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable
-
+        private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable,
+        private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
-
     }
 
     private bindWebsocket() {
@@ -181,15 +181,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 const instance = this.getInstance(document.uri);
                 webviewPanel.webview.postMessage({ type: 'instance', instance });
                 if (!instance) {
-                    const runFlow = 'Run flow to inspect results';
-                    const resumeEdit = 'Resume editing';
-                    const res = await vscode.window.showQuickPick(
-                        [ runFlow, resumeEdit ],
-                        { placeHolder: 'No results to inspect' }
-                    );
-                    if (res === runFlow) {
-                        this.run(document.uri);
-                    }
+                    this.promptToRunForInstance(document.uri);
                 }
             } else if (message.type === 'configurator') {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
@@ -316,10 +308,21 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }));
         }
 
-
         this.disposables.push(this.onFlowItemSelect(flowItemSelect => {
             if (flowItemSelect.uri.with({fragment: ''}).toString() === document.uri.toString()) {
                 updateWebview(flowItemSelect.uri.fragment);
+            }
+        }));
+
+        this.disposables.push(this.onFlowModeChange(async modeChange => {
+            if (modeChange.mode === 'runtime') {
+                const instance = this.getInstance(document.uri);
+                webviewPanel.webview.postMessage({ type: 'instance', instance });
+                if (!instance) {
+                    this.promptToRunForInstance(document.uri);
+                }
+            } else {
+                webviewPanel.webview.postMessage({ type: 'mode', mode: modeChange.mode });
             }
         }));
 
@@ -352,6 +355,18 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             throw new Error(`No test adapter found for workspace folder: ${workspaceFolder.uri}`);
         }
         return adapter;
+    }
+
+    async promptToRunForInstance(uri: vscode.Uri) {
+        const runFlow = 'Run flow to inspect results';
+        const resumeEdit = 'Resume editing';
+        const res = await vscode.window.showQuickPick(
+            [runFlow, resumeEdit],
+            { placeHolder: 'No results to inspect' }
+        );
+        if (res === runFlow) {
+            this.run(uri);
+        }
     }
 
     async run(uri: vscode.Uri, target?: string, values: object = {}, runOptions?: RunOptions, debug = false) {

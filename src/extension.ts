@@ -9,7 +9,7 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
-import { FlowActionEvent, FlowEditor, FlowItemSelectEvent } from './flow/editor';
+import { FlowActionEvent, FlowEditor, FlowItemSelectEvent, FlowModeChangeEvent } from './flow/editor';
 import { Postman } from './postman';
 import { PlyItem } from './item';
 
@@ -49,8 +49,12 @@ export async function activate(context: vscode.ExtensionContext) {
     const onFlowItemSelect = (listener: Listener<FlowItemSelectEvent>): Disposable => {
         return _onFlowItemSelect.on(listener);
     };
+    const _onFlowModeChange = new Event<FlowModeChangeEvent>();
+    const onFlowModeChange = (listener: Listener<FlowModeChangeEvent>): Disposable => {
+        return _onFlowModeChange.on(listener);
+    };
 
-    const flowEditor = new FlowEditor(context, testAdapters, onFlowAction, onFlowItemSelect);
+    const flowEditor = new FlowEditor(context, testAdapters, onFlowAction, onFlowItemSelect, onFlowModeChange);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
         const item = await PlyItem.getItem(...args);
@@ -69,6 +73,14 @@ export async function activate(context: vscode.ExtensionContext) {
             _onFlowAction.emit({ uri: item.uri, action: args[1]} );
         }
     }));
+    const setFlowMode = (mode: any) => {
+        _onFlowModeChange.emit({ mode });
+    };
+    context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.select', () => setFlowMode('select')));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.connect', () => setFlowMode('connect')));
+    context.subscriptions.push(vscode.commands.registerCommand('ply.flow.mode.inspect', () => setFlowMode('runtime')));
+
+
 
     // register for ply-flow scheme (dummy provider to prevent test explorer from opening as text)
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ply-flow', {
