@@ -73,8 +73,9 @@ export class Flow implements flowbee.Disposable {
             });
         }));
 
-        // theme-based icons
-        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLImageElement[];
+        // theme-based icons (first make zoom range visible)
+        (document.getElementById('zoom-range') as HTMLInputElement).style.display = 'inline-block';
+        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLInputElement[];
         for (const toolImg of toolImgs) {
             if (toolImg.hasAttribute('data-icon')) {
                 const icon = toolImg.getAttribute('data-icon') as string;

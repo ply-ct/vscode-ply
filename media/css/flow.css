@@ -96,7 +96,6 @@ body {
 .mode-select input[type=image] {
   width: 14px;
   margin-right: 0;
-  display: inline-block;
 }
 #runtime {
   width: 15px;
