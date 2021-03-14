@@ -73,8 +73,8 @@ export class Flow implements flowbee.Disposable {
             });
         }));
 
-        // theme-based icons (first make zoom range visible)
-        (document.getElementById('zoom-range') as HTMLInputElement).style.display = 'inline-block';
+        // theme-based icons (first make flow header visible)
+        (document.getElementById('flow-header') as HTMLDivElement).style.display = 'flex';
         const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLInputElement[];
         for (const toolImg of toolImgs) {
             if (toolImg.hasAttribute('data-icon')) {
@@ -428,7 +428,7 @@ function updateState(delta: FlowState) {
 
 function readState(loadInstance = true): Flow | undefined {
     const state = vscode.getState();
-    if (state) {
+    if (state && state.base && state.file) {
         templates = new Templates(state.base);
         const flow = new Flow(state.base, state.config?.websocketPort || 0, state.text, state.file, state.readonly);
         flow.flowDiagram.readonly = state.readonly;
