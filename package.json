@@ -309,17 +309,17 @@
     "keybindings": [
       {
         "command": "ply.flow.mode.select",
-        "key": "shift+alt+s",
+        "key": "ctrl+shift+s",
         "mac": "cmd+alt+s"
       },
       {
         "command": "ply.flow.mode.connect",
-        "key": "shift+alt+c",
+        "key": "ctrl+shift+c",
         "mac": "cmd+alt+c"
       },
       {
         "command": "ply.flow.mode.inspect",
-        "key": "shift+alt+i",
+        "key": "ctrl+shift+i",
         "mac": "cmd+alt+i"
       }
     ],
