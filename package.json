@@ -27,7 +27,8 @@
     "test",
     "flow",
     "yaml",
-    "ply"
+    "ply",
+    "postman"
   ],
   "categories": [
     "Programming Languages",
