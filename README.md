@@ -31,7 +31,7 @@ programmatic access via TypeScript to supplement this built-in expected/actual v
 ## Features
   - Graphical flow builder makes it easy to sequence requests
   - Side-by-side diff view compares expected/actual results, with smart decorations aware of runtime values
-  - Auto-generate results files by capturing actual good responses
+  - Auto-generate result files by capturing actual good responses
   - Reference env values and/or upstream response props using template expressions
   - Test Explorer sidebar shows all Ply flow/request/case suites along with their statuses
   - CodeLens links in your Ply test files for running and debugging tests
