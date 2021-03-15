@@ -11,29 +11,34 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply?label=Build) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
 
-[Ply](https://ply-ct.com/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Start with a YAML file
-describing your [requests](https://ply-ct.github.io/ply/topics/requests). Run Ply to submit these requests 
+[Ply](https://ply-ct.com/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Build a request flow graphically
+using Ply's .flow file editor. Or edit raw YAML describing your request sequence. Run Ply to submit these requests 
 and compare actual results against expected, with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
-placeholders for dynamic values. The Ply extension gives you a side-by-side diff view so you can compare
-results at a glance.
+placeholders for dynamic values.
+
+![recording](docs/images/recording.gif)
+
+The Ply extension gives you a side-by-side diff view so you can compare results at a glance.
 
 ![diff](docs/images/diff.png)
 
 Checkmarks indicate diff lines that're okay, such as substituted values or comments; whereas Xs indicate
 significant differences causing test failure(s).
 
-When you need greater control, Ply [cases](https://ply-ct.github.io/ply/topics/cases) give you
+When you need even greater control, Ply [cases](https://ply-ct.github.io/ply/topics/cases) give you
 programmatic access via TypeScript to supplement this built-in expected/actual verification.
 
 ## Features
-  - Test Explorer sidebar shows all Ply requests/cases/suites along with their statuses
-  - CodeLens segments in your Ply test files for running tests and debugging cases
-  - Gutter decorations on your Ply test files showing test statuses
+  - Graphical flow builder makes it easy to sequence requests
+  - Side-by-side diff view compares expected/actual results, with smart decorations aware of runtime values
+  - Auto-generate results files by capturing actual good responses
+  - Reference env values and/or upstream response props using template expressions
+  - Test Explorer sidebar shows all Ply flow/request/case suites along with their statuses
+  - CodeLens links in your Ply test files for running and debugging tests
+  - Built-in GraphQL support providing the same intuitive workflow as REST
+  - Decorations on your Ply test flows and files showing test statuses and results
   - Test log displayed in Output view when a test is selected in Test Explorer
-  - Diff editor for comparing expected/actual results, with smart decorations aware of runtime values
   - Import Ply requests from [Postman](https://www.postman.com/) collections
-
-![recording](docs/images/recording.gif)
 
 ## Dependencies
 Requires [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer) extension.
