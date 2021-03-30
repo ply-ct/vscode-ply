@@ -56,6 +56,9 @@ export class PlyRunner {
             if (this.config.useDist) {
                 runOptions.useDist = true;
             }
+            // if (this.config.requireTsNode) {
+                runOptions.requireTsNode = true;
+            // }
             runOptions.values = runValues;
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
