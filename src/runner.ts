@@ -118,6 +118,7 @@ export class PlyRunner {
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
+            env: this.config.env,
             plyees,  // file locs and/or uris
             plyPath: this.config.plyPath,
             plyOptions: options,

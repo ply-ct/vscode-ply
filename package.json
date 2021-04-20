@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -173,6 +173,11 @@
         "ply.cwd": {
           "description": "Working directory for Ply test execution (relative to workspace folder)",
           "type": "string",
+          "scope": "resource"
+        },
+        "ply.env": {
+          "description": "Environment variables to apply for Ply test execution",
+          "type": "object",
           "scope": "resource"
         },
         "ply.useDist": {

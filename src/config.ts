@@ -18,6 +18,7 @@ export enum Setting {
     nodePath = 'nodePath',
     plyPath = 'plyPath',
     cwd = 'cwd',
+    env = 'env',
     useDist = 'useDist',
     openFlowWhenRun = 'openFlowWhenRun',
     saveBeforeRun = 'saveBeforeRun',
@@ -89,6 +90,10 @@ export class PlyConfig {
         const cwd = configCwd ? path.resolve(dirname, configCwd) : dirname;
         console.debug(`Working directory: ${cwd}`);
         return cwd;
+    }
+
+    get env(): { [name: string]: string } {
+        return this.getConfiguration().get(Setting.env) || {};
     }
 
     get debugPort(): number {

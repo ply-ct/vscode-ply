@@ -64,6 +64,9 @@ Setting | Description | Default
 `ply.debugConfig` | Name of a launch configuration to use for debugging | (see below)
 `ply.nodePath` | Path to node executable | Find on your PATH; if not found, use node shipped with VS Code
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
+`ply.cwd` | Working directory for Ply test execution (relative to workspace folder) | Workspace folder root
+`ply.env` | Environment variables to apply for Ply test execution |
+`ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
 `ply.openFlowWhenRun` | Automatically open flows for live view when executing from Test Explorer | If Single (running a single flow)
 
 ### Custom debug configuration

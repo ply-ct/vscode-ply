@@ -33,6 +33,10 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
     try {
         process.chdir(args.cwd);
 
+        for (const envVar in args.env) {
+            process.env[envVar] = args.env[envVar];
+        }
+
         const plyPath = args.plyPath ? args.plyPath : path.dirname(require.resolve('ply-ct'));
         if (args.logEnabled) {
             sendMessage(`Using ply package at ${plyPath}`);
