@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.1.0-beta1",
+  "version": "2.1.0-beta.2",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "flowbee": "^0.2.8",
-    "ply-ct": "^2.2.11",
+    "ply-ct": "^3.0.0-beta.1",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
     "vscode-uri": "^2.1.2",
@@ -395,17 +395,7 @@
         {
           "command": "ply.diff-item",
           "group": "inline@4",
-          "when": "view == test-explorer && viewItem == suite"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
           "when": "view == test-explorer && viewItem == suiteWithSource"
-        },
-        {
-          "command": "ply.diff-item",
-          "group": "inline@4",
-          "when": "view == test-explorer && viewItem == debuggableSuite"
         },
         {
           "command": "ply.diff-item",
