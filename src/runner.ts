@@ -124,7 +124,6 @@ export class PlyRunner {
             plyOptions: options,
             runOptions,
             logEnabled: this.log.enabled,
-            workerScript: this.workerScript,
             debugPort: debugPort
         };
 

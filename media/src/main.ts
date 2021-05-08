@@ -278,6 +278,8 @@ export class Flow implements flowbee.Disposable {
                 const action = e.options?.submit ? 'Submit' : 'Run';
                 const onlyIfNeeded = !step && e.action !== 'values';
                 const storageCall = async (key: string, storeVals?: { [key: string]: string }) => {
+                    values.storeVals[key] = storeVals;
+                    updateState({ storeVals });
                     vscode.postMessage({ type: 'values', key, storeVals });
                 };
                 vals = await values.prompt(step || this.flowDiagram.flow, action, onlyIfNeeded, storageCall);

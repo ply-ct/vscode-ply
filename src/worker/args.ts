@@ -6,6 +6,5 @@ export interface WorkerArgs {
     plyOptions: object;
     runOptions?: object;
     logEnabled: boolean;
-    workerScript: string;
     debugPort: number;
 }
