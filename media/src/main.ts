@@ -233,6 +233,7 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.readonly = this.readonly;
                 this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
+                this.flowDiagram.focus();
             } else if (drawingOption === 'runtime') {
                 this.closeConfigurator();
                 vscode.postMessage({
