@@ -272,7 +272,7 @@ export class Flow implements flowbee.Disposable {
                 }
             }
         }
-        let vals: object | undefined;
+        let vals: object | 'Files' | undefined;
         if (flowAction === 'run' || flowAction === 'values') {
             this.closeConfigurator();
             if (values) {
@@ -284,7 +284,10 @@ export class Flow implements flowbee.Disposable {
                     vscode.postMessage({ type: 'values', key, storeVals });
                 };
                 vals = await values.prompt(step || this.flowDiagram.flow, action, onlyIfNeeded, storageCall);
-                if (!vals) {
+                if (vals === 'Files') {
+                    vscode.postMessage({ type: 'valuesFiles' });
+                    return;
+                } else if (!vals) {
                     return; // canceled or just saved
                 }
             } else if (flowAction === 'values') {

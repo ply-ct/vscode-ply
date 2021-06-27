@@ -1,9 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as vscode from 'vscode';
-import * as WebSocket from 'ws';
+import * as findUp from 'find-up';
 import * as flowbee from 'flowbee';
-import { RunOptions } from 'ply-ct';
+import * as WebSocket from 'ws';
+import { RunOptions, PLY_CONFIGS } from 'ply-ct';
 import { PlyAdapter } from '../adapter';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
@@ -194,6 +196,28 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     delete plyValues[message.key];
                 }
                 this.context.workspaceState.update('ply-user-values', plyValues);
+            } else if (message.type === 'valuesFiles') {
+                let configPath = findUp.sync(
+                    PLY_CONFIGS,
+                    { cwd: path.dirname(document.fileName) }
+                );
+
+                if (!configPath) {
+                    const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                    if (!workspaceFolder) {
+                        throw new Error(`No workspace folder: ${document.uri}`);
+                    }
+                    configPath = vscode.Uri.parse(`${workspaceFolder.uri}/plyconfig.json`).fsPath;
+                    fs.writeFileSync(configPath, `{${os.EOL}  "valuesFiles": [${os.EOL}  ]${os.EOL}}`, { encoding: 'utf-8' });
+                }
+
+                const configDoc = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
+                await vscode.window.showTextDocument(configDoc);
+                const lines = configDoc.getText().split(/\r?\n/);
+                const lineNumber = lines.findIndex(line => line.indexOf('valuesFiles') !== -1);
+                if (lineNumber > 0) {
+                    await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
+                }
             }
         }));
 

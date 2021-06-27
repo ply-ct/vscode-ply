@@ -157,7 +157,8 @@ export class PlyConfig {
                 expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
                 actualLocation: abs(this.val('actualLocation', options.actualLocation)),
                 logLocation: abs(this.val('logLocation', options.logLocation || options.actualLocation)),
-                valuesFiles: this.arr('valuesFiles', options.valuesFiles).map(vf => abs(vf))
+                // valuesFiles is not a config prop in package.json
+                valuesFiles: options.valuesFiles.map(vf => abs(vf))
             });
             console.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;

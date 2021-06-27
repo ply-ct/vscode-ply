@@ -55,6 +55,7 @@
     "vscode": "^1.56.0"
   },
   "dependencies": {
+    "find-up": "^4.1.0",
     "flowbee": "^0.2.10",
     "ply-ct": "^3.0.6",
     "vscode-test-adapter-api": "^1.9.0",
@@ -142,11 +143,6 @@
           "type": "boolean",
           "description": "Write detailed vscode-ply output to the Ply Invoker output panel.",
           "default": false,
-          "scope": "resource"
-        },
-        "ply.valuesFiles": {
-          "type": "array",
-          "description": "JSON files containing Ply values.",
           "scope": "resource"
         },
         "ply.debugPort": {

@@ -208,6 +208,10 @@ body {
 .flow-values-content {
   height: 100%;
 }
+.flow-values-files {
+  margin-left: 8px;
+  margin-right: auto !important;
+}
 
 /* customized flowbee styles */
 .flowbee-configurator {

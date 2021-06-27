@@ -58,7 +58,6 @@ Setting | Description | Default
 `ply.actualLocation` | Actual results base dir | testsLocation + '/results/actual'
 `ply.logLocation` | Log file base dir | actualLocation
 `ply.logpanel` | Write detailed log output to the Ply Invoker output panel | false
-`ply.valuesFiles` | JSON files containing Ply values | 
 `ply.websocketPort` | WebSocket port for Ply flow live updates (0 to disable). Modify in **Workspace** settings to avoid conflicts. | 9351
 `ply.debugPort` | Port to use for debug connections | 9229
 `ply.debugConfig` | Name of a launch configuration to use for debugging | (see below)

@@ -17,7 +17,7 @@ export class Values {
      */
     async prompt(flowOrStep: flowbee.Flow | flowbee.Step, action: string, onlyIfNeeded: boolean,
         storageCall: (key: string, storeVals?: { [key: string]: string }) => void):
-      Promise<{[key: string]: string} | undefined> {
+      Promise<{[key: string]: string} | 'Files' | undefined> {
         if (document.getElementById('flow-values')?.style?.display === 'flex') {
             return;
         }
@@ -81,6 +81,9 @@ export class Values {
 
             const tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
             if (tableVal && tableVal.length === 2) {
+                if (tableVal[0] === 'Files') {
+                    return 'Files';
+                }
                 const vals = tableVal[1];
                 // save entered values in local storage
                 if (vals) {
@@ -324,9 +327,19 @@ export class Values {
             div.appendChild(content);
             const footer = document.createElement('div') as HTMLDivElement;
             footer.className = 'flowbee-config-footer';
+            const filesButton = document.createElement('input') as HTMLInputElement;
+            filesButton.type = 'button';
+            filesButton.value = 'Values Files...';
+            filesButton.onclick = _e => {
+                div.style.display = 'none';
+                div.innerHTML = '';
+                resolve(['Files', undefined]);
+            };
+            filesButton.className = 'flow-values-files';
+            footer.appendChild(filesButton);
             const saveButton = document.createElement('input') as HTMLInputElement;
             saveButton.type = 'button';
-            saveButton.value = 'Set Values';
+            saveButton.value = 'Save';
             saveButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';
@@ -335,7 +348,7 @@ export class Values {
             footer.appendChild(saveButton);
             const okButton = document.createElement('input') as HTMLInputElement;
             okButton.type = 'button';
-            okButton.value = action;
+            okButton.value = `Save & ${action}`;
             okButton.onclick = _e => {
                 div.style.display = 'none';
                 div.innerHTML = '';
