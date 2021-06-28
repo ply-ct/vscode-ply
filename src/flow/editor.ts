@@ -208,15 +208,35 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         throw new Error(`No workspace folder: ${document.uri}`);
                     }
                     configPath = vscode.Uri.parse(`${workspaceFolder.uri}/plyconfig.json`).fsPath;
-                    fs.writeFileSync(configPath, `{${os.EOL}  "valuesFiles": [${os.EOL}  ]${os.EOL}}`, { encoding: 'utf-8' });
+                    fs.writeFileSync(configPath, `{${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}}`, { encoding: 'utf-8' });
                 }
 
                 const configDoc = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
                 await vscode.window.showTextDocument(configDoc);
                 const lines = configDoc.getText().split(/\r?\n/);
                 const lineNumber = lines.findIndex(line => line.indexOf('valuesFiles') !== -1);
-                if (lineNumber > 0) {
+                if (lineNumber >= 0) {
                     await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
+                } else {
+                    const edit = new vscode.WorkspaceEdit();
+                    const lastClosingBrace = lines.reduce((lcb, line, i) => {
+                        if (line.trimEnd().endsWith('}')) {
+                            return i;
+                        } else {
+                            return lcb;
+                        }
+                    }, -1);
+                    if (lastClosingBrace !== -1) {
+                        const insLine = lastClosingBrace > 0 ? lastClosingBrace - 1 : 0;
+                        edit.insert(
+                            configDoc.uri,
+                            new vscode.Position(insLine, lines[insLine].length),
+                            `,${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}`
+                        );
+                        await vscode.workspace.applyEdit(edit);
+
+                        await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
+                    }
                 }
             }
         }));
