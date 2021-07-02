@@ -366,7 +366,17 @@
         {
           "command": "ply.submit-item",
           "group": "inline@0",
+          "when": "view == test-explorer && viewItem == suite"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
           "when": "view == test-explorer && viewItem == test"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
         },
         {
           "command": "ply.submit-item",
@@ -376,7 +386,17 @@
         {
           "command": "ply.submit-item",
           "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableSuite"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
           "when": "view == test-explorer && viewItem == debuggableTest"
+        },
+        {
+          "command": "ply.submit-item",
+          "group": "inline@0",
+          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
         },
         {
           "command": "ply.submit-item",

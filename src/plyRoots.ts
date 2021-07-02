@@ -18,12 +18,13 @@ export class PlyRoot {
      * @param id qualifier (should not contain '/', '#' or '|' characters)
      * @param label for ui
      */
-    constructor(public readonly uri: Uri, public readonly id: string, public readonly label: string) {
+    constructor(public readonly uri: Uri, public readonly id: string, public readonly label: string, debuggable = false) {
         this.baseSuite = {
             type: 'suite',
             id: this.id,
             label: '',
             description: this.label,
+            debuggable,
             children: []
         };
     }
@@ -253,9 +254,9 @@ export class PlyRoots {
         };
         this.requestsRoot = new PlyRoot(uri, 'requests', 'Requests');
         this.roots.push(this.requestsRoot);
-        this.casesRoot = new PlyRoot(uri, 'cases', 'Cases');
+        this.casesRoot = new PlyRoot(uri, 'cases', 'Cases', true);
         this.roots.push(this.casesRoot);
-        this.flowsRoot = new PlyRoot(uri, 'flows', 'Flows');
+        this.flowsRoot = new PlyRoot(uri, 'flows', 'Flows', true);
         this.roots.push(this.flowsRoot);
     }
 
