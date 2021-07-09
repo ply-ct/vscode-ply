@@ -198,8 +198,12 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 this.run(document.uri, message.target, message.values, message.options, debug);
             } else if (message.type === 'stop') {
                 this.getAdapter(document.uri)?.cancel();
-                const instance = this.getInstance(document.uri);
-                webviewPanel.webview.postMessage({ type: 'instance', instance, event: 'stop' });
+                let instance;
+                try {
+                    instance = this.getInstance(document.uri);
+                } finally {
+                    webviewPanel.webview.postMessage({ type: 'instance', instance, event: 'stop' });
+                }
             } else if (message.type === 'expected') {
                 this.expectedResult(document.uri, message.target);
             } else if (message.type === 'compare') {
