@@ -84,9 +84,7 @@ export class Values implements Disposable {
             const valuesWatcher = vscode.workspace.createFileSystemWatcher(file);
             this.disposables.push(valuesWatcher);
             const onValuesFileChange = () => {
-                this.resultValues.clear();
-                this._plyValues = undefined;
-                this._onValuesUpdate.emit({});
+                this.clear();
             };
             valuesWatcher.onDidChange(_uri => onValuesFileChange());
             valuesWatcher.onDidDelete(uri => {
@@ -179,6 +177,13 @@ export class Values implements Disposable {
             this._plyValues = await plyValues.read();
         }
         return this._plyValues || {};
+    }
+
+    clear() {
+        this.resultValues.clear();
+        this._plyValues = undefined;
+        this.config.clearPlyOptions();
+        this._onValuesUpdate.emit({});
     }
 
     dispose() {

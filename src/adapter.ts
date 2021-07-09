@@ -131,6 +131,8 @@ export class PlyAdapter implements TestAdapter {
                     this.diffState.clearState();
                 }
             }));
+        } else {
+            this.values.clear(); // values files may have changed
         }
     }
 
