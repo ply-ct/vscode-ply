@@ -6,7 +6,8 @@ export class Values {
         readonly flowFile: string,
         readonly iconBase: string,
         readonly defaults: object,
-        readonly storeVals: any
+        public storeVals: any,
+        readonly suppress = false
     ) { }
 
     /**
@@ -79,12 +80,16 @@ export class Values {
                 }
             }
 
-            const tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
+            let tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
             if (tableVal && tableVal.length === 2) {
                 if (tableVal[0] === 'Files') {
                     return 'Files';
+                } else if (tableVal[0] === 'Reset') {
+                    localStorage.setItem(storageKey, '{}');
+                    tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
                 }
-                const vals = tableVal[1];
+
+                const vals = (tableVal as any)[1];
                 // save entered values in local storage
                 if (vals) {
                     const storageVals: {[key: string]: string} = {};
@@ -103,13 +108,13 @@ export class Values {
                     localStorage.removeItem(storageKey);
                     storageCall(storageKey);
                 }
-                if (tableVal[0] === 'Save') {
+                if ((tableVal as any)[0] === 'Save') {
                     return; // Saved only
                 } else {
                     if (vals) {
                         return this.consolidateValues(vals);
                     } else {
-                        return tableVal[0] === 'Run' ? {} : vals;
+                        return (tableVal as any)[0] === 'Run' ? {} : vals;
                     }
                 }
             } else {
@@ -355,6 +360,16 @@ export class Values {
                 resolve([action, this.fromString(value)]);
             };
             footer.appendChild(okButton);
+            const resetButton = document.createElement('input') as HTMLInputElement;
+            resetButton.type = 'button';
+            resetButton.value = 'Reset';
+            resetButton.onclick = _e => {
+                div.style.display = 'none';
+                div.innerHTML = '';
+                resolve(['Reset', this.fromString(value)]);
+            };
+            footer.appendChild(resetButton);
+
             const cancelButton = document.createElement('input') as HTMLInputElement;
             cancelButton.type = 'button';
             cancelButton.value = 'Cancel';

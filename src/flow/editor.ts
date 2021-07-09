@@ -32,6 +32,27 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
+        // clear obsolete stored values
+        const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
+        if (storedVals) {
+            let update = false;
+            for (const testPath of Object.keys(storedVals)) {
+                let file = testPath;
+                const hash = file.lastIndexOf('#');
+                if (hash !== -1) {
+                    file = testPath.substring(0, hash);
+                } else if (file.endsWith('.values')) {
+                    file = file.substring(0, file.length - 7);
+                }
+                if (!fs.existsSync(file)) {
+                    delete storedVals[testPath];
+                    update = true;
+                }
+            }
+            if (update) {
+                this.context.workspaceState.update('ply-user-values', storedVals);
+            }
+        }
     }
 
     private bindWebsocket() {
@@ -189,13 +210,13 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
             } else if (message.type === 'values') {
                 // store values
-                const plyValues = this.context.workspaceState.get('ply-user-values') || {} as any;
+                const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
                 if (message.storeVals) {
-                    plyValues[message.key] = message.storeVals;
+                    storedVals[message.key] = message.storeVals;
                 } else {
-                    delete plyValues[message.key];
+                    delete storedVals[message.key];
                 }
-                this.context.workspaceState.update('ply-user-values', plyValues);
+                this.context.workspaceState.update('ply-user-values', storedVals);
             } else if (message.type === 'valuesFiles') {
                 let configPath = findUp.sync(
                     PLY_CONFIGS,
@@ -307,7 +328,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 base: baseUri.toString(),
                                 flowPath: document.uri.fsPath,
                                 values: await adapter.values.getResultValues(this.getId(document.uri)),
-                                storeVals: this.context.workspaceState.get('ply-user-values')
+                                storeVals: this.context.workspaceState.get('ply-user-values'),
+                                files: adapter.values.files
                             });
                         }
                     }
@@ -323,7 +345,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
                     values: await adapter.values.getResultValues(this.getId(document.uri)),
-                    storeVals: this.context.workspaceState.get('ply-user-values')
+                    storeVals: this.context.workspaceState.get('ply-user-values'),
+                    files: adapter.values.files
                 });
             } else {
                 adapter.onceValues(async e => {
@@ -332,7 +355,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         base: baseUri.toString(),
                         flowPath: document.uri.fsPath,
                         values: await e.values.getResultValues(this.getId(document.uri)),
-                        storeVals: this.context.workspaceState.get('ply-user-values')
+                        storeVals: this.context.workspaceState.get('ply-user-values'),
+                        files: e.values.files
                     });
                     this.disposables.push(e.values.onValuesUpdate(updateEvent => onValuesUpdate(updateEvent.resultUri)));
                 });
