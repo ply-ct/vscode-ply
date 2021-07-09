@@ -196,6 +196,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             } else if (message.type === 'run' || message.type === 'debug') {
                 const debug = message.type === 'debug';
                 this.run(document.uri, message.target, message.values, message.options, debug);
+            } else if (message.type === 'stop') {
+                this.getAdapter(document.uri)?.cancel();
+                const instance = this.getInstance(document.uri);
+                webviewPanel.webview.postMessage({ type: 'instance', instance, event: 'stop' });
             } else if (message.type === 'expected') {
                 this.expectedResult(document.uri, message.target);
             } else if (message.type === 'compare') {
@@ -296,12 +300,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 let flowInstanceId: string | null = null;
                 const listener: flowbee.Listener<flowbee.FlowEvent> = async (flowEvent: flowbee.FlowEvent) => {
                     if (flowEvent.flowPath === flowPath) {
-                        if (flowEvent.eventType === 'start' && flowEvent.elementType === 'flow') {
-                            flowInstanceId = null;
+                        if (flowEvent.elementType === 'flow'
+                              && (flowEvent.eventType === 'start' || flowEvent.eventType === 'finish' || flowEvent.eventType === 'error')) {
+                            if (flowEvent.eventType === 'start') {
+                                flowInstanceId = null;
+                            }
                             // set the diagram instance so it'll start listening for websocket updates
                             webviewPanel.webview.postMessage({
                                 type: 'instance',
-                                instance: flowEvent.instance as flowbee.FlowInstance
+                                instance: flowEvent.instance as flowbee.FlowInstance,
+                                event: flowEvent.eventType
                             });
                         } else {
                             if (!flowInstanceId) {

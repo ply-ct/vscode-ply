@@ -129,9 +129,12 @@ export class FlowActions {
     private expected: HTMLInputElement;
     private compare: HTMLInputElement;
 
-    constructor(container: HTMLElement) {
+    constructor(readonly iconBase: string, container: HTMLElement) {
         const actionClick = (e: MouseEvent) => {
-            const action = (e.target as HTMLElement).id;
+            let action = (e.target as HTMLElement).id;
+            if (action === 'run' && this.run.getAttribute('src') === `${this.iconBase}/stop.svg`) {
+                action = 'stop';
+            }
             this._onFlowAction.emit({ action });
         };
 
@@ -153,4 +156,10 @@ export class FlowActions {
         this.compare.disabled = !isEnabled;
     }
 
+    setRunning(running: boolean) {
+        const base = running ? 'stop' : 'run';
+        this.run.setAttribute('src', `${this.iconBase}/${base}.svg`);
+        this.run.setAttribute('alt', base);
+        this.run.setAttribute('title', `${base.charAt(0).toUpperCase()}${base.substring(1)}`);
+    }
 }

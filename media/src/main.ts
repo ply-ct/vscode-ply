@@ -144,9 +144,9 @@ export class Flow implements flowbee.Disposable {
             });
             this.switchMode('select');
 
-            this.flowActions = new FlowActions(document.getElementById('flow-actions') as HTMLDivElement);
+            this.flowActions = new FlowActions(this.options.iconBase, document.getElementById('flow-actions') as HTMLDivElement);
             const handleFlowAction = (e: FlowActionEvent) => {
-                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug') {
+                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug' || e.action === 'stop') {
                     this.closeConfigurator();
                     if (!e.target) {
                         this.flowDiagram.render(this.options.diagramOptions);
@@ -379,6 +379,7 @@ window.addEventListener('message', async (event) => {
         if (flow) {
             flow.flowDiagram.instance = message.instance;
             const hasInstance = !!flow.flowDiagram.instance;
+            flow.flowActions?.setRunning(hasInstance && message.event === 'start');
             if (hasInstance) {
                 flow.flowDiagram.readonly = true;
                 flow.switchMode('runtime');
