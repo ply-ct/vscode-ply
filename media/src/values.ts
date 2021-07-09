@@ -5,9 +5,9 @@ export class Values {
     constructor(
         readonly flowFile: string,
         readonly iconBase: string,
+        readonly files: string[],
         readonly defaults: object,
         public storeVals: any,
-        readonly suppress = false
     ) { }
 
     /**
@@ -84,7 +84,9 @@ export class Values {
             if (tableVal && tableVal.length === 2) {
                 if (tableVal[0] === 'Files') {
                     return 'Files';
-                } else if (tableVal[0] === 'Reset') {
+                }
+
+                while ((tableVal as any)[0] === 'Reset') {
                     localStorage.setItem(storageKey, '{}');
                     tableVal = await this.renderTable(`Values for '${name}'`, action, storageKey, needed);
                 }
@@ -151,6 +153,15 @@ export class Values {
             }
         }
         return needed;
+    }
+
+    get isRows(): boolean {
+        for (const file of this.files) {
+            if (file.endsWith('.csv') || file.endsWith('.xlsx')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private getExpressions(content: string): string[] | null {

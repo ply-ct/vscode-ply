@@ -370,7 +370,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         action: flowAction.action,
                         target: flowAction.uri.fragment,
                         options: flowAction.options
-
                     });
                 }
             }));
