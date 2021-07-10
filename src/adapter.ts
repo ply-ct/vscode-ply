@@ -103,11 +103,8 @@ export class PlyAdapter implements TestAdapter {
 
             this.plyRoots.build(requests, cases, flows);
             console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
-            // console.debug(`requestsRoot.baseSuite: ${JSON.stringify(this.plyRoots.requestsRoot.baseSuite, null, 2)}`);
             console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
-            // console.debug(`casesRoot.baseSuite: ${JSON.stringify(this.plyRoots.casesRoot.baseSuite, null, 2)}`);
             console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
-            // console.debug(`flowsRoot.baseSuite: ${JSON.stringify(this.plyRoots.flowsRoot.baseSuite, null, 2)}`);
 
             // tests should be sorted in file order (user can override if they want)
             await vscode.commands.executeCommand('test-explorer.dont-sort');
@@ -124,11 +121,16 @@ export class PlyAdapter implements TestAdapter {
             this.values = new Values(this.workspaceFolder, this.plyRoots, this.log);
             this.disposables.push(this.values);
             this._onceValues.emit({ values: this.values });
-            this.disposables.push(this.values.onValuesUpdate(valuesUpdateEvent => {
+            this.disposables.push(this.values.onValuesUpdate(async valuesUpdateEvent => {
                 if (!valuesUpdateEvent.resultUri) {
                     // it's a values file change -- need to reload
                     this.retireEmitter.fire({});
                     this.diffState.clearState();
+                } else {
+                    // result file created or renamed
+                    if (!this.plyRoots.getSuiteIdForActualResult(valuesUpdateEvent.resultUri)) {
+                        await this.load();
+                    }
                 }
             }));
         } else {
