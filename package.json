@@ -221,7 +221,11 @@
     "commands": [
       {
         "command": "ply.open-flow",
-        "title": "Ply: Open Flow",
+        "title": "Ply: Open Flow"
+      },
+      {
+        "command": "ply.open-configurator",
+        "title": "Ply: Open Configurator",
         "icon": {
           "dark": "./icons/open-file-dark.svg",
           "light": "./icons/open-file-light.svg"

@@ -15,6 +15,7 @@ interface InstanceSubscribed { instanceId: string; }
 export interface FlowItemSelectEvent { uri: vscode.Uri; }
 export interface FlowActionEvent { uri: vscode.Uri; action: string; options?: any }
 export interface FlowModeChangeEvent { mode: flowbee.Mode }
+export interface FlowConfiguratorOpen {}
 
 export class FlowEditor implements vscode.CustomTextEditorProvider {
 
@@ -29,7 +30,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         readonly adapters: Map<string,PlyAdapter>,
         private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
         private onFlowItemSelect: (listener: flowbee.Listener<FlowItemSelectEvent>) => flowbee.Disposable,
-        private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable
+        private onFlowModeChange: (listener: flowbee.Listener<FlowModeChangeEvent>) => flowbee.Disposable,
+        private onFlowConfiguratorOpen: (listener: flowbee.Listener<FlowConfiguratorOpen>) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace.getConfiguration('ply').get(Setting.websocketPort, 9351);
         // clear obsolete stored values
@@ -216,6 +218,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 }
             } else if (message.type === 'configurator') {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
+            } else if (message.type === 'open-configurator') {
+                await vscode.commands.executeCommand('ply.open-configurator');
             } else if (message.type === 'values') {
                 // store values
                 const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
@@ -403,6 +407,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             } else {
                 webviewPanel.webview.postMessage({ type: 'mode', mode: modeChange.mode });
             }
+        }));
+
+        this.disposables.push(this.onFlowConfiguratorOpen(() => {
+            console.log('Reached here!');
+            webviewPanel.webview.postMessage({ type: 'open-configurator' });
         }));
 
         webviewPanel.onDidDispose(() => {

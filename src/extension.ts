@@ -9,7 +9,7 @@ import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
-import { FlowActionEvent, FlowEditor, FlowItemSelectEvent, FlowModeChangeEvent } from './flow/editor';
+import { FlowActionEvent, FlowEditor, FlowItemSelectEvent, FlowModeChangeEvent, FlowConfiguratorOpen } from './flow/editor';
 import { Postman } from './postman';
 import { PlyItem } from './item';
 
@@ -54,7 +54,12 @@ export async function activate(context: vscode.ExtensionContext) {
         return _onFlowModeChange.on(listener);
     };
 
-    const flowEditor = new FlowEditor(context, testAdapters, onFlowAction, onFlowItemSelect, onFlowModeChange);
+    const _onFlowConfiguratorOpen = new Event<FlowConfiguratorOpen>();
+    const onFlowConfiguratorOpen = (listener: Listener<FlowConfiguratorOpen>): Disposable => {
+        return _onFlowConfiguratorOpen.on(listener);
+    };
+
+    const flowEditor = new FlowEditor(context, testAdapters, onFlowAction, onFlowItemSelect, onFlowModeChange, onFlowConfiguratorOpen);
     context.subscriptions.push(vscode.window.registerCustomEditorProvider('ply.flow.diagram', flowEditor));
     context.subscriptions.push(vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
         const item = await PlyItem.getItem(...args);
@@ -67,6 +72,13 @@ export async function activate(context: vscode.ExtensionContext) {
             return fileUri;
         }
     }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('ply.open-configurator', async (...args: any[]) => {
+        //vscode.commands.executeCommand('ply.open-configurator');
+        console.log('Hello!');
+        _onFlowConfiguratorOpen.emit({});
+    }));
+
     context.subscriptions.push(vscode.commands.registerCommand('ply.flow-action', async (...args: any[]) => {
         const item = await PlyItem.getItem(args[0]);
         if (item?.uri) {
@@ -252,6 +264,7 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showTextDocument(doc);
         }
     }
+
 }
 
 export function deactivate() {
