@@ -218,8 +218,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 }
             } else if (message.type === 'configurator') {
                 await vscode.commands.executeCommand("workbench.action.closePanel");
-            } else if (message.type === 'open-configurator') {
-                await vscode.commands.executeCommand('ply.open-configurator');
             } else if (message.type === 'values') {
                 // store values
                 const storedVals = this.context.workspaceState.get('ply-user-values') || {} as any;
@@ -410,7 +408,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         }));
 
         this.disposables.push(this.onFlowConfiguratorOpen(() => {
-            console.log('Reached here!');
             webviewPanel.webview.postMessage({ type: 'open-configurator' });
         }));
 

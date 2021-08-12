@@ -225,8 +225,9 @@ export class Flow implements flowbee.Disposable {
     }
 
     openConfigurator() {
-        updateState({ configurator: { open: true }});
-        this.render();
+        if (Flow.configurator && !Flow.configurator.isOpen) {
+            this.updateConfigurator(this.flowDiagram.flow, this.flowDiagram.instance ? [this.flowDiagram.instance] : [], true);
+        }
     }
 
     onOptionToggle(e: OptionToggleEvent) {

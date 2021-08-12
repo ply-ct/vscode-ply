@@ -73,9 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('ply.open-configurator', async (...args: any[]) => {
-        //vscode.commands.executeCommand('ply.open-configurator');
-        console.log('Hello!');
+    context.subscriptions.push(vscode.commands.registerCommand('ply.flow.configurator', async (..._args: any[]) => {
         _onFlowConfiguratorOpen.emit({});
     }));
 

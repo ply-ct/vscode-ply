@@ -224,7 +224,7 @@
         "title": "Ply: Open Flow"
       },
       {
-        "command": "ply.open-configurator",
+        "command": "ply.flow.configurator",
         "title": "Ply: Open Configurator",
         "icon": {
           "dark": "./icons/open-file-dark.svg",
@@ -326,6 +326,11 @@
         "command": "ply.flow.mode.inspect",
         "key": "ctrl+shift+i",
         "mac": "cmd+alt+i"
+      },
+      {
+        "command": "ply.flow.configurator",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+alt+g"
       }
     ],
     "menus": {
