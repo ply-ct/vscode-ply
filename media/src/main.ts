@@ -73,8 +73,7 @@ export class Flow implements flowbee.Disposable {
             });
         }));
 
-        // theme-based icons (first make flow header visible)
-        (document.getElementById('flow-header') as HTMLDivElement).style.display = 'flex';
+        // theme-based icons (lastly make flow header visible)
         const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLInputElement[];
         for (const toolImg of toolImgs) {
             if (toolImg.hasAttribute('data-icon')) {
@@ -83,6 +82,7 @@ export class Flow implements flowbee.Disposable {
                 toolImg.style.display = 'inline-block';
             }
         }
+        (document.getElementById('flow-header') as HTMLDivElement).style.display = 'flex';
 
         // diagram
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
