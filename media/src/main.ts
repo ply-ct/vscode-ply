@@ -12,6 +12,7 @@ import {
 import { descriptors } from './descriptors';
 import { MenuProvider } from './menu';
 import { Values } from './values';
+import { configuratorDefault } from 'flowbee/dist/options';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -223,6 +224,12 @@ export class Flow implements flowbee.Disposable {
         updateState({ configurator: { open: false }});
     }
 
+    openConfigurator() {
+        if (Flow.configurator && !Flow.configurator.isOpen) {
+            this.updateConfigurator(this.flowDiagram.flow, this.flowDiagram.instance ? [this.flowDiagram.instance] : [], true);
+        }
+    }
+
     onOptionToggle(e: OptionToggleEvent) {
         const drawingOption = e.option;
         if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
@@ -405,6 +412,9 @@ window.addEventListener('message', async (event) => {
         readState();
     } else if (message.type === 'confirm') {
         dlgEvt.emit({ result: message.result });
+    } else if (message.type === 'open-configurator') {
+        const flow = readState();
+        flow?.openConfigurator();
     }
 });
 
