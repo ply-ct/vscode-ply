@@ -290,7 +290,7 @@ export class Values {
             titleElem.appendChild(titleSpan);
             const helpAnchor = document.createElement('a') as HTMLAnchorElement;
             helpAnchor.className = 'flow-values-help';
-            helpAnchor.href = 'https://ply-ct.com/ply/topics/values#precedence';
+            helpAnchor.href = 'https://ply-ct.org/ply/topics/values#precedence';
             const helpImg = document.createElement('img') as HTMLImageElement;
             helpImg.alt = 'Values help';
             helpImg.src = `${this.iconBase}/help.svg`;

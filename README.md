@@ -1,9 +1,9 @@
-<a href="https://ply-ct.com/">
+<a href="https://ply-ct.org/">
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/logo.png" width="64" alt="ply" />
 </a>
 <h2>API Automated Testing
 <div>
-<a href="https://ply-ct.com/">
+<a href="https://ply-ct.org/">
   <img src="https://raw.githubusercontent.com/ply-ct/vscode-ply/master/docs/images/wares.png" width="128" alt="Ply your wares" />
 </a>
 </div>
@@ -11,7 +11,7 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply?label=Build) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code)
 
-[Ply](https://ply-ct.com/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Build a request flow graphically
+[Ply](https://ply-ct.org/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Build a request flow graphically
 using Ply's .flow file editor. Or edit raw YAML describing your request sequence. Run Ply to submit these requests 
 and compare actual results against expected, with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
 placeholders for dynamic values.

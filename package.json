@@ -10,7 +10,7 @@
     "email": "donald.h.oakes@gmail.com"
   },
   "publisher": "ply-ct",
-  "homepage": "https://ply-ct.com/",
+  "homepage": "https://ply-ct.org/",
   "repository": {
     "type": "git",
     "url": "https://github.com/ply-ct/vscode-ply.git"
