@@ -111,7 +111,7 @@ export class PlyAdapter implements TestAdapter {
 
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: this.plyRoots.rootSuite });
         }
-        catch (err) {
+        catch (err: unknown) {
             console.error(err);
             this.log.error('Error loading ply tests: ' + err, err);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', errorMessage: inspect(err) });
@@ -149,10 +149,10 @@ export class PlyAdapter implements TestAdapter {
                 this.plyRoots, this.log, this.testStatesEmitter);
             this.runner.onFlow(evt => this._onFlow.emit(evt));
             await this.runner.runTests(testIds, values, false, runOptions);
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            this.log.error(err);
-            vscode.window.showErrorMessage(`Error running ply tests: ${err.message}`);
+            this.log.error(`${err}`);
+            vscode.window.showErrorMessage(`Error running ply tests: ${err}`);
         }
     }
 
@@ -173,7 +173,7 @@ export class PlyAdapter implements TestAdapter {
 		let debugSession: any;
 		try {
 			debugSession = await this.startDebugging();
-		} catch (err) {
+		} catch (err: unknown) {
 			this.log.error('Failed starting the debug session - aborting', err);
 			this.cancel();
 			return;
@@ -190,10 +190,10 @@ export class PlyAdapter implements TestAdapter {
 
         try {
             await testRunPromise;
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            this.log.error(err);
-            vscode.window.showErrorMessage(`Error running ply tests: ${err.message}`);
+            this.log.error(`${err}`);
+            vscode.window.showErrorMessage(`Error running ply tests: ${err}`);
         }
     }
 

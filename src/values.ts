@@ -148,10 +148,10 @@ export class Values implements Disposable {
                         values.__ply_results = actualResults;
                     }
                     this.resultValues.set(resultUri.toString(), values || {});
-                } catch (err) {
+                } catch (err: unknown) {
                     console.error(err);
                     this.log.error(`Cannot process results for suite: ${suiteId}`);
-                    this.log.error(err);
+                    this.log.error(`${err}`);
                 }
             }
         }

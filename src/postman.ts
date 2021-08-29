@@ -48,10 +48,10 @@ export class Postman {
                 }
             }
 
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            this.log.error(err);
-            vscode.window.showErrorMessage(err.message);
+            this.log.error(`${err}`);
+            vscode.window.showErrorMessage(`${err}`);
         }
     }
 

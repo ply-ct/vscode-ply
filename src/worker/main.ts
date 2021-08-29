@@ -114,11 +114,11 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
             }
         });
     }
-    catch (err) {
+    catch (err: unknown) {
         console.error(err);
         if (args.logEnabled) {
             console.error(err);
-            sendMessage(`Caught error ${err.stack}`);
+            sendMessage(`Caught error ${(err as Error).stack}`);
         }
     }
 }

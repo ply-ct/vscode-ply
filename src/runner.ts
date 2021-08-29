@@ -91,9 +91,9 @@ export class PlyRunner {
             }
             this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
-        catch (err) {
+        catch (err: unknown) {
             console.error(err);
-            this.log.error(`Error while running plyees: ${err.stack}`);
+            this.log.error(`Error while running plyees: ${(err as Error).stack}`);
             this.fire(<TestRunFinishedEvent>{ type: 'finished', testRunId });
         }
     }

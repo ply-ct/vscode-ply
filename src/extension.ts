@@ -149,9 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
                     vscode.commands.executeCommand('test-explorer.run', args[0]);
                 }
             }
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            vscode.window.showErrorMessage(err.message);
+            vscode.window.showErrorMessage(`${err}`);
         }
     };
 
@@ -185,9 +185,9 @@ export async function activate(context: vscode.ExtensionContext) {
                     vscode.commands.executeCommand('test-explorer.show-source', args[0]);
                 }
             }
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            vscode.window.showErrorMessage(err.message);
+            vscode.window.showErrorMessage(`${err}`);
         }
     };
 
@@ -236,9 +236,9 @@ export async function activate(context: vscode.ExtensionContext) {
                     await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
                 }
             }
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
-            vscode.window.showErrorMessage(err.message);
+            vscode.window.showErrorMessage(`${err}`);
         }
     };
 
