@@ -1,0 +1,237 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow-y: hidden;
+}
+pre {
+  margin: 0;
+}
+
+#app {
+  font-family: var(--vscode-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.split {
+  display: flex;
+}
+.pane {
+  flex-basis: 50%;
+}
+.pane-left {
+  flex-grow: 1;
+  min-width: 0;
+}
+.pane-right {
+  border-left: 1px solid var(--vscode-panel-border);
+}
+
+.request {
+  height: 100vh;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.request-name {
+  display: inline-block;
+  position: relative;
+  top: 3px;
+  margin: 0 5px 5px 10px;
+  padding: 0 3px 1px 3px;
+  font-size: 14.5px;
+  font-weight: bold;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+.request-name:focus {
+  outline: 1px solid #409eff;
+}
+
+.actions {
+  float: right;
+  margin-top: 5px;
+  margin-right: 15px;
+}
+.icon {
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.endpoint {
+  display: flex;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.endpoint-url .el-input__inner {
+  border-left-color: transparent;
+}
+.endpoint-url .el-input__inner:hover {
+  border-left-color: inherit;
+}
+.endpoint-url .el-input__inner:focus {
+  border-left-color: #409eff;
+}
+
+.action-btn {
+  display: block;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 14px;
+  outline: 1px solid transparent;
+  outline-offset: 2px !important;
+  border: none;
+  height: 30px;
+}
+.action-btn:hover {
+  cursor: pointer;
+  background: var(--vscode-button-hoverBackground);
+}
+.action-btn:focus {
+  outline: none;
+}
+
+.error {
+  height: 100vh;
+  margin: 25px 25px 5px 25px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-errorForeground);
+}
+.response {
+  height: 100vh;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.response-spacer {
+  height: 20px;
+  min-height: 20px;
+  margin: 0 5px 5px 10px;
+  padding: 1px 3px;
+}
+.response-info {
+  height: 30px;
+  margin: 5px 10px 0 10px;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+}
+.response-info-item {
+  margin-right: 5px;
+}
+.status.el-tag {
+  font-weight: bold;
+  background-color: var(--vscode-editor-background);
+  border-color: var(--vscode-editor-foreground);
+  height: 26px;
+  line-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+}
+.status a,
+a:visited,
+a:hover,
+a:active {
+  color: inherit;
+  text-decoration: none;
+  font-family: var(--vscode-font-family);
+}
+.status a:focus {
+  outline: none;
+}
+.response-request-dt {
+  float: right;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.response-loading {
+  display: flex;
+  justify-content: center;
+  height: 30px;
+  margin: 5px 10px 0 10px;
+}
+.response-loading > span {
+  margin-top: 4px;
+  margin-right: 15px;
+}
+.cancel-btn {
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  margin-top: -1px;
+}
+.cancel-btn:hover {
+  background: var(--vscode-editor-background);
+  border: 1px solid rgba(128, 128, 128, 1);
+}
+
+.editor-container {
+  height: calc(100vh - 100px);
+  overflow-x: visible;
+}
+
+.table-container {
+  display: flex;
+  position: static;
+  width: calc(100% - 2px);
+  height: 100%;
+  border: none;
+  box-shadow: none;
+}
+.flowbee-config-tab-content {
+  margin-top: -10px;
+}
+.table-container .flowbee-config-tab-content th {
+  border: 1px solid var(--vscode-panel-border);
+}
+.table-container td {
+  border: 1px solid var(--vscode-panel-border);
+}
+.table-container td:focus {
+  outline: 1px solid #409eff;
+  border-left: 1px solid #409eff;
+}
+
+.el-input__inner {
+  height: 30px;
+  line-height: 30px;
+  padding-left: 7px;
+  padding-right: 0;
+  border-radius: 0;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  font-family: var(--vscode-font-family);
+}
+
+.el-select {
+  width: 135px;
+}
+
+.el-tabs {
+  margin-left: 12px;
+}
+.request .el-tabs {
+  margin-top: -5px;
+}
+.el-tabs__header {
+  margin: 0 0 10px;
+}
+.el-tabs__nav-wrap:after {
+  background-color: transparent;
+}
+.el-tabs__item {
+  color: var(--vscode-tab-inactiveForeground);
+  padding: 0 12px;
+  font-size: 13.3px;
+  height: 30px;
+  line-height: 30px;
+}
+
+.el-loading-mask {
+  margin-top: 25px;
+  background-color: var(--vscode-editor-background);
+  opacity: 0.5;
+}
+.el-loading-spinner {
+  padding-top: 10px;
+}

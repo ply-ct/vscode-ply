@@ -32,5 +32,20 @@ node_modules/typescript/lib/typingsInstaller.js
 node_modules/typescript/lib/typescriptServices.js
 .rpt2_cache/
 .DS_Store/
+notes/
+.github/
+web/.parcel-cache
+web/css
+web/fonts
+web/src
+web/test
+web/node_modules
+web/.eslintrc.yml
+web/package-lock.json
+web/package.json
+web/rollup.config.js
+web/tsconfig.json
+!web/request.html
+
 
 

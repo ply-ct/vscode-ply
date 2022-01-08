@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { detectNodePath } from 'vscode-test-adapter-util';
-import * as ply from 'ply-ct';
+import * as ply from '@ply-ct/ply';
 
 export enum Setting {
     testsLocation = 'testsLocation',
@@ -20,21 +20,20 @@ export enum Setting {
     cwd = 'cwd',
     env = 'env',
     useDist = 'useDist',
-    openFlowWhenRun = 'openFlowWhenRun',
+    openSuitesWhenRun = 'openSuitesWhenRun',
     saveBeforeRun = 'saveBeforeRun',
     websocketPort = 'websocketPort'
 }
 
 export class PlyConfig {
-
     private _plyOptions: ply.PlyOptions | undefined;
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly reload: () => Promise<void> = async () => {},
         private readonly retire: () => void = () => {},
-        private readonly resetDiffs: () => void = () => {},
-    ) { }
+        private readonly resetDiffs: () => void = () => {}
+    ) {}
 
     private getConfiguration(): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri);
@@ -42,22 +41,31 @@ export class PlyConfig {
 
     async onChange(change: vscode.ConfigurationChangeEvent) {
         console.debug('config change');
+        if (
+            change.affectsConfiguration('testExplorer.useNativeTesting', this.workspaceFolder.uri)
+        ) {
+            this.reload();
+            this.retire();
+        }
         for (const setting of Object.values(Setting)) {
             if (change.affectsConfiguration(`ply.${setting}`, this.workspaceFolder.uri)) {
                 console.debug(`config change affects ply.${setting}`);
-                if (setting === Setting.testsLocation
-                    || setting === Setting.requestFiles
-                    || setting === Setting.caseFiles
-                    || setting === Setting.flowFiles
-                    || setting === Setting.excludes
-                    || setting === Setting.nodePath
-                    || setting === Setting.plyPath) {
+                if (
+                    setting === Setting.testsLocation ||
+                    setting === Setting.requestFiles ||
+                    setting === Setting.caseFiles ||
+                    setting === Setting.flowFiles ||
+                    setting === Setting.excludes ||
+                    setting === Setting.nodePath ||
+                    setting === Setting.plyPath
+                ) {
                     this._plyOptions = undefined;
                     this.reload();
                     this.retire();
-                }
-                else if (setting === Setting.expectedLocation
-                    || setting === Setting.actualLocation) {
+                } else if (
+                    setting === Setting.expectedLocation ||
+                    setting === Setting.actualLocation
+                ) {
                     this._plyOptions = undefined;
                     this.resetDiffs();
                     this.retire();
@@ -71,7 +79,7 @@ export class PlyConfig {
         if (plyPath) {
             return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
-            return path.dirname(require.resolve('ply-ct'));
+            return path.dirname(require.resolve('@ply-ct/ply'));
         }
     }
 
@@ -112,8 +120,8 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.useDist, false);
     }
 
-    get openFlowWhenRun(): string {
-        return this.getConfiguration().get(Setting.openFlowWhenRun, 'If Single');
+    get openSuitesWhenRun(): string {
+        return this.getConfiguration().get(Setting.openSuitesWhenRun, 'If Single');
     }
 
     get saveBeforeRun(): boolean {
@@ -141,8 +149,7 @@ export class PlyConfig {
             const abs = (location: string) => {
                 if (path.isAbsolute(location)) {
                     return ply.util.fwdSlashes(path.normalize(location));
-                }
-                else {
+                } else {
                     return ply.util.fwdSlashes(path.normalize(workspacePath + '/' + location));
                 }
             };
@@ -156,9 +163,11 @@ export class PlyConfig {
                 skip: this.val('skip', options.skip),
                 expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
                 actualLocation: abs(this.val('actualLocation', options.actualLocation)),
-                logLocation: abs(this.val('logLocation', options.logLocation || options.actualLocation)),
+                logLocation: abs(
+                    this.val('logLocation', options.logLocation || options.actualLocation)
+                ),
                 // valuesFiles is not a config prop in package.json
-                valuesFiles: options.valuesFiles.map(vf => abs(vf))
+                valuesFiles: options.valuesFiles.map((vf) => abs(vf))
             });
             console.debug(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;

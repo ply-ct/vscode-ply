@@ -13,7 +13,6 @@ export interface ZoomChangeEvent {
 }
 
 export class DrawingTools {
-
     private _onOptionToggle = new flowbee.TypedEvent<OptionToggleEvent>();
     onOptionToggle(listener: flowbee.Listener<OptionToggleEvent>) {
         this._onOptionToggle.on(listener);
@@ -27,57 +26,63 @@ export class DrawingTools {
     constructor(container: HTMLElement) {
         // grid
         const gridToggle = container.querySelector('#grid') as HTMLInputElement;
-        gridToggle.onclick = e => {
+        gridToggle.onclick = (e) => {
             gridToggle.classList.toggle('unselected');
             this._onOptionToggle.emit({ option: (e.target as HTMLElement).id });
         };
         // snap
         const snapToggle = container.querySelector('#snap') as HTMLInputElement;
-        snapToggle.onclick = e => {
+        snapToggle.onclick = (e) => {
             snapToggle.classList.toggle('unselected');
             this._onOptionToggle.emit({ option: (e.target as HTMLElement).id });
         };
         // zoom
         const zoomSlider = container.querySelector('#zoom-range') as HTMLInputElement;
-        zoomSlider.oninput = e => {
+        zoomSlider.oninput = (e) => {
             const zoom = parseInt((e.target as HTMLInputElement).value);
             this._onZoomChange.emit({ zoom });
             zoomSlider.title = `${zoom} %`;
         };
         const zoomOut = container.querySelector('#zoom-out') as HTMLInputElement;
-        zoomOut.onclick = _e => {
+        zoomOut.onclick = (_e) => {
             const zoom = Math.max(parseInt(zoomSlider.value) - 20, 20);
             zoomSlider.value = '' + zoom;
             this._onZoomChange.emit({ zoom });
             zoomSlider.title = `${zoom} %`;
         };
         const zoomIn = container.querySelector('#zoom-in') as HTMLInputElement;
-        zoomIn.onclick = _e => {
+        zoomIn.onclick = (_e) => {
             const zoom = Math.min(parseInt(zoomSlider.value) + 20, 200);
             zoomSlider.value = '' + zoom;
             this._onZoomChange.emit({ zoom });
             zoomSlider.title = `${zoom} %`;
         };
         // pinch gesture
-        window.addEventListener('wheel', e => {
-            if (e.ctrlKey && document.activeElement === document.getElementById('diagram-canvas')) {
-                e.preventDefault();
-                let zoom = parseInt(zoomSlider.value) - e.deltaY;
-                if (zoom < 20) {
-                    zoom = 20;
+        window.addEventListener(
+            'wheel',
+            (e) => {
+                if (
+                    e.ctrlKey &&
+                    document.activeElement === document.getElementById('diagram-canvas')
+                ) {
+                    e.preventDefault();
+                    let zoom = parseInt(zoomSlider.value) - e.deltaY;
+                    if (zoom < 20) {
+                        zoom = 20;
+                    } else if (zoom > 200) {
+                        zoom = 200;
+                    }
+                    zoomSlider.value = '' + zoom;
+                    this._onZoomChange.emit({ zoom });
                 }
-                else if (zoom > 200) {
-                    zoom = 200;
-                }
-                zoomSlider.value = '' + zoom;
-                this._onZoomChange.emit({ zoom });
-            }
-        }, { passive: false });
+            },
+            { passive: false }
+        );
         // mode select
         const modeSelect = container.querySelector('#mode-select') as HTMLInputElement;
         const modeDrop = container.querySelector('#mode-drop') as HTMLElement;
-        modeSelect.onmouseover = () => modeDrop.style.opacity = '1';
-        modeSelect.onmouseout = () => modeDrop.style.opacity = '0.5';
+        modeSelect.onmouseover = () => (modeDrop.style.opacity = '1');
+        modeSelect.onmouseout = () => (modeDrop.style.opacity = '0.5');
         const modeMenu = container.querySelector('#mode-menu') as HTMLUListElement;
         modeSelect.onclick = () => {
             if (modeMenu.classList.contains('hidden')) {
@@ -103,20 +108,21 @@ export class DrawingTools {
     }
 
     switchMode(mode: flowbee.Mode) {
-        (document.getElementById('mode-select') as HTMLElement).querySelectorAll('input').forEach(input => {
-            if (input.id === mode) {
-                if (input.style.display === 'none') {
-                    input.style.display = 'inline-block';
+        (document.getElementById('mode-select') as HTMLElement)
+            .querySelectorAll('input')
+            .forEach((input) => {
+                if (input.id === mode) {
+                    if (input.style.display === 'none') {
+                        input.style.display = 'inline-block';
+                    }
+                } else if (input.style.display !== 'none') {
+                    input.style.display = 'none';
                 }
-            } else if (input.style.display !== 'none') {
-                input.style.display = 'none';
-            }
-        });
+            });
     }
 }
 
 export class FlowActions {
-
     private _onFlowAction = new flowbee.TypedEvent<FlowActionEvent>();
     onFlowAction(listener: flowbee.Listener<FlowActionEvent>) {
         this._onFlowAction.on(listener);

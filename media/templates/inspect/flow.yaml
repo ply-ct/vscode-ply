@@ -1,5 +1,5 @@
 Flow:
   widgets:
-  - type: text
-    instanceProp: status
-    label: Status
+    - type: text
+      instanceProp: status
+      label: Status

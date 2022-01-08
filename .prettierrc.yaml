@@ -1,0 +1,12 @@
+tabWidth: 2
+semi: true
+trailingComma: none
+singleQuote: true
+printWidth: 100
+
+overrides:
+  - files:
+      - '*.ts'
+      - '*.js'
+    options:
+      tabWidth: 4

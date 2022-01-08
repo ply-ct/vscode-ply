@@ -1,18 +1,16 @@
 # configurator template for flow
 Options:
   widgets:
-  - type: checkbox
-    attribute: bail
-    label: Bail on first failure
+    - type: checkbox
+      attribute: bail
+      label: Bail on first failure
 
 Values:
   widgets:
-  - type: table
-    attribute: values
-    widgets:
-    - type: text
-      label: Name
-    - type: text
-      label: Value
-
-
+    - type: table
+      attribute: values
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Value

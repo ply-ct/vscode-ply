@@ -1,10 +1,9 @@
-import ply from 'ply-ct';
+import ply from '@ply-ct/ply';
+import { suite, test, before, after } from '@ply-ct/ply';
 import { assert } from 'chai';
-import { suite, test, before, after } from 'ply-ct';
 
 @suite('movie-crud')
 export class MovieCrud {
-
     movieId?: string;
 
     /**
@@ -15,7 +14,7 @@ export class MovieCrud {
         const requestSuite = await ply.loadSuite('test/ply/requests/movies-api.ply.yaml');
         const deleteMovie = requestSuite.get('deleteMovie');
         assert.exists(deleteMovie);
-        const response = await deleteMovie!.submit({...values, id: '435b30ad'});
+        const response = await deleteMovie!.submit({ ...values, id: '435b30ad' });
         requestSuite.log.info('Cleanup response status code', response.status.code);
         // response status should either be 200 or 404 (we don't care which during cleanup)
         assert.ok(response.status.code === 200 || response.status.code === 404);
@@ -53,6 +52,5 @@ export class MovieCrud {
     }
 
     @after
-    afterAll() {
-    }
+    afterAll() {}
 }

@@ -6,7 +6,7 @@ moviesByYearAndRating:
 
 movieById:
   # id comes from previous response body
-  url:  '${baseUrl}/${@moviesByYearAndRating.response.body.movies[1].id}'
+  url: '${baseUrl}/${@moviesByYearAndRating.response.body.movies[1].id}'
   method: GET
   headers:
     Accept: application/json

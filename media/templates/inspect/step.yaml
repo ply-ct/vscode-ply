@@ -1,12 +1,12 @@
 # default step inspect template
 Step:
   widgets:
-  - type: text
-    instanceProp: status
-    label: Status
-  - type: datetime
-    instanceProp: start
-    label: Start
-  - type: datetime
-    instanceProp: end
-    label: End
+    - type: text
+      instanceProp: status
+      label: Status
+    - type: datetime
+      instanceProp: start
+      label: Start
+    - type: datetime
+      instanceProp: end
+      label: End

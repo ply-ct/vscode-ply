@@ -66,7 +66,7 @@ Setting | Description | Default
 `ply.cwd` | Working directory for Ply test execution (relative to workspace folder) | Workspace folder root
 `ply.env` | Environment variables to apply for Ply test execution |
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
-`ply.openFlowWhenRun` | Automatically open flows for live view when executing from Test Explorer | If Single (running a single flow)
+`ply.openSuitesWhenRun` | Automatically open requests/flows in custom editor when executing from Test Explorer | If Single (running a single suite)
 
 ### Custom debug configuration
 You can specify a custom vscode debug configuration to use for Ply cases instead of the built-in default.

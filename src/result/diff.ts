@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as ply from 'ply-ct';
+import * as ply from '@ply-ct/ply';
 import { PlyRoots, Info } from '../plyRoots';
 import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
@@ -9,7 +9,6 @@ import { ResultDiffs, ResultDecorator } from './decorator';
  * TODO: see lucky #13
  */
 export class DiffState {
-
     _state: any;
 
     constructor(
@@ -19,7 +18,8 @@ export class DiffState {
 
     get state(): any {
         if (!this._state) {
-            this._state = this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || {} as any;
+            this._state =
+                this.workspaceState.get(`ply-diffs:${this.workspaceFolder.uri}`) || ({} as any);
         }
         return this._state;
     }
@@ -76,7 +76,6 @@ interface ResultPair {
 }
 
 export class DiffHandler {
-
     private disposables: { dispose(): void }[] = [];
     // TODO: remove from resultPairs on diff editor close
     private resultPairs: ResultPair[] = [];
@@ -91,44 +90,54 @@ export class DiffHandler {
         private readonly retire: (testIds: string[]) => void,
         private readonly log: ply.Log
     ) {
-
-        this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-            this.activeEditor = undefined;
-            if (editor) {
-                let uri = editor.document.uri;
-                if (uri.scheme === Result.URI_SCHEME) {
-                    uri = Result.convertUri(uri);
+        this.disposables.push(
+            vscode.window.onDidChangeActiveTextEditor((editor) => {
+                this.activeEditor = undefined;
+                if (editor) {
+                    let uri = editor.document.uri;
+                    if (uri.scheme === Result.URI_SCHEME) {
+                        uri = Result.convertUri(uri);
+                    }
+                    if (
+                        uri.scheme === 'file' &&
+                        uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
+                    ) {
+                        this.activeEditor = editor;
+                    }
                 }
-                if (uri.scheme === 'file' && uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
-                    this.activeEditor = editor;
+                if (this.activeEditor) {
+                    this.checkUpdateDiffDecorations(this.activeEditor);
                 }
-            }
-            if (this.activeEditor) {
-                this.checkUpdateDiffDecorations(this.activeEditor);
-            }
-        }));
+            })
+        );
 
-        this.disposables.push(vscode.workspace.onDidChangeTextDocument(event => {
-            const uri = event.document.uri;
-            if (uri.scheme === 'file' && uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
-                const suiteId = this.plyRoots.getSuiteIdForExpectedResult(uri);
-                if (suiteId) {
-                    const testIds = this.plyRoots.getSuiteInfo(suiteId)?.children.map(c => c.id) || [];
-                    // expected: only update decorations the first time (if diff state changed)
-                    if (this.diffState.clearDiffs(testIds)) {
-                        this.retire(testIds);
+        this.disposables.push(
+            vscode.workspace.onDidChangeTextDocument((event) => {
+                const uri = event.document.uri;
+                if (
+                    uri.scheme === 'file' &&
+                    uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
+                ) {
+                    const suiteId = this.plyRoots.getSuiteIdForExpectedResult(uri);
+                    if (suiteId) {
+                        const testIds =
+                            this.plyRoots.getSuiteInfo(suiteId)?.children.map((c) => c.id) || [];
+                        // expected: only update decorations the first time (if diff state changed)
+                        if (this.diffState.clearDiffs(testIds)) {
+                            this.retire(testIds);
+                            if (this.activeEditor) {
+                                this.checkUpdateDiffDecorations(this.activeEditor);
+                            }
+                        }
+                    } else if (this.plyRoots.getSuiteIdForActualResult(uri)) {
+                        // actual: update decorations regardless sinces it's probably due to rerun
                         if (this.activeEditor) {
                             this.checkUpdateDiffDecorations(this.activeEditor);
                         }
                     }
-                } else if (this.plyRoots.getSuiteIdForActualResult(uri)) {
-                    // actual: update decorations regardless sinces it's probably due to rerun
-                    if (this.activeEditor) {
-                        this.checkUpdateDiffDecorations(this.activeEditor);
-                    }
                 }
-            }
-        }));
+            })
+        );
     }
 
     /**
@@ -143,51 +152,56 @@ export class DiffHandler {
         const test = info.type === 'test' ? this.plyRoots.getTest(info.id) : undefined;
 
         const expected = suite.runtime.results.expected;
-        const expectedResult = new Result(expected, test?.name, test?.type);
-        let expectedLabel = expectedResult.label;
         if (!(await expected.exists)) {
             // even the suite file doesn't exist
             throw new Error(`Expected result file not found: ${expected.location}`);
         }
+        const expectedResult = new Result(expected, test?.name, test?.type);
+        let expectedLabel = `(EXPECTED) ${expectedResult.label}`;
         let expectedUri = expectedResult.toUri();
 
         const actual = suite.runtime.results.actual;
         const actualResult = new Result(actual, test?.name, test?.type);
-        let actualLabel = actualResult.label;
+        let actualLabel = `(ACTUAL) ${actualResult.label}`;
         let actualUri = actualResult.toUri();
 
         if (test) {
-            // expected is read-only virtual file (except flows which are one test per file)
-            expectedLabel = `(read-only fragment) ${expectedResult.plyResult.location.name}#${test?.name}`;
-            actualLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
-        }
-        else {
+            expectedLabel = `${expectedResult.plyResult.location.name}#${test?.name}`;
+            if (await expectedResult.exists()) {
+                expectedLabel = `(EXPECTED) ${expectedLabel}`;
+            } else {
+                expectedLabel = `(EXPECTED NOT FOUND) ${expectedLabel}`;
+            }
+            actualLabel = `(ACTUAL) ${expectedResult.plyResult.location.name}#${test?.name}`;
+        } else {
             expectedUri = Result.convertUri(expectedUri);
             // actual uri cannot stay virtual to be read-only,
             // because then vscode.diff prompts when saving expected
             actualUri = Result.convertUri(actualUri);
         }
         if (!(await actualResult.exists())) {
-            actualLabel = `(not found) ${actualLabel}`;
+            actualLabel = `(ACTUAL NOT FOUND) ${actualLabel}`;
         }
 
-        const title = `${expectedLabel} ⟷ ${actualLabel}`;
+        const title = `${expectedLabel} ↔ ${actualLabel}`;
         const options: vscode.TextDocumentShowOptions = {
             preserveFocus: true
         };
 
         await vscode.commands.executeCommand('vscode.diff', expectedUri, actualUri, title, options);
-        const expectedEditor = vscode.window.visibleTextEditors.find(editor => {
+        const expectedEditor = vscode.window.visibleTextEditors.find((editor) => {
             return editor.document.uri.toString() === expectedUri.toString();
         });
-        const actualEditor = vscode.window.visibleTextEditors.find(editor => {
+        const actualEditor = vscode.window.visibleTextEditors.find((editor) => {
             return editor.document.uri.toString() === actualUri.toString();
         });
 
         if (expectedEditor && actualEditor) {
-            const existingPairIdx = this.resultPairs.findIndex(pair => {
-                return pair.expectedUri.toString() === expectedUri.toString() &&
-                    pair.actualUri.toString() === actualUri.toString();
+            const existingPairIdx = this.resultPairs.findIndex((pair) => {
+                return (
+                    pair.expectedUri.toString() === expectedUri.toString() &&
+                    pair.actualUri.toString() === actualUri.toString()
+                );
             });
             if (existingPairIdx >= 0) {
                 this.resultPairs.splice(existingPairIdx, 1);
@@ -209,9 +223,11 @@ export class DiffHandler {
     /**
      * Applies decorations only if diff state exists for the pair
      */
-    async updateDiffDecorations(resultPair: ResultPair,
-        expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor) {
-
+    async updateDiffDecorations(
+        resultPair: ResultPair,
+        expectedEditor: vscode.TextEditor,
+        actualEditor: vscode.TextEditor
+    ) {
         const diffState = this.diffState.state || {};
         await this.checkEnableDiffEditorCodeLens();
 
@@ -229,13 +245,14 @@ export class DiffHandler {
                     diffs
                 });
             }
-        }
-        else {
+        } else {
             const testInfos = this.plyRoots.getTestInfosForSuite(resultPair.infoId);
             for (const actualTest of await resultPair.actualResult.includedTestNames()) {
-                const testInfo = testInfos.find(ti => ti.label === actualTest);
+                const testInfo = testInfos.find((ti) => ti.label === actualTest);
                 if (!testInfo) {
-                    vscode.window.showErrorMessage(`Test info '${actualTest}' not found in suite: ${resultPair.infoId}`);
+                    vscode.window.showErrorMessage(
+                        `Test info '${actualTest}' not found in suite: ${resultPair.infoId}`
+                    );
                     return;
                 }
                 diffs = diffState[testInfo.id];
@@ -252,24 +269,33 @@ export class DiffHandler {
             }
         }
 
-        this.decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs, !!resultPair.testName);
+        this.decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
     }
 
     async checkEnableDiffEditorCodeLens() {
-        const diffEdSettings = vscode.workspace.getConfiguration('diffEditor', this.workspaceFolder.uri);
+        const diffEdSettings = vscode.workspace.getConfiguration(
+            'diffEditor',
+            this.workspaceFolder.uri
+        );
         if (!diffEdSettings.get('codeLens')) {
             const plySettings = vscode.workspace.getConfiguration('ply');
             let diffCodeLensSetting = plySettings.get('enableDiffEditorCodeLens', 'Prompt');
             if (diffCodeLensSetting === 'Prompt') {
                 let response = await vscode.window.showInformationMessage(
-                    'Ply result comparisons work best with vscode\'s \'diffEditor.codeLens\' setting. Enable for this workspace?',
-                    'Yes', 'No', 'Don\'t ask again'
+                    "Ply result comparisons work best with vscode's 'diffEditor.codeLens' setting. Enable for this workspace?",
+                    'Yes',
+                    'No',
+                    "Don't ask again"
                 );
                 if (response && response !== 'No') {
                     response = response === 'Yes' ? 'Always' : 'Never'; // convert to valid enum
                     if (response !== diffCodeLensSetting) {
                         diffCodeLensSetting = response;
-                        await plySettings.update('enableDiffEditorCodeLens', diffCodeLensSetting, vscode.ConfigurationTarget.Global);
+                        await plySettings.update(
+                            'enableDiffEditorCodeLens',
+                            diffCodeLensSetting,
+                            vscode.ConfigurationTarget.Global
+                        );
                     }
                 }
             }
@@ -280,12 +306,12 @@ export class DiffHandler {
     }
 
     delay(ms: number) {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             this.timer = setTimeout(resolve, ms);
         });
     }
 
-	async checkUpdateDiffDecorations(editor: vscode.TextEditor) {
+    async checkUpdateDiffDecorations(editor: vscode.TextEditor) {
         let resultPair: ResultPair | undefined = undefined;
         let expectedEditor: vscode.TextEditor | undefined = undefined;
         let actualEditor: vscode.TextEditor | undefined = undefined;
@@ -294,7 +320,7 @@ export class DiffHandler {
             const pair = this.resultPairs[i];
             if (pair.expectedUri.toString() === editor.document.uri.toString()) {
                 expectedEditor = editor;
-                actualEditor = vscode.window.visibleTextEditors.find(ed => {
+                actualEditor = vscode.window.visibleTextEditors.find((ed) => {
                     return ed.document.uri.toString() === pair.actualUri.toString();
                 });
                 if (actualEditor) {
@@ -304,7 +330,7 @@ export class DiffHandler {
             }
             if (pair.actualUri.toString() === editor.document.uri.toString()) {
                 actualEditor = editor;
-                expectedEditor = vscode.window.visibleTextEditors.find(ed => {
+                expectedEditor = vscode.window.visibleTextEditors.find((ed) => {
                     return ed.document.uri.toString() === pair.expectedUri.toString();
                 });
                 if (expectedEditor) {

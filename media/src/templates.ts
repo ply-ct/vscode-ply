@@ -1,9 +1,8 @@
 import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Templates {
-
     readonly templatePath: string;
-    private templates = new Map<string,string>();
+    private templates = new Map<string, string>();
 
     constructor(readonly base: string) {
         this.templatePath = `${base}/templates`;
@@ -22,9 +21,11 @@ export class Templates {
             path = `${prefix}${pathOrElement}`;
         } else {
             const flowElement: flowbee.FlowElement = pathOrElement;
-            const flowElementPath = flowElement.type === 'flow' ? 'flow' : (flowElement as any).path || flowElement.type;
+            const flowElementPath =
+                flowElement.type === 'flow'
+                    ? 'flow'
+                    : (flowElement as any).path || flowElement.type;
             path = `${prefix}${flowElementPath}.yaml`;
-
         }
         let template = this.templates.get(path);
         if (!template) {

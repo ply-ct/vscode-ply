@@ -1,0 +1,13 @@
+.DS_Store
+/node_modules
+package-lock.json
+/out
+/notes
+/src/vscode
+/media/css/flowbee.css
+/web/src/shims-vue.d.ts
+.gitignore
+.gitattributes
+.prettierignore
+*.md
+

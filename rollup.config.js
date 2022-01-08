@@ -14,7 +14,7 @@ export default [
             sourcemap: true
         },
 
-        external: [ 'fs', 'util', 'event', 'path', 'net', 'stream', 'buffer', 'string_decoder' ],
+        external: ['fs', 'util', 'event', 'path', 'net', 'stream', 'buffer', 'string_decoder'],
 
         plugins: [
             resolve(),

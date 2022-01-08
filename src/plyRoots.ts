@@ -1,6 +1,6 @@
 import { URI as Uri } from 'vscode-uri';
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
-import { Suite, Request, Case, Step, Test } from 'ply-ct';
+import { Suite, Request, Case, Step, Test } from '@ply-ct/ply';
 
 export type Info = TestInfo | TestSuiteInfo;
 
@@ -10,15 +10,19 @@ export type Info = TestInfo | TestSuiteInfo;
  * Tests all have ids that are their plyee's non-encoded uri string.
  */
 export class PlyRoot {
-
-    public readonly baseSuite: TestSuiteInfo;
+    readonly baseSuite: TestSuiteInfo;
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
      * @param id qualifier (should not contain '/', '#' or '|' characters)
      * @param label for ui
      */
-    constructor(public readonly uri: Uri, public readonly id: string, public readonly label: string, debuggable = false) {
+    constructor(
+        readonly uri: Uri,
+        readonly id: string,
+        readonly label: string,
+        readonly debuggable = false
+    ) {
         this.baseSuite = {
             type: 'suite',
             id: this.id,
@@ -34,13 +38,18 @@ export class PlyRoot {
      * Relies on Uris coming in already sorted by shortest segment count first, then alpha.
      * Within files requests/cases should be sorted by the order they appear in the file.
      */
-    build(testUris: [Uri, number][], suiteLabeler?: (suiteId: string) => string, testLabeler?: (suiteId: string) => string) {
-
+    build(
+        testUris: [Uri, number][],
+        customSchemes?: boolean,
+        suiteLabeler?: (suiteId: string) => string,
+        testLabeler?: (suiteId: string) => string
+    ) {
         // clear children in case reload
         this.baseSuite.children = [];
 
         for (let i = 0; i < testUris.length; i++) {
-            const testUri = testUris[i][0];
+            const query = testUris[i][0].query;
+            const testUri = testUris[i][0].with({ query: '' });
             const testPath = this.relativize(testUri);
             const lastHash = testPath.lastIndexOf('#');
             const testName = testPath.substring(lastHash + 1);
@@ -53,9 +62,12 @@ export class PlyRoot {
                 line: testUris[i][1],
                 debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
-            if (this.id === 'flows') {
+            if (this.id === 'requests' && customSchemes && testUri.scheme === 'file') {
+                // request files should be open in request editor
+                test.file = testUri.with({ scheme: 'ply-dummy' }).toString(true);
+            } else if (this.id === 'flows' && customSchemes && testUri.scheme === 'file') {
                 // flows should not be opened in text editor
-                test.file = testUri.scheme === 'file' ? testUri.with({ scheme: 'ply-flow' }).toString(true) : testUri.toString(true);
+                test.file = testUri.with({ scheme: 'ply-dummy', query }).toString(true);
             } else {
                 test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
             }
@@ -68,11 +80,10 @@ export class PlyRoot {
             const fileName = testPath.substring(lastSlash + 1, lastHash);
             const filePath = testPath.substring(0, lastHash);
             const fileUri = Uri.parse(this.uri.toString(true) + '/' + filePath);
-            let suite = this.findSuite(suite => suite.id === this.formSuiteId(fileUri));
+            let suite = this.findSuite((suite) => suite.id === this.formSuiteId(fileUri));
             if (suite) {
                 suite.children.push(test);
-            }
-            else {
+            } else {
                 const suiteId = this.formSuiteId(fileUri);
                 suite = {
                     type: 'suite',
@@ -82,17 +93,19 @@ export class PlyRoot {
                     line: 0,
                     children: []
                 };
-                if (this.id === 'flows') {
+                if (this.id === 'flows' && fileUri.scheme === 'file') {
                     // flows should not be opened in text editor
-                    suite.file = fileUri.scheme === 'file' ? fileUri.with({ scheme: 'ply-flow' }).toString(true) : fileUri.toString(true);
-
+                    suite.file = testUri.with({ scheme: 'ply-dummy' }).toString(true);
                 } else {
-                    suite.file = fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
+                    suite.file =
+                        fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
                 }
                 if (suiteLabeler) {
                     suite.description = fileName;
                 }
-                suite.children.push(test);
+                if (!suite.file.endsWith('.ply')) {
+                    suite.children.push(test);
+                }
 
                 // find parent suite (dir)
                 const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -101,7 +114,7 @@ export class PlyRoot {
                 if (dirPath === '') {
                     parentSuite = this.baseSuite;
                 } else {
-                    parentSuite = this.findSuite(suite => suite.id === this.formSuiteId(dirUri));
+                    parentSuite = this.findSuite((suite) => suite.id === this.formSuiteId(dirUri));
                 }
                 if (!parentSuite) {
                     parentSuite = {
@@ -109,14 +122,20 @@ export class PlyRoot {
                         id: this.formSuiteId(dirUri),
                         label: dirPath,
                         debuggable: false,
-                        children: [],
+                        children: []
                     };
                     this.baseSuite.children.push(parentSuite);
                 }
-                if (suite) {
-                    parentSuite.children.push(suite);
-                } else {
+                if (suite.file.endsWith('.ply')) {
+                    let filename = Uri.file(suite.file).path;
+                    const lastSlash = filename.lastIndexOf('/');
+                    if (lastSlash >= 0) {
+                        filename = filename.substring(lastSlash + 1);
+                    }
+                    test.description = filename;
                     parentSuite.children.push(test);
+                } else {
+                    parentSuite.children.push(suite);
                 }
             }
         }
@@ -141,13 +160,15 @@ export class PlyRoot {
         return this.findSuiteFrom(this.baseSuite, test);
     }
 
-    findSuiteFrom(start: TestSuiteInfo, test: (suite: TestSuiteInfo) => boolean): TestSuiteInfo | undefined {
+    findSuiteFrom(
+        start: TestSuiteInfo,
+        test: (suite: TestSuiteInfo) => boolean
+    ): TestSuiteInfo | undefined {
         if (test(start)) {
             return start;
-        }
-        else {
-            for (const childSuite of start.children.filter(child => child.type === 'suite')) {
-                const foundSuite = this.findSuiteFrom((childSuite as TestSuiteInfo), test);
+        } else {
+            for (const childSuite of start.children.filter((child) => child.type === 'suite')) {
+                const foundSuite = this.findSuiteFrom(childSuite as TestSuiteInfo, test);
                 if (foundSuite) {
                     return foundSuite;
                 }
@@ -163,8 +184,7 @@ export class PlyRoot {
     findFrom(start: Info, test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
         if (test(start)) {
             return start;
-        }
-        else if (start.type === 'suite') {
+        } else if (start.type === 'suite') {
             for (const child of start.children) {
                 const found = this.findFrom(child, test);
                 if (found) {
@@ -182,8 +202,7 @@ export class PlyRoot {
         let infos: Info[] = [];
         if (test(start)) {
             infos.push(start);
-        }
-        else if (start.type === 'suite') {
+        } else if (start.type === 'suite') {
             for (const child of start.children) {
                 infos = [...infos, ...this.filterFrom(child, test)];
             }
@@ -229,22 +248,22 @@ export class PlyRoot {
  * Per one workspace folder.  Currently only has local requests.
  */
 export class PlyRoots {
+    readonly roots: PlyRoot[] = [];
+    readonly requestsRoot: PlyRoot;
+    readonly casesRoot: PlyRoot;
+    readonly flowsRoot: PlyRoot;
+    readonly rootSuite: TestSuiteInfo;
+    requestsScheme = true;
 
-    public readonly roots: PlyRoot[] = [];
-    public readonly requestsRoot: PlyRoot;
-    public readonly casesRoot: PlyRoot;
-    public readonly flowsRoot: PlyRoot;
-    public readonly rootSuite: TestSuiteInfo;
-
-    private readonly testsById = new Map<string,Test>();
-    private readonly suitesByTestOrSuiteId = new Map<string,Suite<Request|Case|Step>>();
-    private readonly suiteIdsByExpectedResultUri = new Map<string,string>();
-    private readonly suiteIdsByActualResultUri = new Map<string,string>();
+    private readonly testsById = new Map<string, Test>();
+    private readonly suitesByTestOrSuiteId = new Map<string, Suite<Request | Case | Step>>();
+    private readonly suiteIdsByExpectedResultUri = new Map<string, string>();
+    private readonly suiteIdsByActualResultUri = new Map<string, string>();
 
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
      */
-    constructor(public readonly uri: Uri) {
+    constructor(readonly uri: Uri) {
         this.rootSuite = {
             type: 'suite',
             id: `Ply:${uri.toString(true)}`,
@@ -260,7 +279,12 @@ export class PlyRoots {
         this.roots.push(this.flowsRoot);
     }
 
-    build(requestSuites: Map<Uri,Suite<Request>>, caseSuites: Map<Uri,Suite<Case>>, flowSuites: Map<Uri,Suite<Step>>) {
+    build(
+        requestSuites: Map<Uri, Suite<Request>>,
+        caseSuites: Map<Uri, Suite<Case>>,
+        flowSuites: Map<Uri, Suite<Step>>,
+        customSchemes: boolean
+    ) {
         this.testsById.clear();
         this.suitesByTestOrSuiteId.clear();
         this.suiteIdsByExpectedResultUri.clear();
@@ -274,8 +298,14 @@ export class PlyRoots {
             if (suite) {
                 const suiteId = this.requestsRoot.formSuiteId(requestSuiteUri);
                 this.suitesByTestOrSuiteId.set(suiteId, suite);
-                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
-                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
+                this.suiteIdsByExpectedResultUri.set(
+                    Uri.file(suite.runtime.results.expected.location.absolute).toString(),
+                    suiteId
+                );
+                this.suiteIdsByActualResultUri.set(
+                    Uri.file(suite.runtime.results.actual.location.absolute).toString(),
+                    suiteId
+                );
                 for (const request of suite) {
                     const testId = requestSuiteUri.toString(true) + '#' + request.name;
                     this.testsById.set(testId, request);
@@ -284,7 +314,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.requestsRoot.build(requestUris);
+        this.requestsRoot.build(requestUris, customSchemes);
 
         // cases
         const caseSuiteUris = Array.from(caseSuites.keys());
@@ -294,8 +324,14 @@ export class PlyRoots {
             if (suite) {
                 const suiteId = this.casesRoot.formSuiteId(caseSuiteUri);
                 this.suitesByTestOrSuiteId.set(suiteId, suite);
-                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
-                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
+                this.suiteIdsByExpectedResultUri.set(
+                    Uri.file(suite.runtime.results.expected.location.absolute).toString(),
+                    suiteId
+                );
+                this.suiteIdsByActualResultUri.set(
+                    Uri.file(suite.runtime.results.actual.location.absolute).toString(),
+                    suiteId
+                );
                 for (const plyCase of suite) {
                     const testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
                     this.testsById.set(testId, plyCase);
@@ -304,7 +340,11 @@ export class PlyRoots {
                 }
             }
         }
-        this.casesRoot.build(caseUris, suiteId => this.suitesByTestOrSuiteId.get(suiteId)!.name);
+        this.casesRoot.build(
+            caseUris,
+            false,
+            (suiteId) => this.suitesByTestOrSuiteId.get(suiteId)!.name
+        );
 
         // flows
         const flowSuiteUris = Array.from(flowSuites.keys());
@@ -314,22 +354,35 @@ export class PlyRoots {
             if (suite) {
                 const suiteId = this.flowsRoot.formSuiteId(flowSuiteUri);
                 this.suitesByTestOrSuiteId.set(suiteId, suite);
-                this.suiteIdsByExpectedResultUri.set(Uri.file(suite.runtime.results.expected.location.absolute).toString(), suiteId);
-                this.suiteIdsByActualResultUri.set(Uri.file(suite.runtime.results.actual.location.absolute).toString(), suiteId);
-                for (const plyFlow of suite) {
-                    const testId = flowSuiteUri.toString(true) + '#' + plyFlow.name;
-                    this.testsById.set(testId, plyFlow);
+                this.suiteIdsByExpectedResultUri.set(
+                    Uri.file(suite.runtime.results.expected.location.absolute).toString(),
+                    suiteId
+                );
+                this.suiteIdsByActualResultUri.set(
+                    Uri.file(suite.runtime.results.actual.location.absolute).toString(),
+                    suiteId
+                );
+                for (const plyStep of suite) {
+                    const testId = flowSuiteUri.toString(true) + '#' + plyStep.name;
+                    this.testsById.set(testId, plyStep);
                     this.suitesByTestOrSuiteId.set(testId, suite);
-                    flowUris.push([Uri.parse(testId), plyFlow.start || 0]);
+                    let stepUri = Uri.parse(testId);
+                    if (plyStep.step.path === 'request') {
+                        stepUri = stepUri.with({ query: 'request' });
+                    }
+                    flowUris.push([stepUri, plyStep.start || 0]);
                 }
             }
         }
-        this.flowsRoot.build(flowUris, undefined, testId => {
+        this.flowsRoot.build(flowUris, customSchemes, undefined, (testId) => {
             const test = this.testsById.get(testId) as Step;
-            return (test.subflow ? `${test.subflow.name} → ` : '') + test.step.name.replace(/\r?\n/g, ' ');
+            return (
+                (test.subflow ? `${test.subflow.name} → ` : '') +
+                test.step.name.replace(/\r?\n/g, ' ')
+            );
         });
 
-        this.rootSuite.children = this.roots.map(root => root.baseSuite);
+        this.rootSuite.children = this.roots.map((root) => root.baseSuite);
     }
 
     find(test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
@@ -342,6 +395,17 @@ export class PlyRoots {
                 return testOrSuite;
             }
         }
+    }
+
+    findForFile(file: string): Info | undefined {
+        return this.find((info) => {
+            if (info.file) {
+                const f = Uri.parse(info.file).with({ scheme: 'file', fragment: null });
+                return f.fsPath === file;
+            } else {
+                return false;
+            }
+        });
     }
 
     filter(test: (testOrSuiteInfo: Info) => boolean): Info[] {
@@ -360,7 +424,7 @@ export class PlyRoots {
             return this.rootSuite;
         }
         for (const plyRoot of this.roots) {
-            const testOrSuite = plyRoot.find(t => t.id === id);
+            const testOrSuite = plyRoot.find((t) => t.id === id);
             if (testOrSuite) {
                 return testOrSuite;
             }
@@ -371,7 +435,7 @@ export class PlyRoots {
         return this.testsById.get(testId);
     }
 
-    getSuite(testOrSuiteId: string): Suite<Request|Case|Step> | undefined {
+    getSuite(testOrSuiteId: string): Suite<Request | Case | Step> | undefined {
         return this.suitesByTestOrSuiteId.get(testOrSuiteId);
     }
 
@@ -404,23 +468,24 @@ export class PlyRoots {
      */
     getSuiteFileInfos(testOrSuiteIds: string[], suites: TestSuiteInfo[] = []): TestSuiteInfo[] {
         for (const testOrSuiteId of testOrSuiteIds) {
-            const testOrSuite = this.find(i => i.id === testOrSuiteId);
+            const testOrSuite = this.find((i) => i.id === testOrSuiteId);
             if (testOrSuite) {
                 if (testOrSuite.type === 'suite') {
-                    if (testOrSuite.file && !suites.find(suite => suite.id === testOrSuite.id)) {
+                    if (testOrSuite.file && !suites.find((suite) => suite.id === testOrSuite.id)) {
                         suites.push(testOrSuite);
                     } else {
-                        const childSuites = this.getSuiteFileInfos(testOrSuite.children.map(c => c.id)).filter(s => {
+                        const childSuites = this.getSuiteFileInfos(
+                            testOrSuite.children.map((c) => c.id)
+                        ).filter((s) => {
                             // honor skip when executing from parent suite (not explicitly running test or suite)
                             const suite = this.getSuite(s.id);
                             return suite && !suite.skip;
                         });
-                        suites = [ ...suites, ...childSuites ];
+                        suites = [...suites, ...childSuites];
                     }
-
                 } else if (testOrSuite.type === 'test') {
                     const suite = this.getParent(testOrSuiteId);
-                    if (suite && !suites.find(suite => suite.id === testOrSuite.id)) {
+                    if (suite && !suites.find((suite) => suite.id === testOrSuite.id)) {
                         suites.push(suite);
                     }
                 }
@@ -439,7 +504,7 @@ export class PlyRoots {
             if (parent) {
                 let ancestor = this.getParent(parent.id);
                 while (ancestor) {
-                    if (!(ancestors.find(a => a.id === ancestor!.id))) {
+                    if (!ancestors.find((a) => a.id === ancestor!.id)) {
                         ancestors.push(ancestor);
                     }
                     ancestor = this.getParent(ancestor.id);
@@ -450,7 +515,7 @@ export class PlyRoots {
     }
 
     getSuiteInfo(suiteId: string): TestSuiteInfo | undefined {
-        const testOrSuite = this.find(i => i.id === suiteId);
+        const testOrSuite = this.find((i) => i.id === suiteId);
         if (testOrSuite && testOrSuite.type === 'suite') {
             return testOrSuite;
         }
@@ -489,7 +554,11 @@ export class PlyRoots {
     }
 
     static fromUri(uri: Uri): string {
-        const rootId = uri.path.endsWith('.flow') ? 'flows' : (uri.path.endsWith('.ts') ? 'cases' : 'requests');
+        const rootId = uri.path.endsWith('.flow')
+            ? 'flows'
+            : uri.path.endsWith('.ts')
+            ? 'cases'
+            : 'requests';
         return `${rootId}|${uri.toString(true)}`;
     }
 }

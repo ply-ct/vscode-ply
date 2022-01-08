@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Use this for standalone testing in browser
+     http://localhost:10001/test/request.html
+     (enable serve in rollup.config.js)
+  -->
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="light.css" rel="stylesheet" />
+    <link href="/out/flowbee.css" rel="stylesheet" />
+    <link href="/out/bundle.css" rel="stylesheet" />
+    <link href="/out/style.css" rel="stylesheet" />
+    <title>Ply Request</title>
+    <script>
+      const acquireVsCodeApi = () => {
+        return {
+          postMessage: (obj) => {
+            console.log('RECEIVED: ' + JSON.stringify(obj, null, 2));
+            if (obj.type === 'ready') {
+              const evt = new CustomEvent('message');
+              evt.data = {
+                type: 'update',
+                options: { base: '', indent: 2 },
+                file: '/Users/donald/ply/ply-demo/test/plyRequests/movies-api.ply',
+                text: 'createMovie:\n  url: ${baseUrl}/movies\n  method: POST\n  headers:\n    Accept: application/json\n    Content-Type: application/json\n  body: |-\n    {\n      "credits": [\n        {\n          "name": "Alan Crosland",\n          "role": "director"\n        },\n        {\n          "name": "Warren William",\n          "role": "actor"\n        },\n        {\n          "name": "Mary Astor",\n          "role": "actor"\n        },\n        {\n          "name": "Allen Jenkins",\n          "role": "actor"\n        },\n        {\n          "name": "Grant Mitchell",\n          "role": "actor"\n        },\n        {\n          "name": "Helen Trenholme",\n          "role": "actor"\n        }\n      ],\n      "poster": "cothd.jpg",\n      "title": "The Case of the Howling Dog",\n      "webRef": {\n        "ref": "tt0024958",\n        "site": "imdb.com"\n      },\n      "year": 1934\n    }\nupdateMovie:\n  url: ${baseUrl}/movies/${movieId}\n  method: PATCH\n  headers:\n    Accept: application/json\n    Content-Type: application/json\n  body: |-\n    {\n      "rating": ${rating}\n    }\nretrieveMovie:\n  url: ${baseUrl}/movies/${movieId}\n  method: GET\n  headers:\n    Accept: application/json\ndeleteMovie:\n  url: ${baseUrl}/movies/${movieId}\n  method: DELETE\n  headers:\n    Accept: application/json\nreplaceMovie:\n  url: ${baseUrl}/movies/${movieId}\n  method: PUT\n  headers:\n    Accept: application/json\n    Content-Type: application/json\n  body: |-\n    {\n      "credits": [\n        {\n          "name": "Alan Crosland",\n          "role": "director"\n        },\n        {\n          "name": "Warren William",\n          "role": "actor"\n        },\n        {\n          "name": "Mary Astor",\n          "role": "actor"\n        },\n        {\n          "name": "Allen Jenkins",\n          "role": "actor"\n        },\n        {\n          "name": "Grant Mitchell",\n          "role": "actor"\n        },\n        {\n          "name": "Helen Trenholme",\n          "role": "actor"\n        }\n      ],\n      "id": "${id}",\n      "poster": "cothd.jpg",\n      "rating": ${rating},\n      "title": "The Case of the Howling Dog",\n      "webRef": {\n        "ref": "tt0024958",\n        "site": "imdb.com"\n      },\n      "year": 1934\n    }\n',
+                readonly: false
+              };
+              window.dispatchEvent(evt);
+            }
+          }
+        };
+      };
+    </script>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/out/bundle.js"></script>
+  </body>
+</html>

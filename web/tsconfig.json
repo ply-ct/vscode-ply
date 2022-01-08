@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "noEmit": true,
+    "strict": true,
+    "lib": ["dom", "es2020"],
+    "sourceMap": true,
+    "allowJs": true
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}

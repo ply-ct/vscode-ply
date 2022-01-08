@@ -1,6 +1,5 @@
 import * as flowbee from 'flowbee/dist/nostyles';
 
-// TODO move this to vscode-ply
 export const descriptors: flowbee.Descriptor[] = [
     flowbee.start,
     flowbee.stop,
@@ -12,7 +11,7 @@ export const descriptors: flowbee.Descriptor[] = [
         path: 'request',
         name: 'Request',
         icon: 'request.svg'
-    },
+    }
     /*
     {
         type: 'step',

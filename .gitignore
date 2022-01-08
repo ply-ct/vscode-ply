@@ -6,3 +6,4 @@ dist
 *.vsix
 npm-debug.log*
 /notes/
+.parcel-cache

@@ -13,5 +13,5 @@ export const Decorations = {
         borderColor: Colors.matchBorder,
         borderWidth: '1px',
         borderStyle: 'solid'
-      })
+    })
 };

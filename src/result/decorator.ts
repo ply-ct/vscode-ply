@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as ply from 'ply-ct';
+import * as ply from '@ply-ct/ply';
 import { DiffComputer } from '../vscode/diffComputer';
 
 export type ResultDiffs = {
@@ -9,7 +9,7 @@ export type ResultDiffs = {
     actualStart: number;
     actualEnd: number;
     diffs: ply.Diff[];
-}
+};
 
 class Decorations {
     expected: vscode.DecorationOptions[] = [];
@@ -23,8 +23,12 @@ class Decorations {
         this.actual.push({ range: new vscode.Range(start, end) });
     }
 
-    undiff(expectedLineNo: number, actualLineNo: number, expectedLines: string[], actualLines: string[]) {
-
+    undiff(
+        expectedLineNo: number,
+        actualLineNo: number,
+        expectedLines: string[],
+        actualLines: string[]
+    ) {
         const diffComputer = new DiffComputer(expectedLines, actualLines, {
             shouldComputeCharChanges: true,
             shouldPostProcessCharChanges: true,
@@ -39,41 +43,71 @@ class Decorations {
             if (change.charChanges) {
                 for (const charChange of change.charChanges) {
                     // zero line/column indicates changes are only on the other side (1-based)
-                    const originalStartLine = (charChange.originalStartLineNumber || charChange.modifiedStartLineNumber) || 1;
+                    const originalStartLine =
+                        charChange.originalStartLineNumber ||
+                        charChange.modifiedStartLineNumber ||
+                        1;
                     const originalStartColumn = charChange.originalStartColumn || 1;
-                    const originalEndLine = (charChange.originalEndLineNumber || charChange.modifiedEndLineNumber) || 1;
+                    const originalEndLine =
+                        charChange.originalEndLineNumber || charChange.modifiedEndLineNumber || 1;
                     const originalEndColumn = charChange.originalEndColumn || 1;
                     this.applyExpected(
-                        new vscode.Position(expectedLineNo + originalStartLine - 1, originalStartColumn - 1),
-                        new vscode.Position(expectedLineNo + originalEndLine - 1, originalEndColumn - 1)
+                        new vscode.Position(
+                            expectedLineNo + originalStartLine - 1,
+                            originalStartColumn - 1
+                        ),
+                        new vscode.Position(
+                            expectedLineNo + originalEndLine - 1,
+                            originalEndColumn - 1
+                        )
                     );
 
-                    const modifiedStartLine = (charChange.modifiedStartLineNumber || charChange.originalStartLineNumber) || 1;
+                    const modifiedStartLine =
+                        charChange.modifiedStartLineNumber ||
+                        charChange.originalStartLineNumber ||
+                        1;
                     const modifiedStartColumn = charChange.modifiedStartColumn || 1;
-                    const modifiedEndLine = (charChange.modifiedEndLineNumber || charChange.originalEndLineNumber) || 1;
+                    const modifiedEndLine =
+                        charChange.modifiedEndLineNumber || charChange.originalEndLineNumber || 1;
                     const modifiedEndColumn = charChange.modifiedEndColumn || 1;
                     this.applyActual(
-                        new vscode.Position(actualLineNo + modifiedStartLine - 1, modifiedStartColumn - 1),
-                        new vscode.Position(actualLineNo + modifiedEndLine - 1, modifiedEndColumn - 1)
+                        new vscode.Position(
+                            actualLineNo + modifiedStartLine - 1,
+                            modifiedStartColumn - 1
+                        ),
+                        new vscode.Position(
+                            actualLineNo + modifiedEndLine - 1,
+                            modifiedEndColumn - 1
+                        )
                     );
                 }
             }
         }
     }
 
-    warn(expectedLineNo: number, actualLineNo: number, removedLines: string[], addedLines: string[]) {
+    warn(
+        expectedLineNo: number,
+        actualLineNo: number,
+        removedLines: string[],
+        addedLines: string[]
+    ) {
         removedLines.forEach((_, i) => {
-            this.applyExpected(new vscode.Position(expectedLineNo + i, 0), new vscode.Position(expectedLineNo + i, 0));
+            this.applyExpected(
+                new vscode.Position(expectedLineNo + i, 0),
+                new vscode.Position(expectedLineNo + i, 0)
+            );
         }, this);
 
         addedLines.forEach((_, i) => {
-            this.applyActual(new vscode.Position(actualLineNo + i, 0), new vscode.Position(actualLineNo + i, 0));
+            this.applyActual(
+                new vscode.Position(actualLineNo + i, 0),
+                new vscode.Position(actualLineNo + i, 0)
+            );
         });
     }
 }
 
 export class ResultDecorator {
-
     private disposables: { dispose(): void }[] = [];
 
     private readonly ignoredDiffDecorator: vscode.TextEditorDecorationType;
@@ -133,7 +167,11 @@ export class ResultDecorator {
      * @param actualEditor
      * @param resultDiffs
      */
-    applyDecorations(expectedEditor: vscode.TextEditor, actualEditor: vscode.TextEditor, resultDiffs: ResultDiffs[], isFragment: boolean) {
+    applyDecorations(
+        expectedEditor: vscode.TextEditor,
+        actualEditor: vscode.TextEditor,
+        resultDiffs: ResultDiffs[]
+    ) {
         const ignoredDecorations = new Decorations();
         const legitDecorations = new Decorations();
 
@@ -144,7 +182,12 @@ export class ResultDecorator {
             const warningDecorations = [];
             if (resultDiffs.length === 0) {
                 const char = expectedAll[0].length;
-                warningDecorations.push({ range: new vscode.Range(new vscode.Position(0, char), new vscode.Position(0, char))});
+                warningDecorations.push({
+                    range: new vscode.Range(
+                        new vscode.Position(0, char),
+                        new vscode.Position(0, char)
+                    )
+                });
             }
             expectedEditor.setDecorations(this.noDiffStateDecorator, warningDecorations);
         }
@@ -155,7 +198,10 @@ export class ResultDecorator {
             if (resultDiff.diffs.length > 0) {
                 for (let i = 0; i < resultDiff.diffs.length; i++) {
                     const diff = resultDiff.diffs[i];
-                    const expectedLines = expectedAll.slice(expectedLineNo, expectedLineNo + diff.count);
+                    const expectedLines = expectedAll.slice(
+                        expectedLineNo,
+                        expectedLineNo + diff.count
+                    );
                     const actualLines = actualAll.slice(actualLineNo, actualLineNo + diff.count);
                     // TODO: what if running line count is different for expected vs actual (see ply compare code)
                     if (diff.removed && i < resultDiff.diffs.length - 1) {
@@ -163,29 +209,35 @@ export class ResultDecorator {
                         if (nextDiff.added) {
                             // has corresponding add
                             if (diff.ignored && nextDiff.ignored) {
-                                ignoredDecorations.undiff(expectedLineNo, actualLineNo, expectedLines, actualLines);
-                            }
-                            else {
+                                ignoredDecorations.undiff(
+                                    expectedLineNo,
+                                    actualLineNo,
+                                    expectedLines,
+                                    actualLines
+                                );
+                            } else {
                                 // diff not ignored
-                                legitDecorations.warn(expectedLineNo, actualLineNo, expectedLines, actualLines);
+                                legitDecorations.warn(
+                                    expectedLineNo,
+                                    actualLineNo,
+                                    expectedLines,
+                                    actualLines
+                                );
                             }
                             i++; // skip corresponding add
                             expectedLineNo += diff.count;
                             actualLineNo += diff.count;
-                        }
-                        else {
+                        } else {
                             // straight removal
                             legitDecorations.warn(expectedLineNo, actualLineNo, expectedLines, []);
                             expectedLineNo += diff.count;
                         }
-                    }
-                    else {
+                    } else {
                         if (diff.added) {
                             // added without previous remove
                             legitDecorations.warn(expectedLineNo, actualLineNo, [], actualLines);
                             actualLineNo += diff.count;
-                        }
-                        else {
+                        } else {
                             // no diff could be because comments were ignored, do the same here
                             // (ignore trailing comments on both sides)
                             const expectedCodeLines = new ply.Code(expectedLines, '#').lines;
@@ -199,16 +251,21 @@ export class ResultDecorator {
                                         ignoredDecorations.undiff(
                                             expectedLineNo + j,
                                             actualLineNo + j,
-                                            [expectedCodeLine.code + expectedCodeLine.comment || ''],
-                                            [actualCodeLine.code + actualCodeLine.comment || '']
+                                            [
+                                                expectedCodeLine.code +
+                                                    (expectedCodeLine.comment || '')
+                                            ],
+                                            [actualCodeLine.code + (actualCodeLine.comment || '')]
                                         );
-                                    }
-                                    else {
+                                    } else {
                                         legitDecorations.warn(
                                             expectedLineNo + j,
                                             actualLineNo + j,
-                                            [expectedCodeLine.code + expectedCodeLine.comment || ''],
-                                            [actualCodeLine.code + actualCodeLine.comment || '']
+                                            [
+                                                expectedCodeLine.code +
+                                                    (expectedCodeLine.comment || '')
+                                            ],
+                                            [actualCodeLine.code + (actualCodeLine.comment || '')]
                                         );
                                     }
                                 }
@@ -218,16 +275,10 @@ export class ResultDecorator {
                         }
                     }
                 }
-            }
-            else {
-                // all diffs ignored
-                if (isFragment) {
-                    const expectedLines = expectedAll.slice(expectedLineNo, resultDiff.expectedEnd);
-                    const actualLines = actualAll.slice(actualLineNo, resultDiff.actualEnd);
-                    ignoredDecorations.undiff(expectedLineNo, actualLineNo, expectedLines, actualLines);
-                } else {
-                    ignoredDecorations.undiff(0, 0, expectedAll, actualAll);
-                }
+            } else {
+                const expectedLines = expectedAll.slice(expectedLineNo, resultDiff.expectedEnd);
+                const actualLines = actualAll.slice(actualLineNo, resultDiff.actualEnd);
+                ignoredDecorations.undiff(expectedLineNo, actualLineNo, expectedLines, actualLines);
             }
         }
 

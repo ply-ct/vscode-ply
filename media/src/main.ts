@@ -1,7 +1,7 @@
 import * as flowbee from 'flowbee/dist/nostyles';
 import { Options } from './options';
 import { Templates } from './templates';
-import { Splitter } from './splitter';
+import { FlowSplitter, ToolboxSplitter } from './splitter';
 import {
     DrawingTools,
     OptionToggleEvent,
@@ -11,8 +11,8 @@ import {
 } from './actions';
 import { descriptors } from './descriptors';
 import { MenuProvider } from './menu';
+import { Request } from './request';
 import { Values } from './values';
-import { configuratorDefault } from 'flowbee/dist/options';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -20,7 +20,9 @@ const vscode = acquireVsCodeApi();
 let templates: Templates;
 let values: Values;
 
-interface Confirmation { result: boolean }
+interface Confirmation {
+    result: boolean;
+}
 const dlgEvt = new flowbee.TypedEvent<Confirmation>();
 
 class DialogProvider implements flowbee.DialogProvider {
@@ -28,8 +30,8 @@ class DialogProvider implements flowbee.DialogProvider {
         vscode.postMessage({ type: 'alert', message });
     }
     async confirm(message: flowbee.DialogMessage): Promise<boolean> {
-        const promise = new Promise<boolean>(resolve => {
-            dlgEvt.once(e =>  {
+        const promise = new Promise<boolean>((resolve) => {
+            dlgEvt.once((e) => {
                 resolve(e.result);
             });
         });
@@ -39,43 +41,75 @@ class DialogProvider implements flowbee.DialogProvider {
 }
 
 let oldFlow: flowbee.Disposable;
+let requests: (flowbee.Descriptor & { request: Request })[] = [];
 
 export class Flow implements flowbee.Disposable {
-
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
     readonly flowActions?: FlowActions;
     private readonly drawingTools?: DrawingTools;
     private readonly toolbox?: flowbee.Toolbox;
+    private requestsToolbox?: flowbee.Toolbox;
     private disposables: flowbee.Disposable[] = [];
     static configurator?: flowbee.Configurator;
 
     /**
      * @param readonly file is readonly
      */
-    constructor(private base: string, readonly websocketPort: number, text: string, private file: string, private readonly: boolean) {
+    constructor(
+        private base: string,
+        readonly websocketPort: number,
+        text: string,
+        private file: string,
+        private readonly: boolean
+    ) {
         oldFlow?.dispose();
         oldFlow = this;
         const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
-        this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
+        this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
 
         // configurator
         if (!Flow.configurator) {
-            Flow.configurator = new flowbee.Configurator(document.getElementById('flow-diagram') as HTMLElement);
+            Flow.configurator = new flowbee.Configurator(
+                document.getElementById('flow-diagram') as HTMLElement
+            );
         }
-        this.disposables.push(Flow.configurator.onFlowElementUpdate(_e => this.updateFlow()));
-        this.disposables.push(Flow.configurator.onReposition(repositionEvent => {
-            updateState( {
-                configurator: {
-                    open: !!repositionEvent.position,
-                    position: repositionEvent.position
+        this.disposables.push(
+            Flow.configurator.onFlowElementUpdate((e) => {
+                if (e.action === 'edit_request') {
+                    let id = this.flowDiagram.flow.steps?.find((s) => s.id === e.element.id)?.id;
+                    if (!id && this.flowDiagram.flow.subflows) {
+                        for (const subflow of this.flowDiagram.flow.subflows) {
+                            id = subflow.steps?.find((s) => s.id === e.element.id)?.id;
+                            if (id) {
+                                id = `${subflow.id}.${id}`;
+                                break;
+                            }
+                        }
+                    }
+                    vscode.postMessage({ type: 'edit', element: 'request', target: id });
+                } else {
+                    this.updateFlow();
                 }
-            });
-        }));
+            })
+        );
+        this.disposables.push(
+            Flow.configurator.onReposition((repositionEvent) => {
+                updateState({
+                    configurator: {
+                        open: !!repositionEvent.position,
+                        position: repositionEvent.position
+                    }
+                });
+            })
+        );
 
         // theme-based icons (lastly make flow header visible)
-        const toolImgs = [ ...document.querySelectorAll('input[type=image]'), ...document.querySelectorAll('img') ] as HTMLInputElement[];
+        const toolImgs = [
+            ...document.querySelectorAll('input[type=image]'),
+            ...document.querySelectorAll('img')
+        ] as HTMLInputElement[];
         for (const toolImg of toolImgs) {
             if (toolImg.hasAttribute('data-icon')) {
                 const icon = toolImg.getAttribute('data-icon') as string;
@@ -87,27 +121,79 @@ export class Flow implements flowbee.Disposable {
 
         // diagram
         const canvasElement = document.getElementById('diagram-canvas') as HTMLCanvasElement;
-        this.flowDiagram = new flowbee.FlowDiagram(text, canvasElement, file, descriptors, this.options.diagramOptions);
-        this.disposables.push(this.flowDiagram.onFlowChange(_e => this.updateFlow()));
+        this.flowDiagram = new flowbee.FlowDiagram(
+            text,
+            canvasElement,
+            file,
+            descriptors,
+            this.options.diagramOptions
+        );
+        this.disposables.push(this.flowDiagram.onFlowChange((_e) => this.updateFlow()));
+        this.disposables.push(
+            this.flowDiagram.onFlowElementAdd((onAdd) => {
+                if (onAdd.descriptor.link) {
+                    // dragged from requests toolpane
+                    const request = requests.find((req) => {
+                        return req.link?.url && req.link.url === onAdd.descriptor.link?.url;
+                    });
+                    if (request) {
+                        if (!onAdd.element.attributes) onAdd.element.attributes = {};
+                        onAdd.element.attributes.url = request.request.url;
+                        onAdd.element.attributes.method = request.request.method;
+                        if (request.request.headers) {
+                            const headers: string[][] = [];
+                            Object.keys(request.request.headers).forEach((header) => {
+                                headers.push([header, request.request.headers[header]]);
+                            });
+                            onAdd.element.attributes.headers = JSON.stringify(headers);
+                        }
+                        if (request.request.body) {
+                            onAdd.element.attributes.body = request.request.body;
+                        }
+                    }
+                }
+                this.updateConfigurator(
+                    onAdd.element,
+                    undefined,
+                    onAdd.descriptor.path === 'request'
+                );
+            })
+        );
+
         this.flowDiagram.dialogProvider = new DialogProvider();
-        const menuProvider = new MenuProvider(this.flowDiagram, this.updateConfigurator, templates, this.options);
+        const menuProvider = new MenuProvider(
+            this.flowDiagram,
+            this.updateConfigurator,
+            templates,
+            this.options
+        );
         this.flowDiagram.contextMenuProvider = menuProvider;
-        this.disposables.push(this.flowDiagram.onFlowElementSelect(async flowElementSelect => {
-            updateState( { selected: { id: flowElementSelect.element.id }});
-            if (Flow.configurator) {
-                this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
-            }
-        }));
-        this.disposables.push(this.flowDiagram.onFlowElementDrill(async flowElementDrill => {
-            if (Flow.configurator && this.flowDiagram.mode !== 'connect') {
-                this.updateConfigurator(flowElementDrill.element, flowElementDrill.instances, true);
-            }
-        }));
-        this.disposables.push(this.flowDiagram.onFlowElementUpdate(async flowElementUpdate => {
-            if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
-                this.updateConfigurator(flowElementUpdate.element);
-            }
-        }));
+        this.disposables.push(
+            this.flowDiagram.onFlowElementSelect(async (flowElementSelect) => {
+                updateState({ selected: { id: flowElementSelect.element.id } });
+                if (Flow.configurator) {
+                    this.updateConfigurator(flowElementSelect.element, flowElementSelect.instances);
+                }
+            })
+        );
+        this.disposables.push(
+            this.flowDiagram.onFlowElementDrill(async (flowElementDrill) => {
+                if (Flow.configurator && this.flowDiagram.mode !== 'connect') {
+                    this.updateConfigurator(
+                        flowElementDrill.element,
+                        flowElementDrill.instances,
+                        true
+                    );
+                }
+            })
+        );
+        this.disposables.push(
+            this.flowDiagram.onFlowElementUpdate(async (flowElementUpdate) => {
+                if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
+                    this.updateConfigurator(flowElementUpdate.element);
+                }
+            })
+        );
 
         const toolboxContainer = document.getElementById('toolbox-container') as HTMLDivElement;
         const flowHeader = document.querySelector('.flow-header') as HTMLDivElement;
@@ -120,7 +206,9 @@ export class Flow implements flowbee.Disposable {
             this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
 
             // open/close toolbox
-            const toolboxHeader = toolboxContainer.querySelector('.toolbox-header') as HTMLDivElement;
+            const toolboxHeader = toolboxContainer.querySelector(
+                '.toolbox-header'
+            ) as HTMLDivElement;
             toolboxHeader.style.cursor = 'pointer';
             const toolboxCaret = flowHeader.querySelector('.toolbox-caret') as HTMLSpanElement;
             toolboxCaret.style.display = 'none';
@@ -130,31 +218,51 @@ export class Flow implements flowbee.Disposable {
             };
             toolboxCaret.onclick = (_e: MouseEvent) => {
                 toolboxCaret.style.display = 'none';
-                toolboxContainer.style.display = 'inline-block';
+                toolboxContainer.style.display = 'flex';
             };
 
-            // splitter
+            // requests tool pane
+            const requestsToolboxElement = document.getElementById(
+                'flow-requests'
+            ) as HTMLDivElement;
+            requestsToolboxElement.innerHTML = '';
+            this.requestsToolbox = new flowbee.Toolbox(requests, requestsToolboxElement);
+
+            // flow splitter
             const containerElement = document.getElementById('container') as HTMLDivElement;
-            new Splitter(containerElement, toolboxContainer, toolboxCaret);
+            new FlowSplitter(containerElement, toolboxContainer, toolboxCaret);
+
+            // toolbox splitter
+            new ToolboxSplitter(toolboxContainer);
 
             // actions
-            this.drawingTools = new DrawingTools(document.getElementById('flow-header') as HTMLDivElement);
-            this.drawingTools.onOptionToggle(e => this.onOptionToggle(e));
+            this.drawingTools = new DrawingTools(
+                document.getElementById('flow-header') as HTMLDivElement
+            );
+            this.drawingTools.onOptionToggle((e) => this.onOptionToggle(e));
             this.drawingTools.onZoomChange((e: ZoomChangeEvent) => {
                 this.flowDiagram.zoom = e.zoom;
             });
             this.switchMode('select');
 
-            this.flowActions = new FlowActions(this.options.iconBase, document.getElementById('flow-actions') as HTMLDivElement);
+            this.flowActions = new FlowActions(
+                this.options.iconBase,
+                document.getElementById('flow-actions') as HTMLDivElement
+            );
             const handleFlowAction = (e: FlowActionEvent) => {
-                if (e.action === 'submit' || e.action === 'run' || e.action === 'debug' || e.action === 'stop') {
+                if (
+                    e.action === 'submit' ||
+                    e.action === 'run' ||
+                    e.action === 'debug' ||
+                    e.action === 'stop'
+                ) {
                     this.closeConfigurator();
                     if (!e.target) {
                         this.flowDiagram.render(this.options.diagramOptions);
                     }
                 }
                 if (e.action === 'submit') {
-                    this.onFlowAction({ action: 'run', options: { submit: true }});
+                    this.onFlowAction({ action: 'run', options: { submit: true } });
                 } else {
                     this.onFlowAction(e);
                 }
@@ -173,19 +281,45 @@ export class Flow implements flowbee.Disposable {
     render() {
         this.flowDiagram.render(this.options.diagramOptions);
         this.toolbox?.render(this.options.toolboxOptions);
+        this.updateRequests(requests);
         if (Flow.configurator?.isOpen) {
             const cfgr = Flow.configurator;
-            cfgr.render(cfgr.flowElement, cfgr.instance ? [cfgr.instance] : [], cfgr.template || {}, this.options.configuratorOptions);
+            cfgr.render(
+                cfgr.flowElement,
+                cfgr.instance ? [cfgr.instance] : [],
+                cfgr.template || {},
+                this.options.configuratorOptions
+            );
             if (cfgr.flowElement.id) {
                 this.flowDiagram.select(cfgr.flowElement.id);
             }
         }
     }
 
-    async updateConfigurator(flowElement: flowbee.FlowElement, instances?: flowbee.FlowElementInstance[], doOpen = false,
-          position?: { left: number, top: number, width: number, height: number }) {
+    updateRequests(reqs: (flowbee.Descriptor & { request: Request })[]) {
+        requests = reqs;
+        const requestsToolboxElement = document.getElementById('flow-requests') as HTMLDivElement;
+        requestsToolboxElement.innerHTML = '';
+        this.requestsToolbox = new flowbee.Toolbox(requests, requestsToolboxElement);
+        this.disposables.push(
+            this.requestsToolbox.onItemOpen((openEvent) => {
+                vscode.postMessage({ type: 'edit', element: 'request', url: openEvent.url });
+            })
+        );
+        this.requestsToolbox.render(this.options.toolboxOptions);
+    }
+
+    async updateConfigurator(
+        flowElement: flowbee.FlowElement,
+        instances?: flowbee.FlowElementInstance[],
+        doOpen = false,
+        position?: { left: number; top: number; width: number; height: number }
+    ) {
         if (Flow.configurator && (doOpen || Flow.configurator?.isOpen)) {
-            const template = await templates.get(flowElement, this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config');
+            const template = await templates.get(
+                flowElement,
+                this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config'
+            );
             if (instances && instances.length > 0) {
                 const instance = instances[instances.length - 1] as any;
                 if (instance.data?.request) {
@@ -200,7 +334,13 @@ export class Flow implements flowbee.Disposable {
                 vscode.postMessage({ type: 'configurator' });
             }
 
-            Flow.configurator.render(flowElement, instances || [], template, this.options.configuratorOptions, position);
+            Flow.configurator.render(
+                flowElement,
+                instances || [],
+                template,
+                this.options.configuratorOptions,
+                position
+            );
             updateState({
                 selected: {
                     id: flowElement.id,
@@ -219,20 +359,28 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    closeConfigurator() {
-        Flow.configurator?.close();
-        updateState({ configurator: { open: false }});
-    }
-
     openConfigurator() {
         if (Flow.configurator && !Flow.configurator.isOpen) {
-            this.updateConfigurator(this.flowDiagram.flow, this.flowDiagram.instance ? [this.flowDiagram.instance] : [], true);
+            this.updateConfigurator(
+                this.flowDiagram.flow,
+                this.flowDiagram.instance ? [this.flowDiagram.instance] : [],
+                true
+            );
         }
+    }
+
+    closeConfigurator() {
+        Flow.configurator?.close();
+        updateState({ configurator: { open: false } });
     }
 
     onOptionToggle(e: OptionToggleEvent) {
         const drawingOption = e.option;
-        if (drawingOption === 'select' || drawingOption === 'connect' || drawingOption === 'runtime') {
+        if (
+            drawingOption === 'select' ||
+            drawingOption === 'connect' ||
+            drawingOption === 'runtime'
+        ) {
             this.flowDiagram.mode = drawingOption;
             if (drawingOption === 'connect') {
                 this.closeConfigurator();
@@ -256,8 +404,7 @@ export class Flow implements flowbee.Disposable {
                 this.flowActions?.enableCompare(false);
                 updateState({ mode: drawingOption });
             }
-        }
-        else {
+        } else {
             (this.options as any)[drawingOption] = !(this.options as any)[drawingOption];
         }
         this.flowDiagram.render(this.options.diagramOptions);
@@ -267,11 +414,11 @@ export class Flow implements flowbee.Disposable {
         const flowAction = e.action;
         let step: flowbee.Step | undefined;
         if (typeof e.target === 'string' && e.target.startsWith('s')) {
-            step = this.flowDiagram.flow.steps?.find(step => step.id === e.target);
+            step = this.flowDiagram.flow.steps?.find((step) => step.id === e.target);
             if (!step && this.flowDiagram.flow.subflows) {
                 // check subflows for target
                 for (const subflow of this.flowDiagram.flow.subflows) {
-                    step = subflow.steps?.find(step => step.id === e.target);
+                    step = subflow.steps?.find((step) => step.id === e.target);
                     if (step) {
                         e.target = `${subflow.id}.${step.id}`;
                         break;
@@ -290,7 +437,12 @@ export class Flow implements flowbee.Disposable {
                     updateState({ storeVals });
                     vscode.postMessage({ type: 'values', key, storeVals });
                 };
-                vals = await values.prompt(step || this.flowDiagram.flow, action, onlyIfNeeded, storageCall);
+                vals = await values.prompt(
+                    step || this.flowDiagram.flow,
+                    action,
+                    onlyIfNeeded,
+                    storageCall
+                );
                 if (vals === 'Files') {
                     vscode.postMessage({ type: 'valuesFiles' });
                     return;
@@ -305,9 +457,9 @@ export class Flow implements flowbee.Disposable {
         vscode.postMessage({
             type: flowAction === 'values' ? 'run' : flowAction, // can elect Run from values prompt even when launched as 'values' action
             flow: this.flowDiagram.flow.path,
-            ...(e.target) && { target: e.target },
-            ...(e.options) && { options: e.options },
-            ...(vals) && { values: vals }
+            ...(e.target && { target: e.target }),
+            ...(e.options && { options: e.options }),
+            ...(vals && { values: vals })
         });
     }
 
@@ -316,7 +468,9 @@ export class Flow implements flowbee.Disposable {
      */
     updateFlow() {
         const indent = this.options.indent;
-        const text = this.options.yaml ? this.flowDiagram.toYaml(indent) : this.flowDiagram.toJson(indent);
+        const text = this.options.yaml
+            ? this.flowDiagram.toYaml(indent)
+            : this.flowDiagram.toJson(indent);
 
         vscode.postMessage({
             type: 'change',
@@ -392,16 +546,37 @@ window.addEventListener('message', async (event) => {
                 flow.switchMode('runtime');
                 updateState({ mode: 'runtime' });
             } else {
-                flow.switchMode( flow.flowDiagram.mode );
+                flow.switchMode(flow.flowDiagram.mode);
             }
             flow.flowActions?.enableCompare(hasInstance);
         }
+    } else if (message.type === 'requests') {
+        const flow = readState(false);
+        if (flow) {
+            console.log('REQUESTS: ' + JSON.stringify(message.requests, null, 2));
+            flow.updateRequests(message.requests);
+        }
+        updateState({ requests: message.requests });
     } else if (message.type === 'values') {
-        const theme = document.body.className.endsWith('vscode-dark') ? 'dark': 'light';
-        values = new Values(`${message.flowPath}`, `${message.base}/icons/${theme}`, message.files, message.values, message.storeVals);
-        updateState({ valuesFiles: message.files, values: message.values, storeVals: message.storeVals });
+        const theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
+        values = new Values(
+            `${message.flowPath}`,
+            `${message.base}/img/icons/${theme}`,
+            message.files,
+            message.values,
+            message.storeVals
+        );
+        updateState({
+            valuesFiles: message.files,
+            values: message.values,
+            storeVals: message.storeVals
+        });
     } else if (message.type === 'action') {
-        readState()?.onFlowAction({ action: message.action, target: message.target, options: message.options });
+        readState()?.onFlowAction({
+            action: message.action,
+            target: message.target,
+            options: message.options
+        });
     } else if (message.type === 'mode') {
         updateState({ mode: message.mode });
         const flow = readState();
@@ -430,14 +605,15 @@ interface FlowState {
     selected?: {
         id?: string; // selected but no id means flow selected
         instances?: flowbee.FlowElementInstance[];
-    }
+    };
     configurator?: {
         open: boolean;
-        position?: { left: number, top: number, width: number, height: number };
-    }
+        position?: { left: number; top: number; width: number; height: number };
+    };
     valuesFiles?: string[];
     values?: object;
     storeVals?: any;
+    requests?: flowbee.Descriptor[];
 }
 
 function updateState(delta: FlowState) {
@@ -448,7 +624,13 @@ function readState(loadInstance = true): Flow | undefined {
     const state = vscode.getState();
     if (state && state.base && state.file) {
         templates = new Templates(state.base);
-        const flow = new Flow(state.base, state.config?.websocketPort || 0, state.text, state.file, state.readonly);
+        const flow = new Flow(
+            state.base,
+            state.config?.websocketPort || 0,
+            state.text,
+            state.file,
+            state.readonly
+        );
         flow.flowDiagram.readonly = state.readonly;
         const mode = state.mode || 'select';
         if (mode === 'runtime' && loadInstance) {
@@ -458,6 +640,7 @@ function readState(loadInstance = true): Flow | undefined {
         }
         flow.switchMode(mode);
         flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
+        requests = state.requests || [];
         flow.render();
         if (state.selected) {
             if (state.selected.id) {
@@ -473,11 +656,16 @@ function readState(loadInstance = true): Flow | undefined {
             }
         }
         if (state.values) {
-            values = new Values(state.file, flow.options.iconBase, state.valuesFiles, state.values, state.storeVals);
+            values = new Values(
+                state.file,
+                flow.options.iconBase,
+                state.valuesFiles,
+                state.values,
+                state.storeVals
+            );
         }
         return flow;
     }
 }
 
 readState();
-

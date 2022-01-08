@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as ply from 'ply-ct';
+import * as ply from '@ply-ct/ply';
 import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
@@ -14,18 +14,19 @@ export interface ValuesUpdateEvent {
 
 /**
  * Caches latest result values so they're known at design-time.
- * Also keeps a copy of values from ply values files
+ * Also keeps a copy of values from ply values files.
+ * This should more appropriately be called ResultsAndValues since
+ * it watches both.
  */
 export class Values implements Disposable {
-
     private disposables: { dispose(): void }[] = [];
     private config: PlyConfig;
     private _plyValues: object | undefined;
     files: string[] | undefined;
     private resultWatcher?: vscode.FileSystemWatcher;
     // result file uri to values object
-    private resultValues = new Map<string,object>();
-    private valuesWatchers = new Map<string,vscode.FileSystemWatcher>();
+    private resultValues = new Map<string, object>();
+    private valuesWatchers = new Map<string, vscode.FileSystemWatcher>();
 
     private _onValuesUpdate = new Event<ValuesUpdateEvent>();
     onValuesUpdate(listener: Listener<ValuesUpdateEvent>): Disposable {
@@ -66,16 +67,16 @@ export class Values implements Disposable {
             this.resultValues.delete(resultFileUri.toString());
             this._onValuesUpdate.emit({ resultUri: resultFileUri });
         };
-        this.resultWatcher.onDidCreate(uri => onResultFileChange(uri));
-        this.resultWatcher.onDidChange(uri => onResultFileChange(uri));
-        this.resultWatcher.onDidDelete(uri => onResultFileChange(uri));
+        this.resultWatcher.onDidCreate((uri) => onResultFileChange(uri));
+        this.resultWatcher.onDidChange((uri) => onResultFileChange(uri));
+        this.resultWatcher.onDidDelete((uri) => onResultFileChange(uri));
     }
 
     /**
      * watch for values file changes
      */
     private watchValuesFiles() {
-        this.valuesWatchers.forEach(watcher => watcher.dispose());
+        this.valuesWatchers.forEach((watcher) => watcher.dispose());
         this.valuesWatchers.clear();
         for (let file of this.config.plyOptions.valuesFiles) {
             if (process.platform.startsWith('win')) {
@@ -86,8 +87,8 @@ export class Values implements Disposable {
             const onValuesFileChange = () => {
                 this.clear();
             };
-            valuesWatcher.onDidChange(_uri => onValuesFileChange());
-            valuesWatcher.onDidDelete(uri => {
+            valuesWatcher.onDidChange((_uri) => onValuesFileChange());
+            valuesWatcher.onDidDelete((uri) => {
                 valuesWatcher.dispose();
                 this.valuesWatchers.delete(uri.toString());
                 onValuesFileChange();
@@ -137,7 +138,8 @@ export class Values implements Disposable {
                                     for (const subKey of Object.keys(flowObj)) {
                                         const subObj = flowObj[subKey];
                                         if (subObj.request) {
-                                            actualResults[`${flowObj.id}.${subObj.id}`] = this.getResult(subObj);
+                                            actualResults[`${flowObj.id}.${subObj.id}`] =
+                                                this.getResult(subObj);
                                         }
                                     }
                                 } else if (flowObj.id?.startsWith('s') && flowObj.request) {

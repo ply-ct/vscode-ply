@@ -1,12 +1,21 @@
 {
-  "files.trimTrailingWhitespace": true,
   "files.exclude": {
     "out": false
   },
   "search.exclude": {
-      "out": true	  
+    "out": true,
+    "web/out": true
   },
+  "files.trimTrailingWhitespace": true,
+  "editor.insertSpaces": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.preferences.quoteStyle": "single",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "files.insertFinalNewline": true,
+  "[ts]": {
+    "editor.tabSize": 4
+  },
   "[html]": {
     "editor.tabSize": 2
   },
@@ -22,7 +31,10 @@
   "[markdown]": {
     "files.trimTrailingWhitespace": false
   },
+  "[vue]": {
+    "editor.tabSize": 2
+  },
   "mochaExplorer.env": {
-      "TS_NODE_TRANSPILE_ONLY": "1"
-  }  
+    "TS_NODE_TRANSPILE_ONLY": "1"
+  }
 }

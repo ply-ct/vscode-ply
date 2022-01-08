@@ -1,8 +1,7 @@
 import * as WebSocket from 'ws';
 
 export class WebSocketSender {
-
-    private static subscriptions: Map<string,WebSocketSender[]> = new Map();
+    private static subscriptions: Map<string, WebSocketSender[]> = new Map();
 
     private constructor(readonly topic: string, readonly websocket: WebSocket) {}
 
@@ -36,7 +35,7 @@ export class WebSocketSender {
                     }
                 }
             }
-            subscribers.forEach(subscriber => {
+            subscribers.forEach((subscriber) => {
                 WebSocketSender.subscriptions.delete(subscriber.topic);
             });
         } else {
@@ -45,4 +44,3 @@ export class WebSocketSender {
         }
     }
 }
-

@@ -271,9 +271,18 @@
         user-select: none;
         cursor: pointer; }
       .flowbee-toolbox-light ul li label {
-        padding-left: 10px;
+        padding-left: 7px;
         user-select: none;
         cursor: pointer; }
+      .flowbee-toolbox-light ul li a {
+        font-size: 11px;
+        margin-left: 5px;
+        margin-right: 15px;
+        text-decoration: none;
+        outline: none; }
+      .flowbee-toolbox-light ul li a:hover {
+        cursor: pointer;
+        text-decoration: underline; }
     .flowbee-toolbox-light ul li:focus {
       color: #ffffff;
       background-color: #146dee;
@@ -307,9 +316,18 @@
         user-select: none;
         cursor: pointer; }
       .flowbee-toolbox-dark ul li label {
-        padding-left: 10px;
+        padding-left: 7px;
         user-select: none;
         cursor: pointer; }
+      .flowbee-toolbox-dark ul li a {
+        font-size: 11px;
+        margin-left: 5px;
+        margin-right: 15px;
+        text-decoration: none;
+        outline: none; }
+      .flowbee-toolbox-dark ul li a:hover {
+        cursor: pointer;
+        text-decoration: underline; }
     .flowbee-toolbox-dark ul li:focus {
       color: #ffffff;
       background-color: #146dee;
@@ -382,6 +400,8 @@
   .flowbee-configurator-light .flowbee-config-tab-content label {
     height: fit-content;
     padding-top: 3px; }
+  .flowbee-configurator-light .flowbee-config-tab-content span {
+    height: fit-content; }
   .flowbee-configurator-light .flowbee-config-tab-content input {
     background-color: #ffffff; }
   .flowbee-configurator-light .flowbee-config-tab-content input[type=checkbox] {
@@ -390,6 +410,13 @@
     width: fit-content; }
   .flowbee-configurator-light .flowbee-config-tab-content textarea {
     grid-column: 1/3; }
+  .flowbee-configurator-light .flowbee-config-tab-content a {
+    outline: none;
+    text-decoration: none;
+    padding-top: 5px; }
+  .flowbee-configurator-light .flowbee-config-tab-content a:hover {
+    text-decoration: underline;
+    cursor: pointer; }
   .flowbee-configurator-light .flowbee-config-tab-content table {
     grid-column: 1/3;
     border-spacing: 0;
@@ -487,6 +514,8 @@
   .flowbee-configurator-dark .flowbee-config-tab-content label {
     height: fit-content;
     padding-top: 3px; }
+  .flowbee-configurator-dark .flowbee-config-tab-content span {
+    height: fit-content; }
   .flowbee-configurator-dark .flowbee-config-tab-content input {
     background-color: #ffffff; }
   .flowbee-configurator-dark .flowbee-config-tab-content input[type=checkbox] {
@@ -495,6 +524,13 @@
     width: fit-content; }
   .flowbee-configurator-dark .flowbee-config-tab-content textarea {
     grid-column: 1/3; }
+  .flowbee-configurator-dark .flowbee-config-tab-content a {
+    outline: none;
+    text-decoration: none;
+    padding-top: 5px; }
+  .flowbee-configurator-dark .flowbee-config-tab-content a:hover {
+    text-decoration: underline;
+    cursor: pointer; }
   .flowbee-configurator-dark .flowbee-config-tab-content table {
     grid-column: 1/3;
     border-spacing: 0;

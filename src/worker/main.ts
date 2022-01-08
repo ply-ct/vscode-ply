@@ -2,25 +2,27 @@ import * as path from 'path';
 import * as flowbee from 'flowbee';
 import { WorkerArgs } from './args';
 // events API must stay compatible
-import { SuiteEvent, PlyEvent, OutcomeEvent } from 'ply-ct';
+import { SuiteEvent, PlyEvent, OutcomeEvent } from '@ply-ct/ply';
 
 (async () => {
     if (process.send) {
-        const args = await new Promise<WorkerArgs>(resolve => {
+        const args = await new Promise<WorkerArgs>((resolve) => {
             process.once('message', resolve);
         });
-        execute(args, async msg => process.send!(msg));
-    }
-    else {
-        execute(JSON.parse(process.argv[3]), async msg => console.log(msg));
+        execute(args, async (msg) => process.send!(msg));
+    } else {
+        execute(JSON.parse(process.argv[3]), async (msg) => console.log(msg));
     }
 })();
 
 /**
  * Console output from here goes to Ply Tests output channel.
  */
-function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolean | void>, onFinished?: () => void): void {
-
+function execute(
+    args: WorkerArgs,
+    sendMessage: (message: any) => Promise<boolean | void>,
+    onFinished?: () => void
+): void {
     const startTimes = new Map<string, number>();
     function elapsed(id: string): string | undefined {
         if (startTimes.has(id)) {
@@ -37,14 +39,14 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
             process.env[envVar] = args.env[envVar];
         }
 
-        const plyPath = args.plyPath ? args.plyPath : path.dirname(require.resolve('ply-ct'));
+        const plyPath = args.plyPath ? args.plyPath : path.dirname(require.resolve('@ply-ct/ply'));
         if (args.logEnabled) {
             sendMessage(`Using ply package at ${plyPath}`);
         }
 
         // actual execution uses ply on specified path
         const ply = require(plyPath + '/index.js');
-        const Plier: typeof import('ply-ct').Plier = ply.Plier;
+        const Plier: typeof import('@ply-ct/ply').Plier = ply.Plier;
         const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();
@@ -99,22 +101,22 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
             sendMessage('Running plyees');
         }
 
-        plier.run(args.plyees, args.runOptions)
-        .then(() => {
-            sendMessage({ type: 'finished' });
-            if (onFinished) {
-                onFinished();
-            }
-        })
-        .catch((err: Error) => {
-            console.error(err);
-            if (args.logEnabled) {
+        plier
+            .run(args.plyees, args.runOptions)
+            .then(() => {
+                sendMessage({ type: 'finished' });
+                if (onFinished) {
+                    onFinished();
+                }
+            })
+            .catch((err: Error) => {
                 console.error(err);
-                sendMessage(`Caught error ${err.stack}`);
-            }
-        });
-    }
-    catch (err: unknown) {
+                if (args.logEnabled) {
+                    console.error(err);
+                    sendMessage(`Caught error ${err.stack}`);
+                }
+            });
+    } catch (err: unknown) {
         console.error(err);
         if (args.logEnabled) {
             console.error(err);
@@ -123,25 +125,20 @@ function execute(args: WorkerArgs, sendMessage: (message: any) => Promise<boolea
     }
 }
 
-function mapStatus(status: String | undefined):
-        'running' | 'completed' | 'passed' | 'skipped' | 'failed' | 'errored' {
-
+function mapStatus(
+    status: String | undefined
+): 'running' | 'completed' | 'passed' | 'skipped' | 'failed' | 'errored' {
     if (status === 'Started') {
         return 'running';
-    }
-    else if (status === 'Finished') {
+    } else if (status === 'Finished') {
         return 'completed';
-    }
-    else if (status === 'Passed') {
+    } else if (status === 'Passed') {
         return 'passed';
-    }
-    else if (status === 'Submitted') {
+    } else if (status === 'Submitted') {
         return 'skipped';
-    }
-    else if (status === 'Failed') {
+    } else if (status === 'Failed') {
         return 'failed';
-    }
-    else {
+    } else {
         return 'errored';
     }
 }
@@ -149,8 +146,7 @@ function mapStatus(status: String | undefined):
 function getUri(plyee: string) {
     if (plyee.startsWith('https://') || plyee.startsWith('http://')) {
         return plyee;
-    }
-    else {
+    } else {
         return `file://${process.platform.startsWith('win') ? '/' : ''}${plyee}`;
     }
 }

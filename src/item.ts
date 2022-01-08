@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as ply from 'ply-ct';
+import * as ply from '@ply-ct/ply';
 import { TestHub, testExplorerExtensionId, TestAdapter } from 'vscode-test-adapter-api';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
@@ -13,20 +13,22 @@ interface Item {
 }
 
 export class PlyItem {
-
     command: { dispose(): any };
 
     constructor(private context: vscode.ExtensionContext, type?: ply.TestType) {
         if (type) {
-            this.command = vscode.commands.registerCommand(`ply.new.${type}`, async (...args: any[]) => {
-                this.newItem(type, args);
-            });
+            this.command = vscode.commands.registerCommand(
+                `ply.new.${type}`,
+                async (...args: any[]) => {
+                    this.newItem(type, args);
+                }
+            );
         } else {
             this.command = vscode.commands.registerCommand('ply.new', async (...args: any[]) => {
-                const type = await vscode.window.showQuickPick(
-                    ['request', 'case', 'flow'],
-                    { canPickMany: false, placeHolder: 'Ply test type' }
-                );
+                const type = await vscode.window.showQuickPick(['request', 'case', 'flow'], {
+                    canPickMany: false,
+                    placeHolder: 'Ply test type'
+                });
                 if (type) {
                     this.newItem(type as ply.TestType, args);
                 }
@@ -36,7 +38,7 @@ export class PlyItem {
 
     getFilters(type: ply.TestType): { [name: string]: string[] } | undefined {
         if (type === 'request') {
-            return { 'Ply Request': ['ply.yaml', 'ply.yml'] };
+            return { 'Ply Request': ['ply', 'ply.yaml', 'ply.yml'] };
         } else if (type === 'case') {
             return { 'Ply Case': ['ply.ts'] };
         } else if (type === 'flow') {
@@ -64,30 +66,47 @@ export class PlyItem {
                     const testsLoc = new PlyConfig(workspaceFolder).plyOptions.testsLocation;
                     const fileLoc = new ply.Location(uri.fsPath);
                     if (fileLoc.isChildOf(testsLoc)) {
-                        await fs.promises.writeFile(uri.fsPath, await this.defaultContents(type), 'utf8');
+                        await fs.promises.writeFile(
+                            uri.fsPath,
+                            await this.defaultContents(type),
+                            'utf8'
+                        );
                         this.openItem(type, uri);
                     } else {
-                        vscode.window.showErrorMessage(`New ${type} should reside under ply.testsLocation: ${testsLoc}`);
+                        vscode.window.showErrorMessage(
+                            `New ${type} should reside under ply.testsLocation: ${testsLoc}`
+                        );
                         return;
                     }
-                } else { // add workspace folder
+                } else {
+                    // add workspace folder
 
                     // create from template since adding workspace folder triggers adapter load (empty flow = no good)
-                    await fs.promises.writeFile(uri.fsPath, await this.defaultContents(type), 'utf8');
+                    await fs.promises.writeFile(
+                        uri.fsPath,
+                        await this.defaultContents(type),
+                        'utf8'
+                    );
 
-                    const pos = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+                    const pos = vscode.workspace.workspaceFolders
+                        ? vscode.workspace.workspaceFolders.length
+                        : 0;
                     if (pos === 0) {
                         // first ever folder added to workspace causes re-activation
                         this.context.workspaceState.update('ply.to.open', uri.toString());
                     } else {
                         // wait for adapter to finish loading
-                        const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
+                        const testExplorerExtension =
+                            vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
                         if (testExplorerExtension) {
                             testExplorerExtension.exports.registerTestController({
                                 registerTestAdapter: (adapter: TestAdapter) => {
-                                    if (adapter.workspaceFolder?.uri.toString() === vscode.Uri.file(dir).toString()) {
+                                    if (
+                                        adapter.workspaceFolder?.uri.toString() ===
+                                        vscode.Uri.file(dir).toString()
+                                    ) {
                                         // this folder's ply adapter
-                                        const disposable = adapter.tests(async testLoadEvent => {
+                                        const disposable = adapter.tests(async (testLoadEvent) => {
                                             if (testLoadEvent.type === 'finished') {
                                                 if (testLoadEvent.suite?.label === 'Ply') {
                                                     await this.openItem(type, uri);
@@ -97,12 +116,16 @@ export class PlyItem {
                                         });
                                     }
                                 },
-                                unregisterTestAdapter: (_adapter: TestAdapter) => { }
+                                unregisterTestAdapter: (_adapter: TestAdapter) => {}
                             });
                         }
                     }
 
-                    if (!vscode.workspace.updateWorkspaceFolders(pos, null, { uri: vscode.Uri.file(dir) })) {
+                    if (
+                        !vscode.workspace.updateWorkspaceFolders(pos, null, {
+                            uri: vscode.Uri.file(dir)
+                        })
+                    ) {
                         vscode.window.showErrorMessage(`Failed add workspace folder: ${dir}`);
                     }
                 }
@@ -112,14 +135,19 @@ export class PlyItem {
 
     async defaultContents(type: ply.TestType): Promise<string> {
         if (type === 'flow') {
-            return await fs.promises.readFile(path.join(this.context.extensionPath, 'media/templates/default.flow'), 'utf-8');
+            return await fs.promises.readFile(
+                path.join(this.context.extensionPath, 'media/templates/default.flow'),
+                'utf-8'
+            );
         } else {
             return '';
         }
     }
 
     async openItem(type: ply.TestType, uri: vscode.Uri) {
-        if (type === 'flow') {
+        if (type === 'request' && uri.fsPath.endsWith('.ply')) {
+            await vscode.commands.executeCommand('ply.open-request', { uri });
+        } else if (type === 'flow') {
             await vscode.commands.executeCommand('ply.open-flow', { uri });
         } else {
             const doc = await vscode.workspace.openTextDocument(uri);
@@ -130,7 +158,7 @@ export class PlyItem {
     /**
      * Returns a test/suite item if found.
      */
-    static async getItem(...args: any[]): Promise<Item | undefined > {
+    static async getItem(...args: any[]): Promise<Item | undefined> {
         if (args.length === 1) {
             if (typeof args[0] === 'string') {
                 const id = args[0];
@@ -159,7 +187,7 @@ export class PlyItem {
                 openLabel: 'Select',
                 canSelectMany: false,
                 filters: {
-                    'Ply Requests/Cases/Flows': ['yaml', 'yml', 'ts', 'flow']
+                    'Ply Requests/Cases/Flows': ['ply', 'yaml', 'yml', 'ts', 'flow']
                 },
                 title: 'Select Ply suite'
             });
@@ -177,4 +205,3 @@ export class PlyItem {
         }
     }
 }
-

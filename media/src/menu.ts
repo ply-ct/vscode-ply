@@ -4,7 +4,6 @@ import { Templates } from './templates';
 import { FlowActionEvent } from './actions';
 
 export class MenuProvider extends flowbee.DefaultMenuProvider {
-
     private _onFlowAction = new flowbee.TypedEvent<FlowActionEvent>();
     onFlowAction(listener: flowbee.Listener<FlowActionEvent>) {
         this._onFlowAction.on(listener);
@@ -12,14 +11,20 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
 
     constructor(
         flowDiagram: flowbee.FlowDiagram,
-        private updateConfigurator: (flowElement: flowbee.FlowElement, instances: flowbee.FlowElementInstance[], doOpen: boolean) => void,
+        private updateConfigurator: (
+            flowElement: flowbee.FlowElement,
+            instances: flowbee.FlowElementInstance[],
+            doOpen: boolean
+        ) => void,
         private templates: Templates,
         private options: Options
     ) {
         super(flowDiagram);
-     }
+    }
 
-    getItems(flowElementEvent: flowbee.FlowElementEvent): (flowbee.MenuItem | 'separator')[] | undefined {
+    getItems(
+        flowElementEvent: flowbee.FlowElementEvent
+    ): (flowbee.MenuItem | 'separator')[] | undefined {
         const element = flowElementEvent.element;
         const type = element.type;
         let step: flowbee.Step | undefined;
@@ -35,24 +40,32 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
                 ...(canRun ? [{ id: 'run', label: 'Run', icon: 'run.svg' }] : [])
             ];
             if (this.flowDiagram.mode === 'select') {
-                designItems = [
-                    { id: 'configure', label: 'Configure' },
-                    ...designItems
-                ];
+                designItems = [{ id: 'configure', label: 'Configure' }, ...designItems];
             }
         }
 
         const superItems = super.getItems(flowElementEvent);
         let items: (flowbee.MenuItem | 'separator')[] = [
-            ...designItems || [],
-            ...(superItems?.length && designItems?.length ? ['separator'] as (flowbee.MenuItem | 'separator')[] : []),
-            ...superItems || []
+            ...(designItems || []),
+            ...(superItems?.length && designItems?.length
+                ? (['separator'] as (flowbee.MenuItem | 'separator')[])
+                : []),
+            ...(superItems || [])
         ];
         if (flowElementEvent.instances) {
-            const hasCompare = type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');
+            const hasCompare =
+                type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');
             items = [
                 { id: 'inspect', label: 'Inspect' },
-                ...(hasCompare ? [{ id: 'compare', label: 'Compare Results', icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg' }] : []),
+                ...(hasCompare
+                    ? [
+                          {
+                              id: 'compare',
+                              label: 'Compare Results',
+                              icon: type === 'flow' ? 'fdiff.svg' : 'diff.svg'
+                          }
+                      ]
+                    : []),
                 'separator',
                 ...items
             ];

@@ -10,8 +10,5 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "exclude": [
-    "out",
-    "node_modules"
-  ]
+  "exclude": ["out", "node_modules", "web"]
 }

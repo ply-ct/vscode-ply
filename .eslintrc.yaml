@@ -1,0 +1,31 @@
+env:
+  es6: true
+  node: true
+extends:
+  - 'eslint:recommended'
+  - 'plugin:@typescript-eslint/eslint-recommended'
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaVersion: 2018
+  sourceType: module
+plugins:
+  - '@typescript-eslint'
+rules:
+  {
+    semi: 2,
+    eqeqeq: 2,
+    no-tabs: 2,
+    curly: [error, multi-line],
+    arrow-spacing: 2,
+    keyword-spacing: 2,
+    space-before-blocks: 2,
+    no-unused-vars: 0,
+    '@typescript-eslint/no-unused-vars':
+      [warn, { vars: all, args: all, argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/comma-spacing': [error, { before: false, after: true }],
+    '@typescript-eslint/space-infix-ops': ['warn', { int32Hint: false }],
+    '@typescript-eslint/no-implicit-any-catch': [error, { allowExplicitAny: true }]
+  }

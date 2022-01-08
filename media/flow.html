@@ -1,74 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; img-src ${cspSource}; style-src ${cspSource}; script-src 'nonce-${nonce}'; connect-src ${cspSource} ${wsSource};">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="${flowbeeCssUri}" rel="stylesheet" />
-  <link href="${flowCssUri}" rel="stylesheet" />
-  <title>Flowbee Diagram</title>
-</head>
-<body>
-  <div id="container" class="container" class="container">
-    <div id="flow-container" class="flow-container">
-      <div id="flow-header" class="flow-header hidden">
-        <div id="diagram-tools" class="drawing-tools">
-          <input id="grid" src="${imgBase}/blank.svg" type="image" alt="grid" title="Grid" data-icon="grid.svg" />
-          <input id="snap" src="${imgBase}/blank.svg" type="image" alt="snap" title="Snap to grid" data-icon="snap.svg" />
-          <input id="zoom-out" src="${imgBase}/blank.svg" type="image" alt="zoom-out" title="Zoom out" data-icon="zoom-out.svg" />
-          <input id="zoom-range" src="${imgBase}/blank.svg" type="range" min="20" max="200" value="100" title="100 %" />
-          <input id="zoom-in" src="${imgBase}/blank.svg" type="image" alt="zoom-in" title="Zoom in" data-icon="zoom-in.svg" />
-        </div>
-        <div id="mode-group" class="drawing-tools tool-group mode-group">
-          <div id="mode-select" class="mode-select">
-            <input id="select" src="${imgBase}/blank.svg" type="image" alt="Select" title="Select" data-icon="select.png" />
-            <input id="connect" src="${imgBase}/blank.svg" type="image" alt="Connect" title="Connect" data-icon="connect.png" class="hidden" />
-            <input id="runtime" src="${imgBase}/blank.svg" type="image" alt="Inspect" title="Inspect" data-icon="inspect.png" class="hidden" />
-            <span id="mode-drop" class="drop-caret">&#9660;</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src ${cspSource}; style-src ${cspSource}; script-src 'nonce-${nonce}'; connect-src ${cspSource} ${wsSource};"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="${webBase}/css/flowbee.css" rel="stylesheet" />
+    <link href="${webBase}/css/flow.css" rel="stylesheet" />
+    <title>Ply Flow</title>
+  </head>
+  <body>
+    <div id="container" class="container" class="container">
+      <div id="flow-container" class="flow-container">
+        <div id="flow-header" class="flow-header hidden">
+          <div id="diagram-tools" class="drawing-tools">
+            <input
+              id="grid"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="grid"
+              title="Grid"
+              data-icon="grid.svg"
+            />
+            <input
+              id="snap"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="snap"
+              title="Snap to grid"
+              data-icon="snap.svg"
+            />
+            <input
+              id="zoom-out"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="zoom-out"
+              title="Zoom out"
+              data-icon="zoom-out.svg"
+            />
+            <input
+              id="zoom-range"
+              src="${webBase}/img/blank.svg"
+              type="range"
+              min="20"
+              max="200"
+              value="100"
+              title="100 %"
+            />
+            <input
+              id="zoom-in"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="zoom-in"
+              title="Zoom in"
+              data-icon="zoom-in.svg"
+            />
           </div>
-          <ul id="mode-menu" class="mode-menu hidden" tabindex="1025">
-            <li id="select-mode">
-               <img src="${imgBase}/blank.svg" alt="select" data-icon="select.png" />
-               <span>Select</span>
-            </li>
-            <li id="connect-mode">
-              <img src="${imgBase}/blank.svg" alt="connect" data-icon="connect.png" />
-              <span>Connect</span>
-            </li>
-            <li id="runtime-mode">
-              <img src="${imgBase}/blank.svg" alt="inspect" data-icon="inspect.png" />
-              <span>Inspect</span>
-            </li>
-          </ul>
-        </div>
-        <div id="flow-actions" class="drawing-tools tool-group action-group">
-          <input id="submit" src="${imgBase}/blank.svg" type="image" alt="submit" title="Submit" data-icon="submit.svg" />
-          <input id="debug" src="${imgBase}/blank.svg" type="image" alt="debug" title="Debug" data-icon="debug.svg" class="hidden" />
-          <input id="run" src="${imgBase}/blank.svg" type="image" alt="run" title="Run" data-icon="run.svg" />
-          <input id="values" src="${imgBase}/blank.svg" type="image" alt="values" title="Values" data-icon="values.svg" />
-          <input id="expected" src="${imgBase}/blank.svg" type="image" alt="expected" title="Expected Results" data-icon="open-file.svg" />
-          <input id="compare" src="${imgBase}/blank.svg" type="image" alt="compare" title="Compare Results" data-icon="fdiff.svg" />
-        </div>
-        <div>
+          <div id="mode-group" class="drawing-tools tool-group mode-group">
+            <div id="mode-select" class="mode-select">
+              <input
+                id="select"
+                src="${webBase}/img/blank.svg"
+                type="image"
+                alt="Select"
+                title="Select"
+                data-icon="select.png"
+              />
+              <input
+                id="connect"
+                src="${webBase}/img/blank.svg"
+                type="image"
+                alt="Connect"
+                title="Connect"
+                data-icon="connect.png"
+                class="hidden"
+              />
+              <input
+                id="runtime"
+                src="${webBase}/img/blank.svg"
+                type="image"
+                alt="Inspect"
+                title="Inspect"
+                data-icon="inspect.png"
+                class="hidden"
+              />
+              <span id="mode-drop" class="drop-caret">&#9660;</span>
+            </div>
+            <ul id="mode-menu" class="mode-menu hidden" tabindex="1025">
+              <li id="select-mode">
+                <img src="${webBase}/img/blank.svg" alt="select" data-icon="select.png" />
+                <span>Select</span>
+              </li>
+              <li id="connect-mode">
+                <img src="${webBase}/img/blank.svg" alt="connect" data-icon="connect.png" />
+                <span>Connect</span>
+              </li>
+              <li id="runtime-mode">
+                <img src="${webBase}/img/blank.svg" alt="inspect" data-icon="inspect.png" />
+                <span>Inspect</span>
+              </li>
+            </ul>
+          </div>
+          <div id="flow-actions" class="drawing-tools tool-group action-group">
+            <input
+              id="submit"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="submit"
+              title="Submit"
+              data-icon="submit.svg"
+            />
+            <input
+              id="debug"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="debug"
+              title="Debug"
+              data-icon="debug.svg"
+              class="hidden"
+            />
+            <input
+              id="run"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="run"
+              title="Run"
+              data-icon="run.svg"
+            />
+            <input
+              id="values"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="values"
+              title="Values"
+              data-icon="values.svg"
+            />
+            <input
+              id="expected"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="expected"
+              title="Expected Results"
+              data-icon="open-file.svg"
+            />
+            <input
+              id="compare"
+              src="${webBase}/img/blank.svg"
+              type="image"
+              alt="compare"
+              title="Compare Results"
+              data-icon="fdiff.svg"
+            />
+          </div>
           <div>
-            <span class="toolbox-caret toolbox-caret-closed" title="Show Toolbox">TOOLBOX</span>
+            <div>
+              <span class="toolbox-caret toolbox-caret-closed" title="Show Toolbox">TOOLBOX</span>
+            </div>
           </div>
         </div>
+        <div id="flow-diagram" class="flow-diagram">
+          <canvas id="diagram-canvas"></canvas>
+        </div>
       </div>
-      <div id="flow-diagram" class="flow-diagram">
-        <canvas id="diagram-canvas"></canvas>
+      <div id="toolbox-container" class="toolbox-container">
+        <div id="flow-toolbox-container" class="flow-toolbox-container">
+          <div class="toolbox-header" title="Flow Toolbox">
+            <span class="toolbox-caret">TOOLBOX</span>
+          </div>
+          <div id="flow-toolbox" class="flow-toolbox"></div>
+        </div>
+        <div id="flow-requests-container" class="flow-requests-container">
+          <div class="toolbox-header" title="Flow Requests">
+            <span class="toolbox-caret flow-requests-caret">REQUESTS</span>
+          </div>
+          <div id="flow-requests" class="flow-requests"></div>
+        </div>
       </div>
     </div>
-    <div id="toolbox-container" class="toolbox-container">
-      <div class="toolbox-header" title="Flowbee Toolbox">
-        <span class="toolbox-caret">TOOLBOX</span>
-      </div>
-      <div id="flow-toolbox" class="flow-toolbox"></div>
-    </div>
-  </div>
-  <div id="flow-values" class="flow-values"></div>
+    <div id="flow-values" class="flow-values"></div>
 
-  <script nonce="${nonce}" src="${jsUri}"></script>
-</body>
+    <script nonce="${nonce}" src="${webBase}/out/bundle.js"></script>
+  </body>
 </html>
