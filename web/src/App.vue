@@ -87,6 +87,7 @@ export default defineComponent({
       time.logtime(`Webview received: ${message.type}\n`);
       console.debug(`message: ${JSON.stringify(message, null, 2)}`);
       if (message.type === 'update') {
+        console.log('UPDATE: ' + JSON.stringify(message, null, 2));
         this.setMessage('');
         this.file = message.file;
         this.requestName = message.name;

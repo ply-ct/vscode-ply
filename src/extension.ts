@@ -3,7 +3,6 @@ import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { PlyAdapter } from './adapter';
-import { RequestContentProvider } from './request/content';
 import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
 import { ResultDecorator } from './result/decorator';
@@ -20,7 +19,8 @@ import {
 import { Postman } from './postman';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
-import { ResultFragmentFsProvider } from './result/fs-provider';
+import { RequestFsProvider } from './edit/request-fs';
+import { ResultFragmentFsProvider } from './result/result-fs';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
@@ -111,9 +111,11 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     // register for ply-request scheme
-    const requestContentProvider = new RequestContentProvider();
+    const requestFs = new RequestFsProvider();
     context.subscriptions.push(
-        vscode.workspace.registerTextDocumentContentProvider('ply-request', requestContentProvider)
+        vscode.workspace.registerFileSystemProvider(RequestFsProvider.URI_SCHEME, requestFs, {
+            isCaseSensitive: true
+        })
     );
 
     // open request in custom editor

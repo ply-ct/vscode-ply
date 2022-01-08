@@ -162,7 +162,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        if (document.uri.scheme === 'file') {
+        if (document.uri.scheme === 'file' || document.uri.scheme === 'ply-request') {
             const updateResults = (resultUri?: vscode.Uri) => {
                 const adapter = this.adapterHelper.getAdapter(document.uri);
                 if (adapter?.values) {
