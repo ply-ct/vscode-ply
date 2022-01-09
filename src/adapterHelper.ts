@@ -46,7 +46,12 @@ export class AdapterHelper {
     ) {
         try {
             const fileUri = uri.with({ scheme: 'file', fragment: '' });
-            const id = this.getId(fileUri, target);
+            let id: string;
+            if (uri.scheme === 'ply-request') {
+                id = uri.with({ scheme: 'file' }).toString(true);
+            } else {
+                id = this.getId(fileUri, target);
+            }
             console.debug(`run: ${id}`);
             const adapter = this.getAdapter(fileUri);
             await adapter?.run([id], values, { ...runOptions, proceed: true, noAutoOpen });

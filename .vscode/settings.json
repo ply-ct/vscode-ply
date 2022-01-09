@@ -4,6 +4,7 @@
   },
   "search.exclude": {
     "out": true,
+    "media/out": true,
     "web/out": true
   },
   "files.trimTrailingWhitespace": true,

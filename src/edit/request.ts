@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
-import { Response } from '@ply-ct/ply';
+import { Response, Flow } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
 
 export interface RequestActionEvent {
@@ -185,6 +185,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                             text: testRunEvent.message,
                             sent: this.time()
                         });
+                    } else if (testRunEvent.type === 'finished') {
+                        updateResponse(this.getResponse(document.uri));
                     }
                 })
             );
@@ -247,12 +249,27 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
      */
     getResponse(uri: vscode.Uri): (Response & { source: string }) | undefined {
         const adapter = this.adapterHelper.getAdapter(uri);
-        const id = `requests|${uri.toString(true)}`;
-        const suite = adapter.plyRoots.getSuite(id);
+        let suiteUri = uri;
+        if (uri.scheme === 'ply-request') {
+            suiteUri = uri.with({ scheme: 'file', fragment: '' });
+        }
+        const suiteId =
+            (uri.path.endsWith('.flow') ? 'flows|' : 'requests|') + suiteUri.toString(true);
+        const suite = adapter.plyRoots.getSuite(suiteId);
         if (suite && suite.runtime.results.actual.exists) {
             const responses = suite.runtime.results.responsesFromActual();
-            // TODO: use uri.fragment to support opening from multiple requests file
-            return responses[Object.keys(responses)[0]];
+            if (uri.fragment) {
+                if (suite.type === 'flow') {
+                    // TODO subflow step
+                    const plyFlow = (suite as any).plyFlow as Flow;
+                    const step = plyFlow.flow.steps?.find((s) => s.id === uri.fragment);
+                    if (step) return responses[step.name.replace(/\r?\n/g, ' ')];
+                } else {
+                    return responses[uri.fragment];
+                }
+            } else {
+                return responses[Object.keys(responses)[0]];
+            }
         }
     }
 

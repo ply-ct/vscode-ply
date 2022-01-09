@@ -280,13 +280,13 @@ export class PlyAdapter implements TestAdapter {
      */
     private async checkAndProceed(
         testIds: string[],
-        runOptions?: ply.RunOptions & { proceed?: boolean }
+        runOptions?: ply.RunOptions & { proceed?: boolean; noAutoOpen?: boolean }
     ): Promise<boolean> {
         if (!(await this.promptToSaveDirtySuites(testIds))) {
             return false;
         }
 
-        if (this.config.openSuitesWhenRun !== 'Never') {
+        if (!runOptions?.noAutoOpen && this.config.openSuitesWhenRun !== 'Never') {
             const editableSuites: TestSuiteInfo[] = this.getEditableSuites(testIds);
             if (editableSuites.length > 0) {
                 if (editableSuites.length === 1) {
