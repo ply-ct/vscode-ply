@@ -202,6 +202,13 @@ a:active {
   border: 1px solid var(--vscode-panel-border);
   font-family: var(--vscode-font-family);
 }
+.el-input__suffix {
+  right: 0;
+}
+.el-input__icon {
+  width: 2em;
+  padding-right: 10px;
+}
 
 .el-select {
   width: 135px;

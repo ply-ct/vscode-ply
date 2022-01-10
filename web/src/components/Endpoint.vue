@@ -1,14 +1,9 @@
 <template>
   <div class="endpoint">
-    <el-select v-model="method" @change="update('method', $event)">
-      <el-option
-        v-for="item in methods"
-        :key="item.value"
-        :label="item.label"
-        :value="item.value"
-      />
+    <el-select v-model="request.method" @change="update('method', $event)">
+      <el-option v-for="item in methods" :key="item.value" :value="item.value" />
     </el-select>
-    <el-input v-model="url" class="endpoint-url" @input="update('url', $event)" />
+    <el-input v-model="request.url" class="endpoint-url" @input="update('url', $event)" />
     <button class="action-btn" type="button" @click="submit">Submit</button>
   </div>
 </template>
@@ -30,28 +25,21 @@ export default defineComponent({
     return {
       methods: [
         {
-          value: 'get',
-          label: 'GET'
+          value: 'GET'
         },
         {
-          value: 'post',
-          label: 'POST'
+          value: 'POST'
         },
         {
-          value: 'put',
-          label: 'PUT'
+          value: 'PUT'
         },
         {
-          value: 'patch',
-          label: 'PATCH'
+          value: 'PATCH'
         },
         {
-          value: 'delete',
-          label: 'DELETE'
+          value: 'DELETE'
         }
-      ],
-      method: this.request.method,
-      url: this.request.url
+      ]
     };
   },
   methods: {

@@ -6,6 +6,8 @@ import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
 import { Response, Flow } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
+import { RequestMerge } from '../request/request';
+import { FlowMerge } from '../request/flow';
 
 export interface RequestActionEvent {
     uri: vscode.Uri;
@@ -20,14 +22,33 @@ export interface RequestEditorOptions {
 }
 
 export class RequestEditor implements vscode.CustomTextEditorProvider {
-    private disposables: { dispose(): void }[] = [];
-    private problems = new Map<string, Problems>();
+    // subscriptions are long-running disposables (not disposed with webview)
+    private subscriptions: { dispose(): void }[] = [];
+
+    private openFileDocs = new Map<string, vscode.TextDocument>();
 
     constructor(
         private context: vscode.ExtensionContext,
         private adapterHelper: AdapterHelper,
         private onRequestAction: (listener: Listener<RequestActionEvent>) => Disposable
-    ) {}
+    ) {
+        this.subscriptions.push(
+            vscode.workspace.onDidOpenTextDocument((doc) => {
+                if (doc.uri.scheme === 'file') {
+                    console.debug(`Open doc: ${doc.uri}`);
+                    this.openFileDocs.set(doc.uri.toString(), doc);
+                }
+            })
+        );
+        this.subscriptions.push(
+            vscode.workspace.onDidCloseTextDocument((doc) => {
+                if (doc.uri.scheme === 'file') {
+                    console.debug(`Close doc: ${doc.uri}`);
+                    this.openFileDocs.delete(doc.uri.toString());
+                }
+            })
+        );
+    }
 
     async resolveCustomTextEditor(
         document: vscode.TextDocument,
@@ -66,7 +87,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 sent: this.time()
             } as any;
             if (options) msg.options = options;
-            webviewPanel.webview.postMessage(msg);
+            await webviewPanel.webview.postMessage(msg);
         };
 
         const updateResponse = async (response?: Response & { source: string }) => {
@@ -80,7 +101,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             requestCanceled = false;
         };
 
-        this.disposables.push(
+        let disposables: { dispose(): void }[] = [];
+        const problems = new Map<string, Problems>();
+        disposables.push(
             webviewPanel.webview.onDidReceiveMessage(async (message) => {
                 if (message.type === 'ready') {
                     await updateRequest(
@@ -124,10 +147,10 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                         sent: this.time()
                     });
                 } else if (message.type === 'change') {
-                    await this.update(document, message.text);
+                    await this.update(document, message.text, true);
                     this.adapterHelper.removeActualResult(document.uri);
                 } else if (message.type === 'markers' && Array.isArray(message.markers)) {
-                    this.showProblems(document.uri, message.resource, message.markers);
+                    this.showProblems(problems, document.uri, message.resource, message.markers);
                 } else if (message.type === 'action') {
                     if (message.action === 'run' || message.action === 'submit') {
                         if (document.isDirty) {
@@ -151,7 +174,38 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        this.disposables.push(
+        // listen for external changes to embedded requests
+        if (document.uri.scheme === 'ply-request') {
+            disposables.push(
+                vscode.workspace.onDidChangeTextDocument(async (docChange) => {
+                    const uri = docChange.document.uri;
+                    const fileUri = document.uri.with({ scheme: 'file', fragment: '' });
+                    if (uri.toString() === fileUri.toString()) {
+                        // corresponding file was changed externally (eg: flow editor)
+                        if (document.uri.path.endsWith('.flow')) {
+                            const text = new FlowMerge(fileUri).getRequestText(
+                                document.uri,
+                                docChange.document
+                            );
+                            if (text !== document.getText()) {
+                                await this.update(document, text);
+                                await updateRequest();
+                            }
+                        } else {
+                            const text = docChange.document.getText(
+                                new RequestMerge(fileUri).getRange(document.uri, docChange.document)
+                            );
+                            if (text !== document.getText()) {
+                                await this.update(document, text);
+                                await updateRequest(); // reflect doc changes
+                            }
+                        }
+                    }
+                })
+            );
+        }
+
+        disposables.push(
             vscode.workspace.onDidChangeConfiguration((configChange) => {
                 if (configChange.affectsConfiguration('workbench.colorTheme')) {
                     webviewPanel.webview.postMessage({
@@ -177,7 +231,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 }
             };
 
-            this.disposables.push(
+            disposables.push(
                 adapter.testStates((testRunEvent) => {
                     if (testRunEvent.type === 'test' && testRunEvent.state === 'errored') {
                         webviewPanel.webview.postMessage({
@@ -192,7 +246,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             );
 
             if (adapter.values) {
-                this.disposables.push(
+                disposables.push(
                     adapter.values.onValuesUpdate((updateEvent) =>
                         updateResults(updateEvent.resultUri)
                     )
@@ -200,7 +254,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             } else {
                 adapter.onceValues(async (e) => {
                     // TODO: Need to send message (or is this just an edge case during extension development)?
-                    this.disposables.push(
+                    disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
                             updateResults(updateEvent.resultUri)
                         )
@@ -208,7 +262,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 });
             }
 
-            this.disposables.push(
+            disposables.push(
                 this.onRequestAction(async (requestAction) => {
                     if (requestAction.uri.toString() === document.uri.toString()) {
                         webviewPanel.webview.postMessage({
@@ -222,26 +276,15 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         }
 
         webviewPanel.onDidDispose(() => {
-            for (const disposable of this.disposables) {
+            for (const disposable of disposables) {
                 disposable.dispose();
             }
-            this.disposables = [];
-            for (const problems of this.problems.values()) {
-                problems.clear();
+            disposables = [];
+            for (const probs of problems.values()) {
+                probs.clear();
             }
-            this.problems.clear();
+            problems.clear();
         });
-    }
-
-    async update(document: vscode.TextDocument, text: string) {
-        const isNew = !document.getText().trim();
-        if (isNew) {
-            fs.writeFileSync(document.uri.fsPath, text);
-        } else {
-            const edit = new vscode.WorkspaceEdit();
-            edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), text);
-            await vscode.workspace.applyEdit(edit);
-        }
     }
 
     /**
@@ -273,6 +316,38 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         }
     }
 
+    async update(document: vscode.TextDocument, text: string, alsoFile = false) {
+        const isNew = !document.getText().trim();
+        if (isNew) {
+            fs.writeFileSync(document.uri.fsPath, text);
+        } else {
+            const edit = new vscode.WorkspaceEdit();
+            edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), text);
+            if (document.uri.scheme === 'ply-request' && alsoFile) {
+                const fileUri = document.uri.with({ scheme: 'file', fragment: '', query: '' });
+                const openFileDoc = this.openFileDocs.get(fileUri.toString());
+                if (openFileDoc && !openFileDoc.isClosed) {
+                    // update file doc
+                    if (fileUri.path.endsWith('.flow')) {
+                        const updated = await new FlowMerge(fileUri).updateRequest(
+                            document.uri,
+                            text
+                        );
+                        edit.replace(
+                            openFileDoc.uri,
+                            new vscode.Range(0, 0, openFileDoc.lineCount, 0),
+                            updated
+                        );
+                    } else {
+                        const range = new RequestMerge(fileUri).getRange(document.uri, openFileDoc);
+                        edit.replace(openFileDoc.uri, range, text);
+                    }
+                }
+            }
+            await vscode.workspace.applyEdit(edit);
+        }
+    }
+
     getOptions(uri: vscode.Uri, baseOptions: RequestEditorOptions): RequestEditorOptions {
         const editorSettings = vscode.workspace.getConfiguration('editor', uri);
         return {
@@ -282,14 +357,19 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         };
     }
 
-    showProblems(uri: vscode.Uri, resource: string, markers: Marker[]) {
+    showProblems(
+        problems: Map<string, Problems>,
+        uri: vscode.Uri,
+        resource: string,
+        markers: Marker[]
+    ) {
         const id = uri.toString();
-        let problems = this.problems.get(id);
-        if (!problems) {
-            problems = new Problems(uri);
-            this.problems.set(id, problems);
+        let probs = problems.get(id);
+        if (!probs) {
+            probs = new Problems(uri);
+            problems.set(id, probs);
         }
-        problems.show(resource, markers);
+        probs.show(resource, markers);
     }
 
     time(): string {
@@ -299,5 +379,15 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         const secs = String(date.getSeconds()).padStart(2, '0');
         const millis = String(date.getMilliseconds()).padStart(3, '0');
         return `${hrs} ${mins} ${secs} ${millis}`;
+    }
+
+    dispose() {
+        console.log('***** DISPOSING REQUEST EDITOR *****');
+        for (const subscription of this.subscriptions) {
+            subscription.dispose();
+        }
+        this.subscriptions = [];
+
+        this.openFileDocs.clear();
     }
 }

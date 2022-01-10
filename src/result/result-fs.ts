@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Result } from './result';
 
-export class ResultFragmentFsProvider implements vscode.FileSystemProvider {
+export class ResultFragmentFs implements vscode.FileSystemProvider {
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 

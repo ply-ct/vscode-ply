@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as findUp from 'find-up';
 import * as WebSocket from 'ws';
 import * as flowbee from 'flowbee';
-import { PLY_CONFIGS } from '@ply-ct/ply';
+import { PLY_CONFIGS, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapterHelper';
@@ -314,6 +314,22 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
                             await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
                         }
+                    }
+                }
+            })
+        );
+
+        this.disposables.push(
+            vscode.workspace.onDidChangeTextDocument((docChange) => {
+                const uri = docChange.document.uri;
+                if (uri.scheme === 'ply-request' && uri.fragment) {
+                    const fileUri = uri.with({ scheme: 'file', fragment: '' });
+                    if (fileUri.toString() === document.uri.toString()) {
+                        webviewPanel.webview.postMessage({
+                            type: 'step',
+                            stepId: uri.fragment,
+                            reqObj: loadYaml(uri.toString(), docChange.document.getText())
+                        });
                     }
                 }
             })

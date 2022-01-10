@@ -16,6 +16,7 @@ import { Values } from './values';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
+const EOL = navigator.platform.indexOf('Win') > -1 ? '\r\n' : '\n';
 
 let templates: Templates;
 let values: Values;
@@ -309,6 +310,34 @@ export class Flow implements flowbee.Disposable {
         this.requestsToolbox.render(this.options.toolboxOptions);
     }
 
+    updateStep(stepId: string, reqObj: object) {
+        let step = this.flowDiagram.flow.steps?.find((s) => s.id === stepId);
+        if (!step && this.flowDiagram.flow.subflows) {
+            for (let i = 0; i < this.flowDiagram.flow.subflows.length; i++) {
+                const subflow = this.flowDiagram.flow.subflows[i];
+                step = subflow.steps?.find((s) => s.id === stepId);
+                if (step) break;
+            }
+        }
+        if (step) {
+            const reqName = Object.keys(reqObj)[0];
+            step.name = reqName.replace(/_/g, EOL);
+            if (!step.attributes) step.attributes = {};
+            const req = (reqObj as any)[reqName];
+            step.attributes.url = req.url;
+            step.attributes.method = req.method;
+            if (req.headers) {
+                const rows: string[][] = [];
+                for (const key of Object.keys(req.headers)) {
+                    rows.push([key, '' + req.headers[key]]);
+                }
+                step.attributes.headers = JSON.stringify(rows);
+            }
+            if (req.body) step.attributes.body = req.body;
+            this.updateFlow(false);
+        }
+    }
+
     async updateConfigurator(
         flowElement: flowbee.FlowElement,
         instances?: flowbee.FlowElementInstance[],
@@ -466,16 +495,19 @@ export class Flow implements flowbee.Disposable {
     /**
      * Update the flow diagram document.
      */
-    updateFlow() {
+    updateFlow(post = true) {
         const indent = this.options.indent;
         const text = this.options.yaml
             ? this.flowDiagram.toYaml(indent)
             : this.flowDiagram.toJson(indent);
 
-        vscode.postMessage({
-            type: 'change',
-            text
-        });
+        if (post) {
+            vscode.postMessage({
+                type: 'change',
+                text
+            });
+        }
+
         updateState({
             base: this.base,
             file: this.file,
@@ -553,10 +585,14 @@ window.addEventListener('message', async (event) => {
     } else if (message.type === 'requests') {
         const flow = readState(false);
         if (flow) {
-            console.log('REQUESTS: ' + JSON.stringify(message.requests, null, 2));
             flow.updateRequests(message.requests);
         }
         updateState({ requests: message.requests });
+    } else if (message.type === 'step') {
+        const flow = readState(false);
+        if (flow) {
+            flow.updateStep(message.stepId, message.reqObj);
+        }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
         values = new Values(

@@ -19,8 +19,8 @@ import {
 import { Postman } from './postman';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
-import { RequestFsProvider } from './edit/request-fs';
-import { ResultFragmentFsProvider } from './result/result-fs';
+import { RequestFs } from './request/request-fs';
+import { ResultFragmentFs } from './result/result-fs';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
@@ -92,28 +92,27 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-            if (editor?.document.uri.scheme === 'ply-dummy') {
+            const uri = editor?.document.uri;
+            if (uri?.scheme === 'ply-dummy') {
                 await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                if (
-                    editor.document.uri.path.endsWith('.flow') &&
-                    editor.document.uri.query !== 'request'
-                ) {
+                if (uri.path.endsWith('.flow') && uri.query !== 'request') {
                     vscode.commands.executeCommand('ply.open-flow', {
-                        uri: editor.document.uri.with({ scheme: 'file' })
+                        uri: uri.with({ scheme: 'file' })
                     });
                 } else {
-                    vscode.commands.executeCommand('ply.open-request', {
-                        uri: editor.document.uri.with({ scheme: 'ply-request', query: '' })
-                    });
+                    const spec = uri.path.endsWith('.ply')
+                        ? { scheme: 'file', fragment: '', query: '' } // standalone request
+                        : { scheme: 'ply-request', query: '' }; // embedded request
+                    vscode.commands.executeCommand('ply.open-request', { uri: uri.with(spec) });
                 }
             }
         })
     );
 
     // register for ply-request scheme
-    const requestFs = new RequestFsProvider();
+    const requestFs = new RequestFs();
     context.subscriptions.push(
-        vscode.workspace.registerFileSystemProvider(RequestFsProvider.URI_SCHEME, requestFs, {
+        vscode.workspace.registerFileSystemProvider(RequestFs.URI_SCHEME, requestFs, {
             isCaseSensitive: true
         })
     );
@@ -258,7 +257,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
-    const resultFs = new ResultFragmentFsProvider();
+    const resultFs = new ResultFragmentFs();
     context.subscriptions.push(
         vscode.workspace.registerFileSystemProvider(Result.URI_SCHEME, resultFs, {
             isCaseSensitive: true
