@@ -138,6 +138,9 @@ export class Flow implements flowbee.Disposable {
                         return req.link?.url && req.link.url === onAdd.descriptor.link?.url;
                     });
                     if (request) {
+                        if ((onAdd.element as any).name) {
+                            (onAdd.element as any).name = `${(onAdd.element as any).name} Copy`;
+                        }
                         if (!onAdd.element.attributes) onAdd.element.attributes = {};
                         onAdd.element.attributes.url = request.request.url;
                         onAdd.element.attributes.method = request.request.method;
@@ -150,6 +153,12 @@ export class Flow implements flowbee.Disposable {
                         }
                         if (request.request.body) {
                             onAdd.element.attributes.body = request.request.body;
+                        }
+                        const step = this.findStep(onAdd.element.id || '');
+                        if (step) {
+                            step.name = (onAdd.element as any).name;
+                            // redraw to reflect name
+                            this.flowDiagram.render(this.options.diagramOptions);
                         }
                     }
                 }
@@ -234,7 +243,13 @@ export class Flow implements flowbee.Disposable {
             new FlowSplitter(containerElement, toolboxContainer, toolboxCaret);
 
             // toolbox splitter
-            new ToolboxSplitter(toolboxContainer);
+            const toolboxSplitter = new ToolboxSplitter(toolboxContainer);
+            // new request
+            const newRequest = document.getElementById('newRequest') as HTMLInputElement;
+            newRequest.onclick = (e: MouseEvent) => {
+                toolboxSplitter.toggleFlowRequests();
+                vscode.postMessage({ type: 'new', element: 'request' });
+            };
 
             // actions
             this.drawingTools = new DrawingTools(
@@ -310,15 +325,20 @@ export class Flow implements flowbee.Disposable {
         this.requestsToolbox.render(this.options.toolboxOptions);
     }
 
-    updateStep(stepId: string, reqObj: object) {
+    findStep(stepId: string) {
         let step = this.flowDiagram.flow.steps?.find((s) => s.id === stepId);
-        if (!step && this.flowDiagram.flow.subflows) {
+        if (step) return step;
+        if (this.flowDiagram.flow.subflows) {
             for (let i = 0; i < this.flowDiagram.flow.subflows.length; i++) {
                 const subflow = this.flowDiagram.flow.subflows[i];
                 step = subflow.steps?.find((s) => s.id === stepId);
-                if (step) break;
+                if (step) return step;
             }
         }
+    }
+
+    updateStep(stepId: string, reqObj: object) {
+        const step = this.findStep(stepId);
         if (step) {
             const reqName = Object.keys(reqObj)[0];
             step.name = reqName.replace(/_/g, EOL);
@@ -462,9 +482,11 @@ export class Flow implements flowbee.Disposable {
                 const action = e.options?.submit ? 'Submit' : 'Run';
                 const onlyIfNeeded = !step && e.action !== 'values';
                 const storageCall = async (key: string, storeVals?: { [key: string]: string }) => {
-                    values.storeVals[key] = storeVals;
-                    updateState({ storeVals });
-                    vscode.postMessage({ type: 'values', key, storeVals });
+                    if (values.storeVals) {
+                        values.storeVals[key] = storeVals;
+                        updateState({ storeVals });
+                        vscode.postMessage({ type: 'values', key, storeVals });
+                    }
                 };
                 vals = await values.prompt(
                     step || this.flowDiagram.flow,

@@ -191,6 +191,14 @@ body {
   transform: rotate(270deg);
   cursor: pointer;
 }
+.toolbox-icon {
+  float: right;
+  margin: 3px 6px;
+  outline: none;
+}
+.toolbox-icon:focus {
+  outline: none;
+}
 .flow-toolbox {
   height: 100%;
   overflow: auto;
