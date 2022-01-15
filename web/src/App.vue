@@ -107,7 +107,7 @@ export default defineComponent({
           this.request = {
             url: DUMMY_URL,
             name: this.requestName,
-            method: 'get',
+            method: 'GET',
             headers: {},
             source: ''
           };

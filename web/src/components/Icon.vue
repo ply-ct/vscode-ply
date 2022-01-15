@@ -1,5 +1,8 @@
 <template>
-  <img class="icon" :src="src" :alt="alt" @click="onClick" />
+  <img v-if="!url" class="icon" :src="src" :alt="alt" :title="title" @click="onClick" />
+  <a v-if="url" class="icon-link" :href="url">
+    <img class="icon" :src="src" :alt="alt" :title="title" />
+  </a>
 </template>
 
 <script lang="ts">
@@ -15,6 +18,14 @@ export default defineComponent({
     file: {
       type: String,
       required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    url: {
+      type: String,
+      default: ''
     }
   },
   emits: ['click'],

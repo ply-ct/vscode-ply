@@ -426,7 +426,9 @@
   .flowbee-configurator-light .flowbee-config-tab-content th, .flowbee-configurator-light td {
     border: 1px solid #4f4f4f;
     text-align: left;
-    padding-left: 3px; }
+    padding-left: 3px;
+    min-width: 25px;
+    white-space: nowrap; }
   .flowbee-configurator-light .flowbee-config-tab-content div > label {
     padding-right: 10px;
     position: relative;
@@ -540,7 +542,9 @@
   .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
     border: 1px solid #4f4f4f;
     text-align: left;
-    padding-left: 3px; }
+    padding-left: 3px;
+    min-width: 25px;
+    white-space: nowrap; }
   .flowbee-configurator-dark .flowbee-config-tab-content div > label {
     padding-right: 10px;
     position: relative;

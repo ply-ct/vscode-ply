@@ -55,6 +55,12 @@ pre {
   margin-left: 10px;
   cursor: pointer;
 }
+.icon-link {
+  outline: none;
+}
+.icon-link:focus {
+  outline: none;
+}
 
 .endpoint {
   display: flex;

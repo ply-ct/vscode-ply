@@ -139,6 +139,12 @@ body {
   flex-grow: 1;
   margin-left: 7px;
 }
+.icon-link {
+  outline: none;
+}
+.icon-link:focus {
+  outline: none;
+}
 .flow-diagram {
   height: 100%;
   overflow: auto;
