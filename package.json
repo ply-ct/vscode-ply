@@ -195,10 +195,16 @@
           "default": "If Single",
           "scope": "window"
         },
+        "ply.testExplorerUseRequestEditor": {
+          "descripton": "When opening individual requests within flow/request suites from Test Explorer, open in Ply request editor",
+          "type": "boolean",
+          "default": true,
+          "scope": "window"
+        },
         "ply.saveBeforeRun": {
           "descripton": "Automatically save dirty test files before running",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "scope": "window"
         },
         "ply.enableDiffEditorCodeLens": {

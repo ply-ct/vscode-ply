@@ -67,6 +67,7 @@ Setting | Description | Default
 `ply.env` | Environment variables to apply for Ply test execution |
 `ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
 `ply.openSuitesWhenRun` | Automatically open requests/flows in custom editor when executing from Test Explorer | If Single (running a single suite)
+`ply.testExplorerUseRequestEditor` | When opening individual requests within flow/request suites from Test Explorer, open in Ply request editor | true
 
 ### Custom debug configuration
 You can specify a custom vscode debug configuration to use for Ply cases instead of the built-in default.

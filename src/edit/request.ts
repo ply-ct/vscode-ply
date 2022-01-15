@@ -35,7 +35,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         this.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme === 'file') {
-                    console.debug(`Open doc: ${doc.uri}`);
                     this.openFileDocs.set(doc.uri.toString(), doc);
                 }
             })
@@ -43,7 +42,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         this.subscriptions.push(
             vscode.workspace.onDidCloseTextDocument((doc) => {
                 if (doc.uri.scheme === 'file') {
-                    console.debug(`Close doc: ${doc.uri}`);
                     this.openFileDocs.delete(doc.uri.toString());
                 }
             })

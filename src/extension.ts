@@ -71,6 +71,24 @@ export async function activate(context: vscode.ExtensionContext) {
         return _onFlowConfiguratorOpen.on(listener);
     };
 
+    const openEditor = async (fileUri: vscode.Uri, lineNumber?: number) => {
+        await vscode.commands.executeCommand('vscode.open', fileUri);
+        if (lineNumber) {
+            const editor = vscode.window.visibleTextEditors.find((editor) => {
+                let docUri = editor.document.uri;
+                if (docUri.scheme === Result.URI_SCHEME) {
+                    // when codelens is 'Compare result files' clicked in actual, scheme is ply-result;
+                    // so convert to file uri
+                    docUri = Result.convertUri(editor.document.uri);
+                }
+                return docUri.toString() === fileUri.toString();
+            });
+            if (editor) {
+                await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
+            }
+        }
+    };
+
     const requestEditor = new RequestEditor(
         context,
         new AdapterHelper('requests', testAdapters),
@@ -95,15 +113,42 @@ export async function activate(context: vscode.ExtensionContext) {
             const uri = editor?.document.uri;
             if (uri?.scheme === 'ply-dummy') {
                 await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+                const fileUri = uri.with({ scheme: 'file', query: '' });
                 if (uri.path.endsWith('.flow') && uri.query !== 'request') {
-                    vscode.commands.executeCommand('ply.open-flow', {
-                        uri: uri.with({ scheme: 'file' })
-                    });
+                    vscode.commands.executeCommand('ply.open-flow', { uri: fileUri });
                 } else {
-                    const spec = uri.path.endsWith('.ply')
-                        ? { scheme: 'file', fragment: '', query: '' } // standalone request
-                        : { scheme: 'ply-request', query: '' }; // embedded request
-                    vscode.commands.executeCommand('ply.open-request', { uri: uri.with(spec) });
+                    const useReqEd =
+                        uri.path.endsWith('.ply') ||
+                        vscode.workspace
+                            .getConfiguration('ply', fileUri)
+                            .get('testExplorerUseRequestEditor');
+                    if (useReqEd) {
+                        vscode.commands.executeCommand('ply.open-request', {
+                            uri: uri.with({ scheme: 'ply-request', query: '' })
+                        });
+                    } else {
+                        if (uri.path.endsWith('.flow')) {
+                            vscode.commands.executeCommand('ply.open-flow', { uri: fileUri });
+                        } else {
+                            let lineNumber = 0;
+                            if (uri.fragment) {
+                                const workspaceFolder =
+                                    vscode.workspace.getWorkspaceFolder(fileUri);
+                                if (workspaceFolder) {
+                                    const adapter = testAdapters.get(
+                                        workspaceFolder.uri.toString()
+                                    );
+                                    if (adapter) {
+                                        const test = adapter.plyRoots.findInfo(
+                                            fileUri.with({ query: '' }).toString()
+                                        );
+                                        lineNumber = test?.line || 0;
+                                    }
+                                }
+                            }
+                            openEditor(fileUri.with({ fragment: '', query: '' }), lineNumber);
+                        }
+                    }
                 }
             }
         })
