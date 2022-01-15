@@ -10,16 +10,15 @@ import {
     TestRunFinishedEvent,
     TestSuiteEvent,
     TestEvent,
-    RetireEvent,
-    TestSuiteInfo
+    RetireEvent
 } from 'vscode-test-adapter-api';
 import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
-import { PlyRoots } from './plyRoots';
+import { Info, PlyRoots } from './plyRoots';
 import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
-import { SubmitCodeLensProvider } from './codeLens';
+import { PlyCodeLensProvider } from './codeLens';
 import { Values } from './values';
 
 export class PlyAdapter implements TestAdapter {
@@ -117,7 +116,7 @@ export class PlyAdapter implements TestAdapter {
         flowWatcher.onDidChange((uri) => this.onSuiteChange(uri));
         flowWatcher.onDidDelete((uri) => this.onSuiteDelete(uri));
 
-        const submitCodeLensProvider = new SubmitCodeLensProvider(workspaceFolder, plyRoots);
+        const submitCodeLensProvider = new PlyCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(
             vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider)
         );
@@ -275,8 +274,6 @@ export class PlyAdapter implements TestAdapter {
 
     /**
      * Check if save needed, and open file (for custom editors) in case run from Test Explorer.
-     * False value for 'proceed' indicates flow run came from Test Explorer, so trigger exec through editor
-     * and then return immediately since run is triggered separately.
      */
     private async checkAndProceed(
         testIds: string[],
@@ -287,29 +284,14 @@ export class PlyAdapter implements TestAdapter {
         }
 
         if (!runOptions?.noAutoOpen && this.config.openSuitesWhenRun !== 'Never') {
-            const editableSuites: TestSuiteInfo[] = this.getEditableSuites(testIds);
-            if (editableSuites.length > 0) {
-                if (editableSuites.length === 1) {
-                    const path = PlyRoots.toUri(editableSuites[0].id).path;
-                    if (path.endsWith('.ply')) {
-                        await vscode.commands.executeCommand('ply.open-request', testIds[0]);
-                    } else if (path.endsWith('.flow')) {
-                        await vscode.commands.executeCommand('ply.open-flow', testIds[0]);
-                        if (!runOptions?.proceed) {
-                            // run through editor to prompt for values if needed
-                            vscode.commands.executeCommand('ply.flow-action', testIds[0], 'run');
-                            return false;
-                        }
-                    }
+            const editables: Info[] = this.getEditables(testIds);
+            if (editables.length > 0) {
+                if (editables.length === 1) {
+                    return await this.openEditable(editables[0], runOptions);
                 } else if (this.config.openSuitesWhenRun === 'Always') {
                     // you asked for it -- open all suites
-                    editableSuites.forEach(async (edSuite) => {
-                        const path = PlyRoots.toUri(editableSuites[0].id).path;
-                        if (path.endsWith('.ply')) {
-                            await vscode.commands.executeCommand('ply.open-request', edSuite.id);
-                        } else if (path.endsWith('.flow')) {
-                            await vscode.commands.executeCommand('ply.open-flow', edSuite.id);
-                        }
+                    editables.forEach(async (editable) => {
+                        await this.openEditable(editable, { ...runOptions, proceed: true });
                     });
                 }
             }
@@ -319,13 +301,41 @@ export class PlyAdapter implements TestAdapter {
     }
 
     /**
-     * Returns request and flow suites with custom editors
+     * False value for 'proceed' indicates flow run came from Test Explorer, so trigger exec through editor
+     * and then return immediately since run is triggered separately.
      */
-    private getEditableSuites(testIds: string[]): TestSuiteInfo[] {
-        return this.plyRoots.getSuiteFileInfos(testIds).filter((suiteFileInfo) => {
-            const uriPath = PlyRoots.toUri(suiteFileInfo.id).path;
-            return uriPath.endsWith('.ply') || uriPath.endsWith('.flow');
-        });
+    private async openEditable(
+        editable: Info,
+        runOptions?: ply.RunOptions & { proceed?: boolean; noAutoOpen?: boolean }
+    ): Promise<boolean> {
+        const uri = PlyRoots.toUri(editable.id);
+        if (uri.path.endsWith('.ply')) {
+            await vscode.commands.executeCommand('ply.open-request', {
+                uri: uri.with({ fragment: '' })
+            });
+        } else if (uri.path.endsWith('.flow')) {
+            await vscode.commands.executeCommand('ply.open-flow', editable.id);
+            if (!runOptions?.proceed) {
+                // run through editor to prompt for values if needed
+                await vscode.commands.executeCommand(
+                    'ply.flow-action',
+                    editable.id,
+                    'run',
+                    runOptions
+                );
+                return false;
+            }
+        } else {
+            await vscode.commands.executeCommand('vscode.open', uri);
+        }
+        return true;
+    }
+
+    /**
+     * Returns request and flow suites with editors
+     */
+    private getEditables(testIds: string[]): Info[] {
+        return this.plyRoots.getFileInfos(testIds);
     }
 
     /**
@@ -333,11 +343,15 @@ export class PlyAdapter implements TestAdapter {
      */
     private async promptToSaveDirtySuites(testIds: string[]): Promise<boolean> {
         const suiteUris = this.plyRoots
-            .getSuiteFileInfos(testIds)
+            .getFileInfos(testIds)
             .map((suite) => PlyRoots.toUri(suite.id));
         const dirtyDocs: vscode.TextDocument[] = [];
         for (const doc of vscode.workspace.textDocuments) {
-            if (doc.isDirty && suiteUris.find((uri) => uri.toString() === doc.uri.toString())) {
+            if (
+                doc.isDirty &&
+                (doc.fileName.endsWith('.ply') ||
+                    suiteUris.find((uri) => uri.toString() === doc.uri.toString()))
+            ) {
                 dirtyDocs.push(doc);
             }
         }

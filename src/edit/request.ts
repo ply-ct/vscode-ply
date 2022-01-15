@@ -69,8 +69,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         );
         webviewPanel.webview.html = web.html;
 
-        let requestCanceled = false;
-
         const updateRequest = async (options?: RequestEditorOptions) => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
@@ -88,15 +86,14 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             await webviewPanel.webview.postMessage(msg);
         };
 
+        let requestCanceled = false;
         const updateResponse = async (response?: Response & { source: string }) => {
-            if (!requestCanceled) {
-                webviewPanel.webview.postMessage({
-                    type: 'response',
-                    response: response,
-                    sent: this.time()
-                });
-            }
-            requestCanceled = false;
+            webviewPanel.webview.postMessage({
+                type: 'response',
+                response: requestCanceled ? undefined : response,
+                sent: this.time(),
+                ...(requestCanceled && { requestCanceled })
+            });
         };
 
         let disposables: { dispose(): void }[] = [];
@@ -151,22 +148,30 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     this.showProblems(problems, document.uri, message.resource, message.markers);
                 } else if (message.type === 'action') {
                     if (message.action === 'run' || message.action === 'submit') {
+                        requestCanceled = false;
                         if (document.isDirty) {
-                            await document.save();
+                            requestCanceled = !(await this.promptOrSave(document.uri));
+                            if (!requestCanceled) {
+                                await document.save();
+                            }
                         }
-                        const runOptions =
-                            message.action === 'submit' ? { submit: true } : undefined;
-                        this.adapterHelper.run(
-                            document.uri,
-                            message.target,
-                            {},
-                            runOptions,
-                            false,
-                            true
-                        );
+                        if (requestCanceled) {
+                            updateResponse(undefined);
+                        } else {
+                            const runOptions =
+                                message.action === 'submit' ? { submit: true } : undefined;
+                            this.adapterHelper.run(
+                                document.uri,
+                                message.target,
+                                {},
+                                runOptions,
+                                false,
+                                true
+                            );
+                        }
                     } else if (message.action === 'cancel') {
-                        // no can turn back request
                         requestCanceled = true;
+                        // no can turn back request
                     }
                 }
             })
@@ -353,6 +358,36 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             lineNumbers: editorSettings.get('lineNumbers', 'on') === 'on',
             hovers: editorSettings.get('hover.enabled', true)
         };
+    }
+
+    /**
+     * Returns false if canceled.
+     */
+    async promptOrSave(uri: vscode.Uri): Promise<boolean> {
+        const adapter = this.adapterHelper.getAdapter(uri);
+        if (adapter) {
+            let doSave = adapter.config.saveBeforeRun;
+            if (!doSave) {
+                const saveAndRun = 'Save and Run';
+                const alwaysSave = 'Always Save before Run';
+                const docName = path.basename(uri.path);
+                const res = await vscode.window.showWarningMessage(
+                    `Save request running: ${docName}?`,
+                    saveAndRun,
+                    alwaysSave,
+                    'Cancel'
+                );
+                doSave = res === saveAndRun || res === alwaysSave;
+                if (res === alwaysSave) {
+                    vscode.workspace
+                        .getConfiguration('ply')
+                        .update('saveBeforeRun', true, vscode.ConfigurationTarget.Workspace);
+                }
+            }
+            return doSave;
+        } else {
+            return false;
+        }
     }
 
     showProblems(

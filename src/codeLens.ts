@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PlyRoots } from './plyRoots';
 
-export class SubmitCodeLensProvider implements vscode.CodeLensProvider {
+export class PlyCodeLensProvider implements vscode.CodeLensProvider {
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly plyRoots: PlyRoots
@@ -37,6 +37,30 @@ export class SubmitCodeLensProvider implements vscode.CodeLensProvider {
                                 ]
                             })
                         );
+                        if (child.file?.startsWith('ply-dummy:')) {
+                            const uri = vscode.Uri.parse(child.file);
+                            if (uri.fragment) {
+                                codeLenses.push(
+                                    new vscode.CodeLens(range, {
+                                        title: 'Request Editor',
+                                        command: 'ply.open-request',
+                                        arguments: [
+                                            { uri: uri.with({ scheme: 'ply-request', query: '' }) }
+                                        ]
+                                    })
+                                );
+                                // restore Test Explorer missing codeLenses
+                                if (child.line > 0) {
+                                    codeLenses.push(
+                                        new vscode.CodeLens(range, {
+                                            title: 'Test Explorer',
+                                            command: 'test-explorer.reveal',
+                                            arguments: [child.id]
+                                        })
+                                    );
+                                }
+                            }
+                        }
                     }
                 }
             }

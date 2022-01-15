@@ -464,34 +464,39 @@ export class PlyRoots {
 
     /**
      * Get unique list of (not skipped) suite files for testOrSuiteIds.
+     * Includes .ply files as test infos.
      * @param testOrSuiteIds
      */
-    getSuiteFileInfos(testOrSuiteIds: string[], suites: TestSuiteInfo[] = []): TestSuiteInfo[] {
+    getFileInfos(testOrSuiteIds: string[], infos: Info[] = []): Info[] {
         for (const testOrSuiteId of testOrSuiteIds) {
             const testOrSuite = this.find((i) => i.id === testOrSuiteId);
             if (testOrSuite) {
                 if (testOrSuite.type === 'suite') {
-                    if (testOrSuite.file && !suites.find((suite) => suite.id === testOrSuite.id)) {
-                        suites.push(testOrSuite);
+                    if (testOrSuite.file && !infos.find((suite) => suite.id === testOrSuite.id)) {
+                        infos.push(testOrSuite);
                     } else {
-                        const childSuites = this.getSuiteFileInfos(
+                        const childSuites = this.getFileInfos(
                             testOrSuite.children.map((c) => c.id)
                         ).filter((s) => {
                             // honor skip when executing from parent suite (not explicitly running test or suite)
                             const suite = this.getSuite(s.id);
                             return suite && !suite.skip;
                         });
-                        suites = [...suites, ...childSuites];
+                        infos = [...infos, ...childSuites];
                     }
                 } else if (testOrSuite.type === 'test') {
-                    const suite = this.getParent(testOrSuiteId);
-                    if (suite && !suites.find((suite) => suite.id === testOrSuite.id)) {
-                        suites.push(suite);
+                    if (testOrSuite.id.startsWith('file:')) {
+                        infos.push(testOrSuite);
+                    } else {
+                        const suite = this.getParent(testOrSuiteId);
+                        if (suite && !infos.find((suite) => suite.id === testOrSuite.id)) {
+                            infos.push(suite);
+                        }
                     }
                 }
             }
         }
-        return suites;
+        return infos;
     }
 
     /**

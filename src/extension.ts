@@ -165,7 +165,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // open request in custom editor
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.open-request', async (...args: any[]) => {
-            const uri = args[0].uri;
+            const uri =
+                typeof args[0] === 'string'
+                    ? vscode.Uri.parse(args[0]).with({ fragment: '' })
+                    : args[0].uri;
             vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
         })
     );
@@ -210,7 +213,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('ply.flow-action', async (...args: any[]) => {
             const item = await PlyItem.getItem(args[0]);
             if (item?.uri) {
-                _onFlowAction.emit({ uri: item.uri, action: args[1] });
+                _onFlowAction.emit({ uri: item.uri, action: args[1], options: args[2] });
             }
         })
     );

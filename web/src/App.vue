@@ -133,6 +133,9 @@ export default defineComponent({
           ...(message.response || this.blankResponse()),
           loading: false
         };
+        if (message.requestCanceled) {
+          this.setMessage('Request canceled');
+        }
       } else if (message.type === 'action') {
         this.setMessage('');
         // TODO
