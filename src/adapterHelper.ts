@@ -61,7 +61,7 @@ export class AdapterHelper {
         }
     }
 
-    expectedResult(uri: vscode.Uri, target?: string) {
+    async expectedResult(uri: vscode.Uri, type: string, target?: string) {
         const id = this.getId(uri, target);
         console.debug(`expected: ${id}`);
         const adapter = this.getAdapter(uri);
@@ -71,14 +71,22 @@ export class AdapterHelper {
             if (target) {
                 fileUri = fileUri.with({ fragment: target });
             }
-            const expectedUri = Result.fromUri(fileUri).toUri().with({ query: 'type=flow' });
-            vscode.commands.executeCommand('ply.openResult', expectedUri);
+            const expectedUri = Result.fromUri(fileUri)
+                .toUri()
+                .with({ query: `type=${type}` });
+            if (fs.existsSync(expectedUri.fsPath)) {
+                await vscode.commands.executeCommand('ply.openResult', expectedUri);
+            } else {
+                vscode.window.showErrorMessage(
+                    `Expected results file not found: ${expectedUri.fsPath}`
+                );
+            }
         } else {
             vscode.window.showErrorMessage(`Suite not found for: ${id}`);
         }
     }
 
-    compareResults(uri: vscode.Uri, target?: string) {
+    async compareResults(uri: vscode.Uri, target?: string) {
         const id = this.getId(uri, target);
         console.debug(`compare: ${id}`);
         vscode.commands.executeCommand('ply.diff', id);

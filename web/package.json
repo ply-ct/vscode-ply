@@ -12,12 +12,14 @@
     "monaco-workers": "npm run editor-worker && npm run json-worker && npm run yaml-worker"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.27",
     "element-plus": "latest",
     "flowbee": "^0.3.3",
     "http-status-codes": "^2.1.4",
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.29.1",
     "monaco-yaml": "^3.2.1",
+    "vscode-uri": "^3.0.3",
     "vue": "^3.2.26"
   },
   "devDependencies": {
@@ -27,12 +29,11 @@
     "@types/js-yaml": "^4.0.5",
     "@vue/compiler-sfc": "^3.2.26",
     "eslint": "^8.6.0",
-    "@vscode/codicons": "^0.0.27",
     "eslint-plugin-prettier-vue": "^3.1.0",
     "eslint-plugin-vue": "^8.2.0",
     "mkdirp": "^1.0.4",
     "node-sass": "^7.0.1",
-    "parcel": "^2.1.1",
+    "parcel": "^2.2.0",
     "rollup": "^2.63.0",
     "rollup-plugin-copy-watch": "^0.0.1",
     "rollup-plugin-postcss": "^4.0.2",

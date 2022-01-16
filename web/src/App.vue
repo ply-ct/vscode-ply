@@ -4,6 +4,7 @@
       <request
         :request="request"
         :options="options"
+        :file="filename"
         @updateRequest="onUpdate"
         @updateSource="onUpdateSource"
         @updateMarkers="onUpdateMarkers"
@@ -26,6 +27,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { URI } from 'vscode-uri';
 import * as yaml from './util/yaml';
 import * as time from './util/time';
 import Split from './components/Split.vue';
@@ -67,6 +69,17 @@ export default defineComponent({
   },
   unmounted: function () {
     window.removeEventListener('message', this.handleMessage);
+  },
+  computed: {
+    filename() {
+      const uri = URI.parse(this.file);
+      if (!uri.path.endsWith('.ply')) {
+        const lastSlash = uri.path.lastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash < uri.path.length - 1) {
+          return uri.path.substring(lastSlash + 1);
+        }
+      }
+    }
   },
   methods: {
     blankResponse(): Resp {
@@ -174,16 +187,16 @@ export default defineComponent({
       });
     },
     onAction(action: string, requestName: string) {
-      this.setMessage('');
       if (action === 'run' || action === 'submit') {
+        this.setMessage('');
         this.response.loading = true;
-        time.logtime(`Webview sends: action-${action}`);
-        vscode.postMessage({
-          type: 'action',
-          action,
-          target: requestName
-        });
       }
+      time.logtime(`Webview sends: action-${action}`);
+      vscode.postMessage({
+        type: 'action',
+        action,
+        target: requestName
+      });
     },
     onCancel(requestName: string) {
       time.logtime('Webview sends: action-cancel');

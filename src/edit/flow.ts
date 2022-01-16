@@ -244,7 +244,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         vscode.commands.executeCommand('ply.open-request', { uri });
                     }
                 } else if (message.type === 'expected') {
-                    this.adapterHelper.expectedResult(document.uri, message.target);
+                    this.adapterHelper.expectedResult(document.uri, 'flow', message.target);
                 } else if (message.type === 'compare') {
                     this.adapterHelper.compareResults(document.uri, message.target);
                 } else if (message.type === 'instance') {

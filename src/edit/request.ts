@@ -176,6 +176,32 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     } else if (message.action === 'cancel') {
                         requestCanceled = true;
                         // no can turn back request
+                    } else if (message.action === 'open-file') {
+                        vscode.commands.executeCommand(
+                            'vscode.open',
+                            document.uri.with({ scheme: 'file', fragment: '' })
+                        );
+                    } else if (message.action === 'expected') {
+                        let type = 'request';
+                        let target = message.target;
+                        if (document.uri.path.endsWith('.flow') && document.uri.fragment) {
+                            type = 'flow';
+                            target = document.uri.fragment;
+                        }
+                        this.adapterHelper.expectedResult(
+                            document.uri.with({ scheme: 'file', fragment: '' }),
+                            type,
+                            target
+                        );
+                    } else if (message.action === 'compare') {
+                        let target = message.target;
+                        if (document.uri.path.endsWith('.flow') && document.uri.fragment) {
+                            target = document.uri.fragment;
+                        }
+                        this.adapterHelper.compareResults(
+                            document.uri.with({ scheme: 'file', fragment: '' }),
+                            target
+                        );
                     }
                 }
             })

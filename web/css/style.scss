@@ -6,6 +6,16 @@ body {
 pre {
   margin: 0;
 }
+a {
+  outline: none;
+  text-decoration: none;
+}
+a:focus {
+  outline: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
 #app {
   font-family: var(--vscode-font-family);
@@ -32,6 +42,9 @@ pre {
   margin-bottom: 5px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
+.request-line {
+  white-space: nowrap;
+}
 .request-name {
   display: inline-block;
   position: relative;
@@ -45,6 +58,12 @@ pre {
 .request-name:focus {
   outline: 1px solid #409eff;
 }
+.file-link {
+  font-size: 12px;
+  vertical-align: middle;
+  position: relative;
+  top: 2px;
+}
 
 .actions {
   float: right;
@@ -54,12 +73,7 @@ pre {
 .icon {
   margin-left: 10px;
   cursor: pointer;
-}
-.icon-link {
-  outline: none;
-}
-.icon-link:focus {
-  outline: none;
+  width: 16px;
 }
 
 .endpoint {
@@ -133,9 +147,9 @@ pre {
   padding: 0 8px;
 }
 .status a,
-a:visited,
-a:hover,
-a:active {
+.status a:visited,
+.status a:hover,
+.status a:active {
   color: inherit;
   text-decoration: none;
   font-family: var(--vscode-font-family);

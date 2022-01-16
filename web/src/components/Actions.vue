@@ -4,6 +4,13 @@
       <icon :base="options.iconBase" file="run.svg" title="Run Test" @click="onAction" />
       <icon
         :base="options.iconBase"
+        file="expected.svg"
+        title="Expected Results"
+        @click="onAction"
+      />
+      <icon :base="options.iconBase" file="compare.svg" title="Compare Results" @click="onAction" />
+      <icon
+        :base="options.iconBase"
         file="help.svg"
         title="Help"
         url="https://ply-ct.org/ply/topics/requests"

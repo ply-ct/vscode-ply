@@ -1,6 +1,6 @@
 <template>
   <div class="request">
-    <div>
+    <div class="request-line">
       <a :name="request.name"></a>
       <div
         class="request-name"
@@ -10,8 +10,11 @@
         @keydown="onNameKeyDown"
         @blur="onNameBlur"
       >
-        {{ request.name || 'x' }}
+        {{ request.name || 'new-request' }}
       </div>
+      <a v-if="file" class="file-link" href="" @click="onAction('open-file', request.name)">{{
+        file
+      }}</a>
       <actions :options="options" :request="request" @requestAction="onAction" />
     </div>
     <endpoint
@@ -73,6 +76,10 @@ export default defineComponent({
     options: {
       type: Object,
       required: true
+    },
+    file: {
+      type: String,
+      default: ''
     }
   },
   emits: ['renameRequest', 'updateRequest', 'updateSource', 'updateMarkers', 'requestAction'],
