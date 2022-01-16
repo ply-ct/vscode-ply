@@ -10,7 +10,7 @@
         @requestAction="onAction"
       />
     </pane>
-    <pane :is-right="true">
+    <pane v-if="options.runnable" :is-right="true">
       <div v-if="message" class="error">{{ message }}</div>
       <response
         v-if="!message"

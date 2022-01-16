@@ -1,10 +1,19 @@
 <template>
   <div class="endpoint">
-    <el-select v-model="request.method" @change="update('method', $event)">
+    <el-select
+      v-model="request.method"
+      :disabled="options.readonly"
+      @change="update('method', $event)"
+    >
       <el-option v-for="item in methods" :key="item.value" :value="item.value" />
     </el-select>
-    <el-input v-model="request.url" class="endpoint-url" @input="update('url', $event)" />
-    <button class="action-btn" type="button" @click="submit">Submit</button>
+    <el-input
+      v-model="request.url"
+      class="endpoint-url"
+      :readonly="options.readonly"
+      @input="update('url', $event)"
+    />
+    <button v-if="options.runnable" class="action-btn" type="button" @click="submit">Submit</button>
   </div>
 </template>
 
@@ -15,6 +24,10 @@ import { Request } from '../model/request';
 export default defineComponent({
   name: 'Endpoint',
   props: {
+    options: {
+      type: Object,
+      required: true
+    },
     request: {
       type: Object as PropType<Request>,
       required: true

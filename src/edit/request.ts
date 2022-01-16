@@ -19,6 +19,8 @@ export interface RequestEditorOptions {
     indent?: number;
     lineNumbers?: boolean;
     hovers?: boolean;
+    readonly: boolean;
+    runnable: boolean;
 }
 
 export class RequestEditor implements vscode.CustomTextEditorProvider {
@@ -75,11 +77,12 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 type: 'update',
                 options: {
                     base: baseUri.toString(),
-                    indent: adapter.config.plyOptions.prettyIndent
+                    indent: adapter.config.plyOptions.prettyIndent,
+                    readonly: false,
+                    runnable: true
                 },
                 file: isFile ? document.uri.fsPath : document.uri.toString(),
                 text: document.getText(),
-                readonly: !isFile || (fs.statSync(document.uri.fsPath).mode & 146) === 0,
                 sent: this.time()
             } as any;
             if (options) msg.options = options;
@@ -104,7 +107,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     await updateRequest(
                         this.getOptions(document.uri, {
                             base: baseUri.toString(),
-                            indent: adapter.config.plyOptions.prettyIndent
+                            indent: adapter.config.plyOptions.prettyIndent,
+                            readonly: false,
+                            runnable: true
                         })
                     );
                     updateResponse(this.getResponse(document.uri));
@@ -356,7 +361,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         return {
             ...baseOptions,
             lineNumbers: editorSettings.get('lineNumbers', 'on') === 'on',
-            hovers: editorSettings.get('hover.enabled', true)
+            hovers: editorSettings.get('hover.enabled', true),
+            readonly: uri.scheme === 'git' || (fs.statSync(uri.fsPath).mode & 146) === 0,
+            runnable: uri.scheme !== 'git'
         };
     }
 

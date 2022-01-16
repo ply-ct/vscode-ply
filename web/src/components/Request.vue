@@ -5,7 +5,7 @@
       <div
         class="request-name"
         tabindex="0"
-        contenteditable="true"
+        :contenteditable="!options.readonly"
         @input="onRename"
         @keydown="onNameKeyDown"
         @blur="onNameBlur"
@@ -14,7 +14,12 @@
       </div>
       <actions :options="options" :request="request" @requestAction="onAction" />
     </div>
-    <endpoint :request="request" @updateRequest="onUpdate" @submitRequest="onSubmit" />
+    <endpoint
+      :options="options"
+      :request="request"
+      @updateRequest="onUpdate"
+      @submitRequest="onSubmit"
+    />
     <el-tabs tab-position="top">
       <el-tab-pane label="Body">
         <editor
@@ -22,12 +27,17 @@
           :value="request.body || ''"
           :language="language"
           :options="bodyOptions"
+          :readonly="options.readonly"
           @updateSource="onUpdateBody"
           @updateMarkers="onUpdateMarkers"
         />
       </el-tab-pane>
       <el-tab-pane label="Headers">
-        <table-comp :value="request.headers" @updateValue="onUpdateHeaders" />
+        <table-comp
+          :value="request.headers"
+          :readonly="options.readonly"
+          @updateValue="onUpdateHeaders"
+        />
       </el-tab-pane>
       <el-tab-pane label="Source">
         <editor
@@ -35,6 +45,7 @@
           :value="request.source"
           language="yaml"
           :options="options"
+          :readonly="options.readonly"
           @updateSource="onUpdateSource"
           @updateMarkers="onUpdateMarkers"
         />

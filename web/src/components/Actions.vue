@@ -1,12 +1,14 @@
 <template>
   <div class="actions">
-    <icon :base="options.iconBase" file="run.svg" title="Run" @click="onAction" />
-    <icon
-      :base="options.iconBase"
-      file="help.svg"
-      title="Help"
-      url="https://ply-ct.org/ply/topics/requests"
-    />
+    <div v-if="options.runnable">
+      <icon :base="options.iconBase" file="run.svg" title="Run" @click="onAction" />
+      <icon
+        :base="options.iconBase"
+        file="help.svg"
+        title="Help"
+        url="https://ply-ct.org/ply/topics/requests"
+      />
+    </div>
   </div>
 </template>
 
