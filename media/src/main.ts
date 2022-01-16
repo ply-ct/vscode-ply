@@ -246,7 +246,7 @@ export class Flow implements flowbee.Disposable {
             const toolboxSplitter = new ToolboxSplitter(toolboxContainer);
             // new request
             const newRequest = document.getElementById('newRequest') as HTMLInputElement;
-            newRequest.onclick = (e: MouseEvent) => {
+            newRequest.onclick = (_e: MouseEvent) => {
                 toolboxSplitter.toggleFlowRequests();
                 vscode.postMessage({ type: 'new', element: 'request' });
             };
@@ -296,8 +296,10 @@ export class Flow implements flowbee.Disposable {
 
     render() {
         this.flowDiagram.render(this.options.diagramOptions);
-        this.toolbox?.render(this.options.toolboxOptions);
-        this.updateRequests(requests);
+        if (!this.readonly) {
+            this.toolbox?.render(this.options.toolboxOptions);
+            this.updateRequests(requests);
+        }
         if (Flow.configurator?.isOpen) {
             const cfgr = Flow.configurator;
             cfgr.render(
@@ -566,11 +568,18 @@ window.addEventListener('message', async (event) => {
         const flow = new Flow(message.base, websocketPort, text, message.file, message.readonly);
         flow.switchMode('select');
         flow.flowDiagram.readonly = message.readonly;
-        flow.render();
         if (isNew) {
-            console.info(`Saving new flow: ${message.file}`);
-            flow.updateFlow();
+            if (message.readonly) {
+                // new and readonly means blank
+                updateState({ readonly: true });
+                document.getElementById('container')!.style.visibility = 'hidden';
+                return;
+            } else {
+                console.info(`Saving new flow: ${message.file}`);
+                flow.updateFlow();
+            }
         }
+        flow.render();
         // save state
         updateState({
             base: message.base,

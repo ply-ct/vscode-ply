@@ -100,22 +100,24 @@ export default defineComponent({
         }
         const isNew = !message.text;
         if (isNew) {
-          this.requestName = message.file
-            .split('/')
-            .pop()
-            .replace(/\.[^/.]+$/, '');
-          this.request = {
-            url: DUMMY_URL,
-            name: this.requestName,
-            method: 'GET',
-            headers: {},
-            source: ''
-          };
-          this.request.source = this.toYaml();
-          this.update();
-          this.$nextTick(function () {
-            this.focusRequestName();
-          });
+          if (!message.options.readonly) {
+            this.requestName = message.file
+              .split('/')
+              .pop()
+              .replace(/\.[^/.]+$/, '');
+            this.request = {
+              url: DUMMY_URL,
+              name: this.requestName,
+              method: 'GET',
+              headers: {},
+              source: ''
+            };
+            this.request.source = this.toYaml();
+            this.update();
+            this.$nextTick(function () {
+              this.focusRequestName();
+            });
+          }
         } else {
           const obj = yaml.load(message.file, message.text);
           this.requestName = Object.keys(obj)[0];
