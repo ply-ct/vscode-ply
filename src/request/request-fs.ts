@@ -5,8 +5,28 @@ import { FlowMerge } from './flow';
 export class RequestFs implements vscode.FileSystemProvider {
     static URI_SCHEME = 'ply-request';
 
+    private disposables: { dispose(): void }[] = [];
+    private openFileDocs = new Map<string, vscode.TextDocument>();
+
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+    constructor() {
+        this.disposables.push(
+            vscode.workspace.onDidOpenTextDocument((doc) => {
+                if (doc.uri.scheme === 'file') {
+                    this.openFileDocs.set(doc.uri.toString(), doc);
+                }
+            })
+        );
+        this.disposables.push(
+            vscode.workspace.onDidCloseTextDocument((doc) => {
+                if (doc.uri.scheme === 'file') {
+                    this.openFileDocs.delete(doc.uri.toString());
+                }
+            })
+        );
+    }
 
     watch(_uri: vscode.Uri): vscode.Disposable {
         // ignore, fires for all changes
@@ -29,10 +49,11 @@ export class RequestFs implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const fileUri = this.toFileUri(uri);
+        const text = await this.getText(fileUri);
         if (uri.path.endsWith('.flow')) {
-            return new TextEncoder().encode(await new FlowMerge(fileUri).readRequest(uri));
+            return new TextEncoder().encode(await new FlowMerge(fileUri).readRequest(uri, text));
         } else {
-            return new TextEncoder().encode(await new RequestMerge(fileUri).readRequest(uri));
+            return new TextEncoder().encode(await new RequestMerge(fileUri).readRequest(uri, text));
         }
     }
 
@@ -49,7 +70,21 @@ export class RequestFs implements vscode.FileSystemProvider {
         return requestUri.with({ scheme: 'file', fragment: '', query: '' });
     }
 
+    private async getText(fileUri: vscode.Uri): Promise<string> {
+        const openDoc = this.openFileDocs.get(fileUri.toString());
+        if (openDoc) {
+            return openDoc.getText();
+        } else {
+            return Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString('utf8');
+        }
+    }
+
     dispose() {
+        for (const disposable of this.disposables) {
+            disposable.dispose();
+        }
+        this.disposables = [];
+        this.openFileDocs.clear();
         this.stats.clear();
     }
 

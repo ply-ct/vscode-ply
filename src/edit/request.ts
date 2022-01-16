@@ -26,7 +26,6 @@ export interface RequestEditorOptions {
 export class RequestEditor implements vscode.CustomTextEditorProvider {
     // subscriptions are long-running disposables (not disposed with webview)
     private subscriptions: { dispose(): void }[] = [];
-
     private openFileDocs = new Map<string, vscode.TextDocument>();
 
     constructor(
@@ -182,8 +181,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        // listen for external changes to embedded requests
         if (document.uri.scheme === 'ply-request') {
+            // listen for external changes to embedded requests
             disposables.push(
                 vscode.workspace.onDidChangeTextDocument(async (docChange) => {
                     const uri = docChange.document.uri;
@@ -208,6 +207,16 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                                 await updateRequest(); // reflect doc changes
                             }
                         }
+                    }
+                })
+            );
+
+            // whole file opened, need to sync
+            disposables.push(
+                vscode.workspace.onDidOpenTextDocument((fileDoc) => {
+                    const fileUri = document.uri.with({ scheme: 'file', fragment: '' });
+                    if (fileDoc.uri.toString() === fileUri.toString() && document.isDirty) {
+                        this.updateFileDoc(document.uri, fileDoc, document.getText());
                     }
                 })
             );
@@ -324,36 +333,40 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         }
     }
 
-    async update(document: vscode.TextDocument, text: string, alsoFile = false) {
+    private async update(document: vscode.TextDocument, text: string, alsoFile = false) {
         const isNew = !document.getText().trim();
         if (isNew) {
             fs.writeFileSync(document.uri.fsPath, text);
         } else {
             const edit = new vscode.WorkspaceEdit();
             edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), text);
+            await vscode.workspace.applyEdit(edit);
             if (document.uri.scheme === 'ply-request' && alsoFile) {
                 const fileUri = document.uri.with({ scheme: 'file', fragment: '', query: '' });
                 const openFileDoc = this.openFileDocs.get(fileUri.toString());
                 if (openFileDoc && !openFileDoc.isClosed) {
-                    // update file doc
-                    if (fileUri.path.endsWith('.flow')) {
-                        const updated = await new FlowMerge(fileUri).updateRequest(
-                            document.uri,
-                            text
-                        );
-                        edit.replace(
-                            openFileDoc.uri,
-                            new vscode.Range(0, 0, openFileDoc.lineCount, 0),
-                            updated
-                        );
-                    } else {
-                        const range = new RequestMerge(fileUri).getRange(document.uri, openFileDoc);
-                        edit.replace(openFileDoc.uri, range, text);
-                    }
+                    this.updateFileDoc(document.uri, openFileDoc, text);
                 }
             }
-            await vscode.workspace.applyEdit(edit);
         }
+    }
+
+    private async updateFileDoc(
+        requestUri: vscode.Uri,
+        fileDoc: vscode.TextDocument,
+        text: string
+    ) {
+        const fileUri = fileDoc.uri;
+        const edit = new vscode.WorkspaceEdit();
+        // update file doc
+        if (fileUri.path.endsWith('.flow')) {
+            const updated = await new FlowMerge(fileUri).updateRequest(requestUri, text);
+            edit.replace(fileDoc.uri, new vscode.Range(0, 0, fileDoc.lineCount, 0), updated);
+        } else {
+            const range = new RequestMerge(fileUri).getRange(requestUri, fileDoc);
+            edit.replace(fileDoc.uri, range, text);
+        }
+        await vscode.workspace.applyEdit(edit);
     }
 
     getOptions(uri: vscode.Uri, baseOptions: RequestEditorOptions): RequestEditorOptions {
@@ -422,7 +435,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
     }
 
     dispose() {
-        console.log('***** DISPOSING REQUEST EDITOR *****');
         for (const subscription of this.subscriptions) {
             subscription.dispose();
         }

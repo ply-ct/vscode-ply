@@ -14,9 +14,8 @@ export class FlowMerge {
     /**
      * Read embedded request from file
      */
-    async readRequest(requestUri: vscode.Uri): Promise<string> {
-        const fileText = await this.fileText();
-        const yamlObj = ply.loadYaml(this.fileUri.fsPath, fileText);
+    async readRequest(requestUri: vscode.Uri, text: string): Promise<string> {
+        const yamlObj = ply.loadYaml(this.fileUri.fsPath, text);
         const step = this.getStep(requestUri, yamlObj);
         return ply.dumpYaml(this.getRequest(step), this.getIndent());
     }
@@ -103,7 +102,7 @@ export class FlowMerge {
     }
 
     /**
-     * TODO: better way to determine indent
+     * TODO: more efficient way to determine indent
      */
     private getIndent(): number {
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(this.fileUri);

@@ -31,11 +31,11 @@ export class RequestMerge {
     /**
      * Read embedded request from file
      */
-    async readRequest(requestUri: vscode.Uri): Promise<string> {
-        const fileText = await this.fileText();
-        const reqObj = this.getRequestObject(requestUri, fileText);
+    async readRequest(requestUri: vscode.Uri, text: string): Promise<string> {
+        // const fileText = await this.fileText();
+        const reqObj = this.getRequestObject(requestUri, text);
         return ply.util
-            .lines(fileText)
+            .lines(text)
             .slice(reqObj.__start, reqObj.__end + 1)
             .join(os.EOL);
     }
