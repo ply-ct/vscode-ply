@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "element-plus": "latest",
-    "flowbee": "^0.3.2",
+    "flowbee": "^0.3.3",
     "http-status-codes": "^2.1.4",
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.29.1",

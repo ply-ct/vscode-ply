@@ -1,7 +1,7 @@
 <template>
   <div class="actions">
     <div v-if="options.runnable">
-      <icon :base="options.iconBase" file="run.svg" title="Run" @click="onAction" />
+      <icon :base="options.iconBase" file="run.svg" title="Run Test" @click="onAction" />
       <icon
         :base="options.iconBase"
         file="help.svg"
