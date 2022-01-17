@@ -5,6 +5,7 @@
         :request="request"
         :options="options"
         :file="filename"
+        :result="result"
         @updateRequest="onUpdate"
         @updateSource="onUpdateSource"
         @updateMarkers="onUpdateMarkers"
@@ -34,7 +35,7 @@ import Split from './components/Split.vue';
 import Pane from './components/Pane.vue';
 import Request from './components/Request.vue';
 import Response from './components/Response.vue';
-import { Request as Req, Response as Resp, DUMMY_URL } from './model/request';
+import { Request as Req, Response as Resp, Result, DUMMY_URL } from './model/request';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -49,7 +50,8 @@ export default defineComponent({
       request: null,
       response: null,
       file: '',
-      message: ''
+      message: '',
+      result: null
     } as any as {
       options: any;
       requestName: string;
@@ -57,6 +59,7 @@ export default defineComponent({
       response: Resp;
       file: string;
       message: string;
+      result: Result;
     };
   },
   mounted: function () {
@@ -155,9 +158,12 @@ export default defineComponent({
         this.setMessage('');
         // TODO
         console.log('REQUEST ACTION: ' + message.action);
-      } else if (message.type === 'error') {
-        this.response = this.blankResponse();
-        this.setMessage(`Error: ${message.text}`);
+      } else if (message.type === 'result') {
+        this.result = message.result;
+        if (this.result.state === 'errored') {
+          this.response = this.blankResponse();
+          this.setMessage(this.result.message ? `Error: ${this.result.message}` : '');
+        }
       }
     },
     onUpdate(updatedRequest: Req) {

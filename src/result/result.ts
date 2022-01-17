@@ -10,6 +10,11 @@ export type ResultContents = {
     end: number;
 };
 
+export interface TestResult {
+    state?: 'passed' | 'failed' | 'skipped' | 'errored';
+    message?: string;
+}
+
 export class Result {
     static URI_SCHEME = 'ply-result';
 

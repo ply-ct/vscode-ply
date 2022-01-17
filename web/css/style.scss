@@ -43,7 +43,15 @@ a:hover {
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 .request-line {
+  position: relative;
+  top: -2px;
+  height: 26px;
   white-space: nowrap;
+}
+.status-icon {
+  position: relative;
+  top: 6px;
+  left: 10px;
 }
 .request-name {
   display: inline-block;

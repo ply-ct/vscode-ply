@@ -25,3 +25,8 @@ export interface Response {
     source?: string;
     loading: boolean;
 }
+
+export interface Result {
+    state?: 'passed' | 'failed' | 'skipped' | 'errored';
+    message?: string;
+}

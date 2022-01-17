@@ -8,6 +8,7 @@ import { Response, Flow } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
 import { RequestMerge } from '../request/request';
 import { FlowMerge } from '../request/flow';
+import { TestResult } from '../result/result';
 
 export interface RequestActionEvent {
     uri: vscode.Uri;
@@ -89,12 +90,19 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         };
 
         let requestCanceled = false;
-        const updateResponse = async (response?: Response & { source: string }) => {
+        const updateResponse = (response?: Response & { source: string }) => {
             webviewPanel.webview.postMessage({
                 type: 'response',
                 response: requestCanceled ? undefined : response,
                 sent: this.time(),
                 ...(requestCanceled && { requestCanceled })
+            });
+        };
+        const updateResult = (result: TestResult) => {
+            webviewPanel.webview.postMessage({
+                type: 'result',
+                result,
+                sent: this.time()
             });
         };
 
@@ -260,7 +268,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         );
 
         if (document.uri.scheme === 'file' || document.uri.scheme === 'ply-request') {
-            const updateResults = (resultUri?: vscode.Uri) => {
+            const updateSuiteResponse = (resultUri?: vscode.Uri) => {
                 const adapter = this.adapterHelper.getAdapter(document.uri);
                 if (adapter?.values) {
                     const suite = adapter.plyRoots.getSuite(this.adapterHelper.getId(document.uri));
@@ -276,11 +284,16 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
 
             disposables.push(
                 adapter.testStates((testRunEvent) => {
-                    if (testRunEvent.type === 'test' && testRunEvent.state === 'errored') {
-                        webviewPanel.webview.postMessage({
-                            type: 'error',
-                            text: testRunEvent.message,
-                            sent: this.time()
+                    const fileUri = document.uri.with({ scheme: 'file' });
+                    if (
+                        testRunEvent.type === 'test' &&
+                        testRunEvent.state !== 'running' &&
+                        (document.uri.path.endsWith('.ply') ||
+                            fileUri.toString(true) === testRunEvent.test)
+                    ) {
+                        updateResult({
+                            state: testRunEvent.state,
+                            message: testRunEvent.message
                         });
                     } else if (testRunEvent.type === 'finished') {
                         updateResponse(this.getResponse(document.uri));
@@ -291,7 +304,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             if (adapter.values) {
                 disposables.push(
                     adapter.values.onValuesUpdate((updateEvent) =>
-                        updateResults(updateEvent.resultUri)
+                        updateSuiteResponse(updateEvent.resultUri)
                     )
                 );
             } else {
@@ -299,7 +312,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     // TODO: Need to send message (or is this just an edge case during extension development)?
                     disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
-                            updateResults(updateEvent.resultUri)
+                            updateSuiteResponse(updateEvent.resultUri)
                         )
                     );
                 });
@@ -465,7 +478,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             subscription.dispose();
         }
         this.subscriptions = [];
-
         this.openFileDocs.clear();
     }
 }

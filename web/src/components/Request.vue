@@ -1,6 +1,13 @@
 <template>
   <div class="request">
     <div class="request-line">
+      <img
+        v-if="result?.state && result.state !== 'skipped'"
+        class="status-icon"
+        :src="statusIcon"
+        :alt="result?.state"
+        :title="result?.message"
+      />
       <a :name="request.name"></a>
       <div
         class="request-name"
@@ -63,7 +70,7 @@ import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-import { Request } from '../model/request';
+import { Request, Result } from '../model/request';
 
 export default defineComponent({
   name: 'Request',
@@ -80,6 +87,10 @@ export default defineComponent({
     file: {
       type: String,
       default: ''
+    },
+    result: {
+      type: Object as PropType<Result>,
+      default: null
     }
   },
   emits: ['renameRequest', 'updateRequest', 'updateSource', 'updateMarkers', 'requestAction'],
@@ -99,6 +110,11 @@ export default defineComponent({
           this.request.method !== 'get' &&
           this.request.method !== 'delete'
       };
+    },
+    statusIcon() {
+      if (this.result?.state) {
+        return `${this.options.iconBase}/${this.result.state}.svg`;
+      }
     }
   },
   methods: {
