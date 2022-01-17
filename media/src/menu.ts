@@ -35,7 +35,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         if (type !== 'link' && this.flowDiagram.mode !== 'connect') {
             const canRun = type === 'flow' || step?.path === 'request';
             designItems = [
-                { id: 'expected', label: 'Expected Results', icon: 'open-file.svg' },
+                { id: 'expected', label: 'Expected Results', icon: 'expected.svg' },
                 ...(canRun ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
                 ...(canRun ? [{ id: 'run', label: 'Run', icon: 'run.svg' }] : [])
             ];
