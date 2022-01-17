@@ -331,16 +331,18 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             );
         }
 
-        webviewPanel.onDidDispose(() => {
-            for (const disposable of disposables) {
-                disposable.dispose();
-            }
-            disposables = [];
-            for (const probs of problems.values()) {
-                probs.clear();
-            }
-            problems.clear();
-        });
+        this.subscriptions.push(
+            webviewPanel.onDidDispose(() => {
+                for (const disposable of disposables) {
+                    disposable.dispose();
+                }
+                disposables = [];
+                for (const probs of problems.values()) {
+                    probs.clear();
+                }
+                problems.clear();
+            })
+        );
     }
 
     /**
