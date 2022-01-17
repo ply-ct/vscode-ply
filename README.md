@@ -62,10 +62,10 @@ Setting | Description | Default
 `ply.debugPort` | Port to use for debug connections | 9229
 `ply.debugConfig` | Name of a launch configuration to use for debugging | (see below)
 `ply.nodePath` | Path to node executable | Find on your PATH; if not found, use node shipped with VS Code
-`ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
+`ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/@ply-ct/ply" | Use a bundled version of ply
 `ply.cwd` | Working directory for Ply test execution (relative to workspace folder) | Workspace folder root
 `ply.env` | Environment variables to apply for Ply test execution |
-`ply.plyPath` | Path to ply package (relative to workspace folder) eg: "node_modules/ply-ct" | Use a bundled version of ply
+`ply.saveBeforeRun` | Automatically save dirty test editor documents before running | true
 `ply.openSuitesWhenRun` | Automatically open requests/flows in custom editor when executing from Test Explorer | If Single (running a single suite)
 `ply.testExplorerUseRequestEditor` | When opening individual requests within flow/request suites from Test Explorer, open in Ply request editor | true
 

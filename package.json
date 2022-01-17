@@ -202,7 +202,7 @@
           "scope": "window"
         },
         "ply.saveBeforeRun": {
-          "descripton": "Automatically save dirty test files before running",
+          "descripton": "Automatically save dirty test editor documents before running",
           "type": "boolean",
           "default": true,
           "scope": "window"
