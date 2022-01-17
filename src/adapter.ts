@@ -326,7 +326,10 @@ export class PlyAdapter implements TestAdapter {
                 return false;
             }
         } else {
-            await vscode.commands.executeCommand('vscode.open', uri);
+            await vscode.commands.executeCommand(
+                'vscode.open',
+                uri.with({ fragment: '', query: '' })
+            );
         }
         return true;
     }
