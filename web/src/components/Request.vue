@@ -10,7 +10,7 @@
         @keydown="onNameKeyDown"
         @blur="onNameBlur"
       >
-        {{ request.name || 'new-request' }}
+        {{ request.name || 'Request-1' }}
       </div>
       <a v-if="file" class="file-link" href="" @click="onAction('open-file', request.name)">{{
         file
@@ -108,6 +108,24 @@ export default defineComponent({
     onNameKeyDown(event: KeyboardEvent) {
       if (event.key === 'Enter' || event.key === 'Escape') {
         (event.target as HTMLElement).blur();
+      } else if (
+        event.key === ':' ||
+        event.key === '#' ||
+        event.key === "'" ||
+        event.key === '"' ||
+        event.key === '.' ||
+        event.key === ';' ||
+        event.key === '@' ||
+        event.key === ',' ||
+        event.key === '$' ||
+        event.key === '%' ||
+        event.key === '~' ||
+        event.key === '^' ||
+        event.key === '?' ||
+        event.key === '{' ||
+        event.key === '}'
+      ) {
+        event.preventDefault();
       }
     },
     onNameBlur() {
