@@ -159,6 +159,7 @@ export class Flow implements flowbee.Disposable {
                             step.name = (onAdd.element as any).name;
                             // redraw to reflect name
                             this.flowDiagram.render(this.options.diagramOptions);
+                            this.updateFlow();
                         }
                     }
                 }
