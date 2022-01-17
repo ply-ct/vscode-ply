@@ -28,10 +28,12 @@
     "flow",
     "yaml",
     "ply",
-    "postman"
+    "postman",
+    "insomnia"
   ],
   "categories": [
     "Programming Languages",
+    "Visualization",
     "Linters",
     "Other"
   ],
