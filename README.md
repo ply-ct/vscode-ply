@@ -11,12 +11,18 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ply-ct/vscode-ply/vscode-ply?label=Build) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code) ![CodeQL](https://github.com/ply-ct/vscode-ply/workflows/CodeQL/badge.svg)
 
-[Ply](https://ply-ct.org/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Build a request flow graphically
-using Ply's .flow file editor. Or edit raw YAML describing your request sequence. Run Ply to submit these requests 
+[Ply](https://ply-ct.org/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Create and run HTTP requests
+using Ply's visual request editor.
+
+![request-recording](docs/images/request-recording.gif)
+
+Then reuse your requests in Ply's graphical flow builder.
+
+![flow-recording](docs/images/flow-recording.gif)
+
+Or edit raw YAML describing your request sequence. Run Ply to submit these requests 
 and compare actual results against expected, with [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) 
 placeholders for dynamic values.
-
-![recording](docs/images/recording.gif)
 
 The Ply extension gives you a side-by-side diff view so you can compare results at a glance.
 
@@ -29,6 +35,7 @@ When you need even greater control, Ply [cases](https://ply-ct.github.io/ply/top
 programmatic access via TypeScript to supplement this built-in expected/actual verification.
 
 ## Features
+  - Visual HTTP request editor for sending REST and GraphQL requests
   - Graphical flow builder makes it easy to sequence requests
   - Side-by-side diff view compares expected/actual results, with smart decorations aware of runtime values
   - Auto-generate result files by capturing actual good responses
