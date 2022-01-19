@@ -10,29 +10,7 @@ export class ResultFragmentFs implements vscode.FileSystemProvider {
         return new vscode.Disposable(() => {});
     }
 
-    /**
-     * maps file uri string to ply-result uris
-     */
-    private resultUris = new Map<string, string[]>();
-    private subscription = vscode.workspace.onDidCloseTextDocument((doc) => {
-        if (doc.uri.scheme === Result.URI_SCHEME) {
-            const fileUri = Result.convertUri(doc.uri).toString();
-            const plyUris = this.resultUris.get(fileUri);
-            if (plyUris) {
-                const plyUri = doc.uri.toString();
-                const i = plyUris.indexOf(plyUri);
-                if (i >= 0) {
-                    plyUris.splice(i, 1);
-                }
-                if (plyUris.length === 0) {
-                    this.resultUris.delete(fileUri);
-                }
-            }
-        } else {
-            this.resultUris.delete(doc.uri.toString());
-        }
-    });
-
+    private stats = new Map<string, vscode.FileStat>();
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         const fileUri = Result.convertUri(uri);
         const stat = await vscode.workspace.fs.stat(fileUri);
@@ -48,18 +26,8 @@ export class ResultFragmentFs implements vscode.FileSystemProvider {
     }
 
     private async readResult(uri: vscode.Uri): Promise<string | undefined> {
-        const fileUri = Result.convertUri(uri);
         const result = Result.fromUri(uri);
         if (await result.plyResult.exists) {
-            let plyUris = this.resultUris.get(fileUri.toString());
-            if (!plyUris) {
-                plyUris = [];
-                this.resultUris.set(fileUri.toString(), plyUris);
-            }
-            const plyUri = uri.toString();
-            if (!plyUris.includes(plyUri)) {
-                plyUris.push(plyUri);
-            }
             const resultContents = await result.readResultContents();
             if (resultContents) return resultContents.contents;
         }
@@ -72,10 +40,7 @@ export class ResultFragmentFs implements vscode.FileSystemProvider {
         );
     }
 
-    dispose() {
-        this.resultUris.clear();
-        this.subscription.dispose();
-    }
+    dispose() {}
 
     createDirectory() {}
     readDirectory() {

@@ -26,8 +26,7 @@ export class PlyRoot {
         this.baseSuite = {
             type: 'suite',
             id: this.id,
-            label: '',
-            description: this.label,
+            label: this.label,
             debuggable,
             children: []
         };
@@ -41,9 +40,17 @@ export class PlyRoot {
     build(
         testUris: [Uri, number][],
         customSchemes?: boolean,
+        description?: string,
         suiteLabeler?: (suiteId: string) => string,
         testLabeler?: (suiteId: string) => string
     ) {
+        if (description) {
+            this.baseSuite.description = description;
+        } else {
+            const testCount = testUris.length;
+            this.baseSuite.description = `${testCount} ${testCount === 1 ? 'test' : 'tests'}`;
+        }
+
         // clear children in case reload
         this.baseSuite.children = [];
 
@@ -340,11 +347,9 @@ export class PlyRoots {
                 }
             }
         }
-        this.casesRoot.build(
-            caseUris,
-            false,
-            (suiteId) => this.suitesByTestOrSuiteId.get(suiteId)!.name
-        );
+        this.casesRoot.build(caseUris, false, undefined, (suiteId) => {
+            return this.suitesByTestOrSuiteId.get(suiteId)!.name;
+        });
 
         // flows
         const flowSuiteUris = Array.from(flowSuites.keys());
@@ -374,7 +379,9 @@ export class PlyRoots {
                 }
             }
         }
-        this.flowsRoot.build(flowUris, customSchemes, undefined, (testId) => {
+        const flowCount = flowSuiteUris.length;
+        const description = `${flowCount} ${flowCount === 1 ? 'flow' : 'flows'}`;
+        this.flowsRoot.build(flowUris, customSchemes, description, undefined, (testId) => {
             const test = this.testsById.get(testId) as Step;
             return (
                 (test.subflow ? `${test.subflow.name} → ` : '') +
