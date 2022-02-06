@@ -186,7 +186,7 @@
           "default": false,
           "scope": "resource"
         },
-        "ply.openSuitesWhenRun": {
+        "ply.openRequestsAndFlowsWhenRun": {
           "description": "Automatically open requests/flows in custom editor when executing from Test Explorer",
           "type": "string",
           "enum": [

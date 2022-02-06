@@ -283,12 +283,12 @@ export class PlyAdapter implements TestAdapter {
             return false;
         }
 
-        if (!runOptions?.noAutoOpen && this.config.openSuitesWhenRun !== 'Never') {
+        if (!runOptions?.noAutoOpen && this.config.openRequestsAndFlowsWhenRun !== 'Never') {
             const editables: Info[] = this.getEditables(testIds);
             if (editables.length > 0) {
                 if (editables.length === 1) {
                     return await this.openEditable(editables[0], runOptions);
-                } else if (this.config.openSuitesWhenRun === 'Always') {
+                } else if (this.config.openRequestsAndFlowsWhenRun === 'Always') {
                     // you asked for it -- open all suites
                     editables.forEach(async (editable) => {
                         await this.openEditable(editable, { ...runOptions, proceed: true });
@@ -303,6 +303,7 @@ export class PlyAdapter implements TestAdapter {
     /**
      * False value for 'proceed' indicates flow run came from Test Explorer, so trigger exec through editor
      * and then return immediately since run is triggered separately.
+     * Note: only opens standalone requests and flows.
      */
     private async openEditable(
         editable: Info,
@@ -325,11 +326,6 @@ export class PlyAdapter implements TestAdapter {
                 );
                 return false;
             }
-        } else {
-            await vscode.commands.executeCommand(
-                'vscode.open',
-                uri.with({ fragment: '', query: '' })
-            );
         }
         return true;
     }

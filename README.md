@@ -73,7 +73,7 @@ Setting | Description | Default
 `ply.cwd` | Working directory for Ply test execution (relative to workspace folder) | Workspace folder root
 `ply.env` | Environment variables to apply for Ply test execution |
 `ply.saveBeforeRun` | Automatically save dirty test editor documents before running | true
-`ply.openSuitesWhenRun` | Automatically open requests/flows in custom editor when executing from Test Explorer | If Single (running a single suite)
+`ply.openRequestsAndFlowsWhenRun` | Automatically open requests/flows in custom editor when executing from Test Explorer | If Single (running a single suite)
 `ply.testExplorerUseRequestEditor` | When opening individual requests within flow/request suites from Test Explorer, open in Ply request editor | true
 
 ### Custom debug configuration
