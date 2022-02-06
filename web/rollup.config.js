@@ -38,8 +38,8 @@ export default {
                     transform: (contents) => sass.renderSync({ data: contents.toString() }).css
                 }
             ]
-        })
-        // terser() // for prod
+        }),
+        terser() // for prod
         // serve() // for testing
     ],
     onwarn(warning, warn) {
