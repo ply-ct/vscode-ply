@@ -16,7 +16,7 @@ import {
     FlowModeChangeEvent,
     FlowConfiguratorOpen
 } from './edit/flow';
-import { Postman } from './postman';
+import { Importer } from './import';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
 import { RequestFs } from './request/request-fs';
@@ -400,14 +400,21 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('ply.openResult', openResultCommand)
     );
 
-    // postman import
-    const postman = new Postman(log);
-    const importPostmanCommand = async (...args: any[]) => await postman.import(args);
+    // postman/insomnia import
+    const importer = new Importer(log);
+    const importPostmanCommand = async (...args: any[]) => await importer.import('postman', args);
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.import.postman', importPostmanCommand)
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand)
+    );
+    const importInsomniaCommand = async (...args: any[]) => await importer.import('insomnia', args);
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ply.import.insomnia', importInsomniaCommand)
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ply.import.insomnia-item', importInsomniaCommand)
     );
 
     console.log(`vscode-ply activated in ${Date.now() - before} ms`);

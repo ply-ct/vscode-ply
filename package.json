@@ -59,7 +59,7 @@
     "vscode": "^1.63.1"
   },
   "dependencies": {
-    "@ply-ct/ply": "^3.0.25",
+    "@ply-ct/ply": "^3.0.27",
     "find-up": "^4.1.0",
     "flowbee": "^0.3.3",
     "vscode-test-adapter-api": "^1.9.0",
@@ -306,6 +306,18 @@
         }
       },
       {
+        "command": "ply.import.insomnia",
+        "title": "Ply: Import from Insomnia"
+      },
+      {
+        "command": "ply.import.insomnia-item",
+        "title": "Import from Insomnia",
+        "icon": {
+          "dark": "./icons/json-dark.svg",
+          "light": "./icons/json-light.svg"
+        }
+      },
+      {
         "command": "ply.new",
         "title": "Ply: New Item"
       },
@@ -380,6 +392,11 @@
           "command": "ply.import.postman-item",
           "group": "4_import@8",
           "when": "view == test-explorer"
+        },
+        {
+          "command": "ply.import.insomnia-item",
+          "group": "4_import@9",
+          "when": "view == test-explorer"
         }
       ],
       "view/item/context": [
@@ -444,6 +461,11 @@
           "when": "view == test-explorer && viewItem == collection"
         },
         {
+          "command": "ply.import.insomnia-item",
+          "group": "inline@3",
+          "when": "view == test-explorer && viewItem == collection"
+        },
+        {
           "command": "ply.diff-item",
           "group": "inline@4",
           "when": "view == test-explorer && viewItem == suiteWithSource"
@@ -477,11 +499,20 @@
           "command": "ply.import.postman-item",
           "group": "6_postman",
           "when": "view == test-explorer && viewItem == collection"
+        },
+        {
+          "command": "ply.import.insomnia-item",
+          "group": "7_insomnia",
+          "when": "view == test-explorer && viewItem == collection"
         }
       ],
       "commandPalette": [
         {
           "command": "ply.import.postman-item",
+          "when": "false"
+        },
+        {
+          "command": "ply.import.insomnia-item",
           "when": "false"
         },
         {

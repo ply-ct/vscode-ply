@@ -281,7 +281,7 @@ export class DiffHandler {
             const plySettings = vscode.workspace.getConfiguration('ply');
             let diffCodeLensSetting = plySettings.get('enableDiffEditorCodeLens', 'Prompt');
             if (diffCodeLensSetting === 'Prompt') {
-                let response = await vscode.window.showInformationMessage(
+                let response = await vscode.window.showInformationMessage<string>(
                     "Ply result comparisons work best with vscode's 'diffEditor.codeLens' setting. Enable for this workspace?",
                     'Yes',
                     'No',
