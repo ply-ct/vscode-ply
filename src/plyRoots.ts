@@ -44,11 +44,15 @@ export class PlyRoot {
         suiteLabeler?: (suiteId: string) => string,
         testLabeler?: (suiteId: string) => string
     ) {
-        if (description) {
+        if (typeof description === 'string') {
             this.baseSuite.description = description;
         } else {
             const testCount = testUris.length;
-            this.baseSuite.description = `${testCount} ${testCount === 1 ? 'test' : 'tests'}`;
+            if (testCount > 0) {
+                this.baseSuite.description = `${testCount} ${testCount === 1 ? 'test' : 'tests'}`;
+            } else {
+                this.baseSuite.description = '';
+            }
         }
 
         // clear children in case reload
@@ -385,8 +389,11 @@ export class PlyRoots {
                 }
             }
         }
+        let description = '';
         const flowCount = flowSuiteUris.length;
-        const description = `${flowCount} ${flowCount === 1 ? 'flow' : 'flows'}`;
+        if (flowCount > 0) {
+            description = `${flowCount} ${flowCount === 1 ? 'flow' : 'flows'}`;
+        }
         this.flowsRoot.build(flowUris, customSchemes, description, undefined, (testId) => {
             const test = this.testsById.get(testId) as Step;
             return (
