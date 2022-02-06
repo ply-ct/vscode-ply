@@ -326,6 +326,15 @@ export class PlyAdapter implements TestAdapter {
                 );
                 return false;
             }
+        } else if (
+            editable.type === 'test' &&
+            editable.file?.startsWith('ply-dummy:/') &&
+            uri.fragment &&
+            this.config.testExplorerUseRequestEditor
+        ) {
+            await vscode.commands.executeCommand('ply.open-request', {
+                uri: uri.with({ scheme: 'ply-request' })
+            });
         }
         return true;
     }

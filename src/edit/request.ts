@@ -179,7 +179,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                                 if (!new Location(document.uri.fsPath).isChildOf(testsLoc)) {
                                     updateResult({
                                         state: 'errored',
-                                        message: `Request file: ${document.uri.fsPath} must be under Ply tests location: ${testsLoc}`
+                                        message: `Request file: ${document.uri.fsPath} must be under Ply testsLocation: ${testsLoc}`
                                     });
                                     return;
                                 }

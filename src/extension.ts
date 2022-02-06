@@ -117,12 +117,16 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (uri.path.endsWith('.flow') && uri.query !== 'request') {
                     vscode.commands.executeCommand('ply.open-flow', { uri: fileUri });
                 } else {
-                    const useReqEd =
-                        uri.path.endsWith('.ply') ||
+                    if (uri.path.endsWith('.ply')) {
+                        vscode.commands.executeCommand('ply.open-request', {
+                            uri: uri.with({ scheme: 'file', query: '', fragment: '' })
+                        });
+                    } else if (
                         vscode.workspace
                             .getConfiguration('ply', fileUri)
-                            .get('testExplorerUseRequestEditor');
-                    if (useReqEd) {
+                            .get('testExplorerUseRequestEditor')
+                    ) {
+                        // open sub req in request editor
                         vscode.commands.executeCommand('ply.open-request', {
                             uri: uri.with({ scheme: 'ply-request', query: '' })
                         });

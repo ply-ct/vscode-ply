@@ -21,6 +21,7 @@ export enum Setting {
     env = 'env',
     useDist = 'useDist',
     openRequestsAndFlowsWhenRun = 'openRequestsAndFlowsWhenRun',
+    testExplorerUseRequestEditor = 'testExplorerUseRequestEditor',
     saveBeforeRun = 'saveBeforeRun',
     websocketPort = 'websocketPort'
 }
@@ -120,6 +121,9 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.useDist, false);
     }
 
+    get testExplorerUseRequestEditor(): boolean {
+        return this.getConfiguration().get(Setting.testExplorerUseRequestEditor, true);
+    }
     get openRequestsAndFlowsWhenRun(): string {
         return this.getConfiguration().get(Setting.openRequestsAndFlowsWhenRun, 'If Single');
     }
