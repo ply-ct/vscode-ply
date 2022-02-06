@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
-import { Response, Flow } from '@ply-ct/ply';
+import { Response, Flow, Location } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
 import { RequestMerge } from '../request/request';
 import { FlowMerge } from '../request/flow';
@@ -170,6 +170,21 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                         if (requestCanceled) {
                             updateResponse(undefined);
                         } else {
+                            if (
+                                document.uri.scheme === 'file' &&
+                                document.uri.fsPath.endsWith('.ply')
+                            ) {
+                                // double-check within ply testsLoc
+                                const testsLoc = adapter.config.plyOptions.testsLocation;
+                                if (!new Location(document.uri.fsPath).isChildOf(testsLoc)) {
+                                    updateResult({
+                                        state: 'errored',
+                                        message: `Request file: ${document.uri.fsPath} must be under Ply tests location: ${testsLoc}`
+                                    });
+                                    return;
+                                }
+                            }
+
                             const runOptions =
                                 message.action === 'submit' ? { submit: true } : undefined;
                             this.adapterHelper.run(

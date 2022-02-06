@@ -234,16 +234,22 @@ export class PlyRoot {
     toString() {
         const indent = '    ';
         let str = this.label + '\n';
-        for (const dirSuite of this.baseSuite.children as TestSuiteInfo[]) {
-            str += indent + dirSuite.label + '\n';
-            for (const fileSuiteOrTest of dirSuite.children as TestSuiteInfo[] | TestInfo[]) {
-                if (fileSuiteOrTest.type === 'suite') {
-                    str += indent + indent + fileSuiteOrTest.label + '\n';
-                    for (const plyTest of fileSuiteOrTest.children as TestInfo[]) {
-                        str += indent + indent + indent + '- ' + plyTest.label + '\n';
+        for (const dirSuiteOrTest of this.baseSuite.children as (TestSuiteInfo | TestInfo)[]) {
+            str += indent + dirSuiteOrTest.label + '\n';
+            if (dirSuiteOrTest.type === 'test') {
+                str += indent + indent + '- ' + dirSuiteOrTest.label + '\n';
+            } else {
+                for (const fileSuiteOrTest of dirSuiteOrTest.children as
+                    | TestSuiteInfo[]
+                    | TestInfo[]) {
+                    if (fileSuiteOrTest.type === 'suite') {
+                        str += indent + indent + fileSuiteOrTest.label + '\n';
+                        for (const plyTest of fileSuiteOrTest.children as TestInfo[]) {
+                            str += indent + indent + indent + '- ' + plyTest.label + '\n';
+                        }
+                    } else {
+                        str += indent + indent + '- ' + fileSuiteOrTest.label + '\n';
                     }
-                } else {
-                    str += indent + indent + '- ' + fileSuiteOrTest.label + '\n';
                 }
             }
         }
