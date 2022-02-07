@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.1.1](https://github.com/ply-ct/vscode-ply/tree/2.1.1) (2022-02-06)
+
+- Enhancement: Import from Insomnia [\#93](https://github.com/ply-ct/vscode-ply/issues/93)
+
+- Enhancement: Include test count in Test Explorer base groups [\#111](https://github.com/ply-ct/vscode-ply/issues/111)
+
+- Enhancement: Warn if .ply request file not under configured Ply testsLocation [\#114](https://github.com/ply-ct/vscode-ply/issues/114)
+
+- Enhancement: Don't auto-open Request or Case suites when run [\#115](https://github.com/ply-ct/vscode-ply/issues/115)
+
+- Bug: Can't handle expressions with prop names containing dot [\#112](https://github.com/ply-ct/vscode-ply/issues/112)
+
+
 ## [2.1.0](https://github.com/ply-ct/vscode-ply/tree/2.1.0) (2022-01-17)
 
 - Enhancement: Postman-like request editor [\#59](https://github.com/ply-ct/vscode-ply/issues/59)
