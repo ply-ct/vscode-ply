@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.1.2](https://github.com/ply-ct/vscode-ply/tree/2.1.2) (2022-02-07)
+
+- Bug: Request editor Headers table not visible if no headers [\#116](https://github.com/ply-ct/vscode-ply/issues/116)
+
+- Bug: Allow explicitly running skipped .ply requests [\#117](https://github.com/ply-ct/vscode-ply/issues/117)
+
+
 ## [2.1.1](https://github.com/ply-ct/vscode-ply/tree/2.1.1) (2022-02-06)
 
 - Enhancement: Import from Insomnia [\#93](https://github.com/ply-ct/vscode-ply/issues/93)
