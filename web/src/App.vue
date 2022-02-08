@@ -137,6 +137,7 @@ export default defineComponent({
         } else {
           const obj = yaml.load(message.file, message.text);
           this.requestName = Object.keys(obj)[0];
+          if (!obj[this.requestName].headers) obj[this.requestName].headers = {};
           this.request = {
             ...obj[this.requestName],
             name: this.requestName,
