@@ -54,7 +54,7 @@ export class PlyRunner {
             for (const testId of testIds) {
                 const testOrSuite = this.plyRoots.find((i) => i.id === testId);
                 if (testOrSuite) {
-                    this.collectTests(testOrSuite, testInfos);
+                    this.collectTests(testOrSuite, testInfos, testOrSuite.type === 'test');
                 } else {
                     throw new Error(`No such ply test: ${testId}`);
                 }
@@ -273,17 +273,28 @@ export class PlyRunner {
     /**
      * Returns a flattened list of all test ids
      */
-    collectTests(testOrSuite: TestSuiteInfo | TestInfo, testInfos: TestInfo[], skip = false) {
+    collectTests(
+        testOrSuite: TestSuiteInfo | TestInfo,
+        testInfos: TestInfo[],
+        isExplicitTest = false,
+        skip = false
+    ) {
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
                 // honor skip when executing from parent suite (not explicitly running test or suite)
                 const shouldSkip =
                     skip || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.skip);
-                this.collectTests(child, testInfos, shouldSkip);
+                this.collectTests(child, testInfos, false, shouldSkip);
             }
         } else {
             if (!skip && !testInfos.find((ti) => ti.id === testOrSuite.id)) {
-                testInfos.push(testOrSuite);
+                const testSuite = this.plyRoots.getSuite(testOrSuite.id);
+                if (testSuite?.path.endsWith('.ply')) {
+                    // .ply suite may be skipped
+                    if (isExplicitTest || !testSuite.skip) testInfos.push(testOrSuite);
+                } else {
+                    testInfos.push(testOrSuite);
+                }
             }
         }
     }
