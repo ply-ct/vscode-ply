@@ -139,7 +139,9 @@ export default defineComponent({
         event.key === '^' ||
         event.key === '?' ||
         event.key === '{' ||
-        event.key === '}'
+        event.key === '}' ||
+        event.key === '\\' ||
+        event.key === '/'
       ) {
         event.preventDefault();
       }

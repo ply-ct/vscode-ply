@@ -118,6 +118,7 @@ export default defineComponent({
         if (isNew) {
           if (!message.options.readonly) {
             this.requestName = message.file
+              .replace(/\\/g, '/')
               .split('/')
               .pop()
               .replace(/\.[^/.]+$/, '');
