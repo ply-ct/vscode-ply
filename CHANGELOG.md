@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.1.3](https://github.com/ply-ct/vscode-ply/tree/2.1.3) (2022-02-13)
+
+- Bug: Request editor default name on Windows is full file path [\#118](https://github.com/ply-ct/vscode-ply/issues/118)
+
+- Chore: Bump parcel [\#120](https://github.com/ply-ct/vscode-ply/issues/120)
+
+
 ## [2.1.2](https://github.com/ply-ct/vscode-ply/tree/2.1.2) (2022-02-07)
 
 - Bug: Request editor Headers table not visible if no headers [\#116](https://github.com/ply-ct/vscode-ply/issues/116)
