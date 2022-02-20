@@ -39,7 +39,12 @@ function execute(
             process.env[envVar] = args.env[envVar];
         }
 
-        const plyPath = args.plyPath ? args.plyPath : path.dirname(require.resolve('@ply-ct/ply'));
+        let plyPath = args.plyPath;
+        if (plyPath) {
+            plyPath = path.join(plyPath, 'dist');
+        } else {
+            plyPath = path.dirname(require.resolve('@ply-ct/ply'));
+        }
         if (args.logEnabled) {
             sendMessage(`Using ply package at ${plyPath}`);
         }

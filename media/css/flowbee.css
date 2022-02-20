@@ -404,8 +404,23 @@
     height: fit-content; }
   .flowbee-configurator-light .flowbee-config-tab-content input {
     background-color: #ffffff; }
+  .flowbee-configurator-light .flowbee-config-tab-content input[type=text] {
+    border-width: 1px;
+    border-style: solid; }
   .flowbee-configurator-light .flowbee-config-tab-content input[type=checkbox] {
     margin-top: 5px; }
+  .flowbee-configurator-light .flowbee-config-tab-content button {
+    background-color: #007acc;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    padding: 4px 10px;
+    margin-right: 10px;
+    width: fit-content; }
+  .flowbee-configurator-light .flowbee-config-tab-content button:hover {
+    background-color: #0062a3; }
   .flowbee-configurator-light .flowbee-config-tab-content select {
     width: fit-content; }
   .flowbee-configurator-light .flowbee-config-tab-content textarea {
@@ -534,8 +549,23 @@
     height: fit-content; }
   .flowbee-configurator-dark .flowbee-config-tab-content input {
     background-color: #ffffff; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input[type=text] {
+    border-width: 1px;
+    border-style: solid; }
   .flowbee-configurator-dark .flowbee-config-tab-content input[type=checkbox] {
     margin-top: 5px; }
+  .flowbee-configurator-dark .flowbee-config-tab-content button {
+    background-color: #007acc;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    padding: 4px 10px;
+    margin-right: 10px;
+    width: fit-content; }
+  .flowbee-configurator-dark .flowbee-config-tab-content button:hover {
+    background-color: #0062a3; }
   .flowbee-configurator-dark .flowbee-config-tab-content select {
     width: fit-content; }
   .flowbee-configurator-dark .flowbee-config-tab-content textarea {
@@ -610,6 +640,10 @@
     opacity: .8; }
   .flowbee-configurator-dark .flowbee-config-tab-content input[type=radio] {
     opacity: .8; }
+  .flowbee-configurator-dark .flowbee-config-tab-content button {
+    background-color: #0e639c; }
+  .flowbee-configurator-dark .flowbee-config-tab-content button:hover {
+    background-color: #1177bb; }
   .flowbee-configurator-dark .flowbee-config-tab-content select {
     background-color: #3c3c3c;
     color: #cccccc; }

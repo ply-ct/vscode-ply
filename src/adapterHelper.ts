@@ -5,6 +5,7 @@ import { Descriptor } from 'flowbee';
 import { PlyAdapter } from './adapter';
 import { Request } from './request/request';
 import { Result } from './result/result';
+import { PlyConfig } from './config';
 
 export class AdapterHelper {
     constructor(
@@ -144,5 +145,9 @@ export class AdapterHelper {
             }
         }
         return ret;
+    }
+
+    getConfig(uri: vscode.Uri): PlyConfig {
+        return this.getAdapter(uri)?.config;
     }
 }

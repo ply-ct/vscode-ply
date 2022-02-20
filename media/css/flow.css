@@ -233,10 +233,10 @@ body {
 
 .flow-values {
   position: absolute;
-  width: calc(100% - 200px);
+  width: calc(100% - 260px);
   height: calc(100% - 100px);
   top: 50px;
-  left: 20px;
+  left: 50px;
   display: none;
 }
 .flow-values-help {

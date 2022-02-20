@@ -75,13 +75,23 @@ export class PlyConfig {
         }
     }
 
+    /**
+     * ply path without /dist
+     */
     get plyPath(): string {
-        const plyPath = this.getConfiguration().get<string>(Setting.plyPath);
+        let plyPath = this.getConfiguration().get<string>(Setting.plyPath);
         if (plyPath) {
-            return path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
+            plyPath = path.resolve(this.workspaceFolder.uri.fsPath, plyPath);
         } else {
-            return path.dirname(require.resolve('@ply-ct/ply'));
+            plyPath = path.dirname(require.resolve('@ply-ct/ply'));
         }
+        if (plyPath.endsWith('/') || plyPath.endsWith('\\')) {
+            plyPath = plyPath.substring(0, plyPath.length - 1);
+        }
+        if (plyPath.endsWith('/dist') || plyPath.endsWith('\\dist')) {
+            return plyPath.substring(0, plyPath.length - 5);
+        }
+        return plyPath;
     }
 
     async getNodePath(): Promise<string | undefined> {

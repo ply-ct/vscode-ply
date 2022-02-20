@@ -227,11 +227,71 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         });
                     }
                 } else if (message.type === 'new') {
-                    if (message.element === 'request') {
+                    if (message.element === 'file') {
+                        const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                        let dir = wsFolder!.uri;
+                        if (
+                            vscode.workspace.asRelativePath('src') !==
+                            path.join(wsFolder!.name, 'src')
+                        ) {
+                            dir = dir.with({ path: `${dir.path}/src` });
+                        }
+                        const selUri = await vscode.window.showSaveDialog({
+                            defaultUri: dir,
+                            filters: { 'TypeScript Source File': ['ts'] }
+                        });
+                        if (selUri) {
+                            const filepath = await this.pathInWorkspaceFolder(wsFolder!, selUri);
+                            if (filepath) {
+                                const plyPath = this.adapterHelper.getConfig(document.uri).plyPath;
+                                const templatePath = path.join(plyPath, 'templates', 'exec.ts.txt');
+                                const template = await fs.promises.readFile(templatePath, 'utf8');
+                                await fs.promises.writeFile(selUri.fsPath, template, 'utf8');
+                                await vscode.commands.executeCommand('vscode.open', selUri);
+                                webviewPanel.webview.postMessage({
+                                    type: 'step',
+                                    stepId: message.target,
+                                    file: filepath
+                                });
+                            }
+                        }
+                    } else if (message.element === 'request') {
                         vscode.commands.executeCommand('ply.new.request');
                     }
+                } else if (message.type === 'select') {
+                    if (message.element === 'file') {
+                        const selUris = await vscode.window.showOpenDialog({
+                            openLabel: 'Select',
+                            canSelectMany: false,
+                            filters: { 'TypeScript Source File': ['ts'] },
+                            title: 'Select TypeScript File'
+                        });
+                        if (selUris?.length === 1) {
+                            const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                            const filepath = await this.pathInWorkspaceFolder(
+                                wsFolder!,
+                                selUris[0]
+                            );
+                            if (filepath) {
+                                webviewPanel.webview.postMessage({
+                                    type: 'step',
+                                    stepId: message.target,
+                                    file: filepath
+                                });
+                            }
+                        }
+                    }
                 } else if (message.type === 'edit') {
-                    if (message.element === 'request') {
+                    if (message.element === 'file') {
+                        const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                        const fileUri = wsFolder!.uri.with({
+                            path: `${wsFolder!.uri.path}/${message.path}`
+                        });
+                        const filepath = await this.pathInWorkspaceFolder(wsFolder!, fileUri);
+                        if (filepath) {
+                            await vscode.commands.executeCommand('vscode.open', fileUri);
+                        }
+                    } else if (message.element === 'request') {
                         let uri: vscode.Uri;
                         if (message.url) {
                             uri = vscode.Uri.parse(message.url);
@@ -547,6 +607,23 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
         } else {
             throw new Error(`Flow not found: ${id}`);
+        }
+    }
+
+    /**
+     * Returns undefined if not in workspace folder
+     */
+    async pathInWorkspaceFolder(
+        workspaceFolder: vscode.WorkspaceFolder,
+        fileUri: vscode.Uri
+    ): Promise<string | undefined> {
+        const resourceWsFolder = vscode.workspace.getWorkspaceFolder(fileUri);
+        if (resourceWsFolder?.name === workspaceFolder.name) {
+            return vscode.workspace.asRelativePath(fileUri, false);
+        } else {
+            vscode.window.showErrorMessage(
+                `File must be under workspace folder ${workspaceFolder.name}`
+            );
         }
     }
 

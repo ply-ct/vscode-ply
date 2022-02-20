@@ -11,6 +11,12 @@ export const descriptors: flowbee.Descriptor[] = [
         path: 'request',
         name: 'Request',
         icon: 'request.svg'
+    },
+    {
+        type: 'step',
+        path: 'typescript',
+        name: 'TypeScript',
+        icon: 'typescript.svg'
     }
     /*
     {
@@ -19,11 +25,5 @@ export const descriptors: flowbee.Descriptor[] = [
         name: 'Sync',
         icon: 'sync.svg'
     },
-    {
-        type: 'step',
-        path: 'script',
-        name: 'Script',
-        icon: 'typescript.svg'
-    }
     */
 ];

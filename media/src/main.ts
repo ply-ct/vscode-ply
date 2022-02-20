@@ -78,8 +78,13 @@ export class Flow implements flowbee.Disposable {
         }
         this.disposables.push(
             Flow.configurator.onFlowElementUpdate((e) => {
-                if (e.action === 'edit_request') {
-                    let id = this.flowDiagram.flow.steps?.find((s) => s.id === e.element.id)?.id;
+                if (
+                    e.action === 'Select File' ||
+                    e.action === 'Create File' ||
+                    e.action === 'edit_request'
+                ) {
+                    const step = this.flowDiagram.flow.steps?.find((s) => s.id === e.element.id);
+                    let id = step?.id;
                     if (!id && this.flowDiagram.flow.subflows) {
                         for (const subflow of this.flowDiagram.flow.subflows) {
                             id = subflow.steps?.find((s) => s.id === e.element.id)?.id;
@@ -89,7 +94,15 @@ export class Flow implements flowbee.Disposable {
                             }
                         }
                     }
-                    vscode.postMessage({ type: 'edit', element: 'request', target: id });
+                    if (e.action === 'Create File') {
+                        vscode.postMessage({ type: 'new', element: 'file', target: id });
+                    } else if (e.action === 'Select File') {
+                        vscode.postMessage({ type: 'select', element: 'file', target: id });
+                    } else if (e.action === 'edit_request') {
+                        vscode.postMessage({ type: 'edit', element: 'request', target: id });
+                    }
+                } else if (e.action?.endsWith('.ts')) {
+                    vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
                 } else {
                     this.updateFlow();
                 }
@@ -340,24 +353,29 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    updateStep(stepId: string, reqObj: object) {
+    updateStep(stepId: string, reqObjOrTsFile: object | string) {
         const step = this.findStep(stepId);
         if (step) {
-            const reqName = Object.keys(reqObj)[0];
-            step.name = reqName.replace(/_/g, EOL);
             if (!step.attributes) step.attributes = {};
-            const req = (reqObj as any)[reqName];
-            step.attributes.url = req.url;
-            step.attributes.method = req.method;
-            if (req.headers) {
-                const rows: string[][] = [];
-                for (const key of Object.keys(req.headers)) {
-                    rows.push([key, '' + req.headers[key]]);
+            if (typeof reqObjOrTsFile === 'object') {
+                const reqName = Object.keys(reqObjOrTsFile)[0];
+                step.name = reqName.replace(/_/g, EOL);
+                const req = (reqObjOrTsFile as any)[reqName];
+                step.attributes.url = req.url;
+                step.attributes.method = req.method;
+                if (req.headers) {
+                    const rows: string[][] = [];
+                    for (const key of Object.keys(req.headers)) {
+                        rows.push([key, '' + req.headers[key]]);
+                    }
+                    step.attributes.headers = JSON.stringify(rows);
                 }
-                step.attributes.headers = JSON.stringify(rows);
+                if (req.body) step.attributes.body = req.body;
+                this.updateFlow(false);
+            } else {
+                step.attributes.tsFile = reqObjOrTsFile;
+                this.updateFlow(true);
             }
-            if (req.body) step.attributes.body = req.body;
-            this.updateFlow(false);
         }
     }
 
@@ -623,7 +641,7 @@ window.addEventListener('message', async (event) => {
     } else if (message.type === 'step') {
         const flow = readState(false);
         if (flow) {
-            flow.updateStep(message.stepId, message.reqObj);
+            flow.updateStep(message.stepId, message.reqObj || message.file);
         }
     } else if (message.type === 'values') {
         const theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';

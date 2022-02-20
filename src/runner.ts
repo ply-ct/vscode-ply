@@ -169,6 +169,7 @@ export class PlyRunner {
             this.runningTestProcess.on('message', (message: any) => {
                 if (typeof message === 'string') {
                     console.debug(`Worker: ${message}`);
+                    if (this.log.enabled) this.log.debug(message);
                 } else {
                     console.debug(`Received: ${JSON.stringify(message)}`);
                     if (message.type === 'flow') {

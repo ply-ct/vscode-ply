@@ -448,7 +448,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 const alwaysSave = 'Always Save before Run';
                 const docName = path.basename(uri.path);
                 const res = await vscode.window.showWarningMessage(
-                    `Save request running: ${docName}?`,
+                    `Save request before running: ${docName}?`,
                     saveAndRun,
                     alwaysSave,
                     'Cancel'
