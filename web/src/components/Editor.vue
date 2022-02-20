@@ -48,6 +48,11 @@ export default defineComponent({
           this.editor.setValue(newValue);
         }
       }
+    },
+    readonly(newReadonly) {
+      if (this.editor) {
+        this.editor.updateOptions({ ...this.editor.getOptions(), readOnly: newReadonly });
+      }
     }
   },
   mounted: function () {

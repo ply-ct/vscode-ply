@@ -1,6 +1,6 @@
 {
   "name": "ply-web",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "scripts": {
     "build": "npm run fonts && npm run styles && rollup -c && npm run monaco-workers",
     "watch": "cross-env VSCODE_PLY_WEB_WATCH='css/style.scss' rollup --watch -c",

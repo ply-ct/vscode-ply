@@ -51,7 +51,7 @@ export const getEditor = (
         renderLineHighlight: 'none',
         glyphMargin: false,
         tabSize: options.indent,
-        insertSpaces: true,
+        insertSpaces: options.insertSpaces === false ? false : true,
         scrollbar: {
             verticalScrollbarSize: 12,
             horizontalSliderSize: 12
