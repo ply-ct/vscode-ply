@@ -186,7 +186,11 @@ export default defineComponent({
       }
     },
     onUpdate(updatedRequest: Request) {
-      this.$emit('updateRequest', updatedRequest);
+      const request = { ...updatedRequest };
+      if (request.method === 'GET' || request.method === 'DELETE') {
+        delete request.body;
+      }
+      this.$emit('updateRequest', request);
     },
     onUpdateBody(content: string) {
       const request = { ...this.request };
