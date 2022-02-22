@@ -192,6 +192,10 @@ a:hover {
   border: 1px solid rgba(128, 128, 128, 1);
 }
 
+.form-data {
+  height: calc(100vh - 100px);
+}
+
 .editor-container {
   height: calc(100vh - 100px);
   overflow-x: visible;

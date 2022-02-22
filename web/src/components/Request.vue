@@ -36,17 +36,19 @@
           v-if="!isFormUrlEncoded"
           resource="Request Body"
           :value="request.body || ''"
-          :language="language"
+          :language="bodyLanguage"
           :options="bodyOptions"
           :readonly="options.readonly || !canHaveBody"
           @updateSource="onUpdateBody"
           @updateMarkers="onUpdateMarkers"
         />
-        <table-comp
-          :value="formParams"
-          :readonly="options.readonly"
-          @updateValue="onUpdateFormParams"
-        />
+        <div v-if="isFormUrlEncoded" class="form-data">
+          <table-comp
+            :value="formParams"
+            :readonly="options.readonly"
+            @updateValue="onUpdateFormParams"
+          />
+        </div>
       </el-tab-pane>
       <el-tab-pane label="Headers">
         <table-comp
@@ -72,11 +74,12 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
+import { Request, Result } from '../model/request';
+import { getContentType, getLanguage } from '../util/content';
 import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-import { Request, Result } from '../model/request';
 
 export default defineComponent({
   name: 'Request',
@@ -102,7 +105,6 @@ export default defineComponent({
   emits: ['renameRequest', 'updateRequest', 'updateSource', 'updateMarkers', 'requestAction'],
   data() {
     return {
-      language: 'json',
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
       rename: this.request.name
     };
@@ -110,6 +112,9 @@ export default defineComponent({
   computed: {
     canHaveBody() {
       return this.request.method !== 'GET' && this.request.method !== 'DELETE';
+    },
+    bodyLanguage() {
+      return getLanguage(this.request, 'json');
     },
     bodyOptions() {
       return {
@@ -130,11 +135,7 @@ export default defineComponent({
       ) {
         return false;
       }
-      for (const key of Object.keys(this.request.headers)) {
-        if (key.toLowerCase() === 'content-type') {
-          return this.request.headers[key] === 'application/x-www-form-urlencoded';
-        }
-      }
+      return getContentType(this.request);
     },
     formParams() {
       const params: { [key: string]: string } = {};

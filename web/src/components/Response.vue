@@ -27,7 +27,7 @@
         <editor
           resource="Response Body"
           :value="response.body || ''"
-          :language="language"
+          :language="bodyLanguage"
           :readonly="true"
           :options="bodyOptions"
           @updateMarkers="onUpdateMarkers"
@@ -54,6 +54,7 @@
 import { defineComponent, PropType } from 'vue';
 import { getReasonPhrase } from 'http-status-codes';
 import { Response } from '../model/request';
+import { getLanguage } from '../util/content';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
 
@@ -77,7 +78,6 @@ export default defineComponent({
   emits: ['updateMarkers', 'cancelRequest'],
   data() {
     return {
-      language: 'json',
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs'
     };
   },
@@ -117,6 +117,9 @@ export default defineComponent({
         }
       }
       return null;
+    },
+    bodyLanguage() {
+      return getLanguage(this.response);
     },
     requestDt() {
       if (this.response.submitted) {
