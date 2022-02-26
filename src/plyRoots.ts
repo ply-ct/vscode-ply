@@ -87,9 +87,9 @@ export class PlyRoot {
             }
 
             // find suite (file)
-            const lastSlash = testPath.lastIndexOf('/');
-            const fileName = testPath.substring(lastSlash + 1, lastHash);
             const filePath = testPath.substring(0, lastHash);
+            const lastSlash = filePath.lastIndexOf('/');
+            const fileName = filePath.substring(lastSlash + 1, lastHash);
             const fileUri = Uri.parse(this.uri.toString(true) + '/' + filePath);
             let suite = this.findSuite((suite) => suite.id === this.formSuiteId(fileUri));
             if (suite) {

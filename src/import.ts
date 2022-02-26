@@ -39,16 +39,16 @@ export class Importer {
                 const name = format === 'insomnia' ? 'Insomnia' : 'Postman';
 
                 const items: vscode.QuickPickItem[] = [];
-                const requestSuiteItem = {
-                    label: 'Into Ply request suite(s)',
-                    description: '.yaml/.yml'
-                };
-                items.push(requestSuiteItem);
                 const individualRequestsItem = {
                     label: 'Into Individual request file(s)',
                     description: '.ply'
                 };
                 items.push(individualRequestsItem);
+                const requestSuiteItem = {
+                    label: 'Into Ply request suite(s)',
+                    description: '.yaml'
+                };
+                items.push(requestSuiteItem);
                 const options = {
                     placeHolder: `Import ${name}:`,
                     canPickMany: false,
@@ -79,7 +79,7 @@ export class Importer {
                         testsLocation: plyOptions.testsLocation,
                         valuesLocation: valuesLoc,
                         indent: plyOptions.prettyIndent,
-                        individualRequests: res === individualRequestsItem
+                        importToSuite: res === requestSuiteItem
                     };
                     for (const uri of uris) {
                         this.log.info(`Importing ${format} file ${uri.fsPath}`);
