@@ -1,5 +1,5 @@
 # configurator template for embedded subflow
-Request:
+Subflow:
   widgets:
     - type: radio
       attribute: when
