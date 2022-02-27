@@ -210,12 +210,19 @@ export default defineComponent({
         for (let i = 0; i < keys.length; i++) {
           if (i > 0) request.body += '&';
           const val = updatedParams[keys[i]];
-          request.body += encodeURIComponent(keys[i]) + '=' + encodeURIComponent(val);
+          request.body += this.specialUriEncode(keys[i]) + '=' + this.specialUriEncode(val);
         }
       } else {
         delete request.body;
       }
       this.$emit('updateRequest', request);
+    },
+    specialUriEncode(str: string): string {
+      // exclude expressions
+      return encodeURIComponent(str).replace(
+        /%24%7B.+?%7D/g,
+        (s) => '${' + s.substring(6, s.length - 3) + '}'
+      );
     },
     onUpdateHeaders(updatedHeaders: { [key: string]: string }) {
       this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
