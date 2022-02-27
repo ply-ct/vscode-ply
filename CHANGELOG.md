@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.1.5](https://github.com/ply-ct/vscode-ply/tree/2.1.5) (2022-02-27)
+
+- Enhancement: First-class XML support [\#122](https://github.com/ply-ct/vscode-ply/issues/122)
+
+- Enhancement: Exclude expressions from form data urlencodincoding [\#123](https://github.com/ply-ct/vscode-ply/issues/1223
+
+- Bug: Import fixes on Windows [\#127](https://github.com/ply-ct/vscode-ply/issues/127)
+
+
 ## [2.1.4](https://github.com/ply-ct/vscode-ply/tree/2.1.4) (2022-02-19)
 
 - Enhancement: Table input for application/x-www-form-urlencoded media type [\#121](https://github.com/ply-ct/vscode-ply/issues/121)
