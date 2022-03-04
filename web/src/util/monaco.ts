@@ -44,7 +44,7 @@ export const getEditor = (
         language,
         theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
         readOnly,
-        folding: false,
+        folding: options.folding,
         lineNumbers: options.lineNumbers ? 'on' : 'off',
         lineDecorationsWidth: options.lineNumbers ? 10 : 0,
         lineNumbersMinChars: options.lineNumbers ? 2 : 0,

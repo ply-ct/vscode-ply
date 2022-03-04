@@ -1,6 +1,6 @@
 {
   "name": "ply-web",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "scripts": {
     "build": "npm run fonts && npm run styles && rollup -c && npm run monaco-workers",
     "watch": "cross-env VSCODE_PLY_WEB_WATCH='css/style.scss' rollup --watch -c",
@@ -14,7 +14,7 @@
   "dependencies": {
     "@vscode/codicons": "^0.0.27",
     "element-plus": "latest",
-    "flowbee": "^0.3.5",
+    "flowbee": "^0.3.7",
     "http-status-codes": "^2.1.4",
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.29.1",

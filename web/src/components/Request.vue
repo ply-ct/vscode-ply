@@ -135,7 +135,7 @@ export default defineComponent({
       ) {
         return false;
       }
-      return getContentType(this.request);
+      return getContentType(this.request)?.toLowerCase() === 'application/x-www-form-urlencoded';
     },
     formParams() {
       const params: { [key: string]: string } = {};
