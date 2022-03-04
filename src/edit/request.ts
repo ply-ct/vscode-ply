@@ -432,7 +432,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             ...baseOptions,
             lineNumbers: editorSettings.get('lineNumbers', 'on') === 'on',
             hovers: editorSettings.get('hover.enabled', true),
-            folding: editorSettings.get('editor.folding', true),
+            folding: editorSettings.get('folding', true),
             readonly: uri.scheme === 'git' || (fs.statSync(uri.fsPath).mode & 146) === 0,
             runnable: uri.scheme !== 'git'
         };
