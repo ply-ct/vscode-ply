@@ -1,10 +1,17 @@
 # Change Log
 
+## [2.1.6](https://github.com/ply-ct/vscode-ply/tree/2.1.6) (2022-03-03)
+
+- Bug: Request editor body displays as table even for JSON payloads [\#129](https://github.com/ply-ct/vscode-ply/issues/129)
+
+- Enhancement: Honor vscode's folding prefs in request editor [\#130](https://github.com/ply-ct/vscode-ply/issues/130)
+
+
 ## [2.1.5](https://github.com/ply-ct/vscode-ply/tree/2.1.5) (2022-02-27)
 
 - Enhancement: First-class XML support [\#122](https://github.com/ply-ct/vscode-ply/issues/122)
 
-- Enhancement: Exclude expressions from form data urlencodincoding [\#123](https://github.com/ply-ct/vscode-ply/issues/1223
+- Enhancement: Exclude expressions from form data urlencodincoding [\#123](https://github.com/ply-ct/vscode-ply/issues/123)
 
 - Bug: Import fixes on Windows [\#127](https://github.com/ply-ct/vscode-ply/issues/127)
 
