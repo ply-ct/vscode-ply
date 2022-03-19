@@ -96,16 +96,8 @@
   ],
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": "limited",
-      "description": "Requests and Flows can be run in untrusted workspaces, but Cases cannot. Flows with Custom steps or TypeScript steps are NOT executed without trust.",
-      "restrictedConfigurations": [
-        "ply.nodePath",
-        "ply.plyPath",
-        "ply.useDist",
-        "ply.cwd",
-        "ply.env",
-        "ply.customSteps"
-      ]
+      "supported": false,
+      "description": "Requests, Flows and Cases should all be submitted/run in the context of a trusted workspace."
     }
   },
   "contributes": {
