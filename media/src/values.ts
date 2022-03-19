@@ -210,7 +210,7 @@ export class Values {
                 seg = seg.substring(0, idx);
             }
             if (!res[seg]) {
-                return input;
+                return '';
             }
             res = res[seg];
             if (indexer) {

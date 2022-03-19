@@ -270,6 +270,13 @@
         margin-bottom: 2px;
         user-select: none;
         cursor: pointer; }
+      .flowbee-toolbox-light ul li svg {
+        width: 20px;
+        min-width: 20px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none;
+        cursor: pointer; }
       .flowbee-toolbox-light ul li label {
         padding-left: 7px;
         user-select: none;
@@ -309,6 +316,13 @@
       padding: 0 5px;
       line-height: 22px; }
       .flowbee-toolbox-dark ul li img {
+        width: 20px;
+        min-width: 20px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none;
+        cursor: pointer; }
+      .flowbee-toolbox-dark ul li svg {
         width: 20px;
         min-width: 20px;
         vertical-align: middle;
@@ -362,6 +376,10 @@
   .flowbee-configurator-light .flowbee-config-title {
     flex-grow: 1;
     user-select: none; }
+  .flowbee-configurator-light .flowbee-config-title a {
+    text-decoration: none;
+    margin-left: 7px;
+    font-weight: normal; }
   .flowbee-configurator-light .flowbee-config-close {
     cursor: pointer;
     user-select: none; }
@@ -507,6 +525,10 @@
   .flowbee-configurator-dark .flowbee-config-title {
     flex-grow: 1;
     user-select: none; }
+  .flowbee-configurator-dark .flowbee-config-title a {
+    text-decoration: none;
+    margin-left: 7px;
+    font-weight: normal; }
   .flowbee-configurator-dark .flowbee-config-close {
     cursor: pointer;
     user-select: none; }

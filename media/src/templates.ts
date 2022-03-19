@@ -2,9 +2,9 @@ import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Templates {
     readonly templatePath: string;
-    private templates = new Map<string, string>();
+    private templates = new Map<string, string | flowbee.ConfigTemplate>();
 
-    constructor(readonly base: string) {
+    constructor(readonly base: string, private customDescriptors?: flowbee.Descriptor[]) {
         this.templatePath = `${base}/templates`;
     }
 
@@ -12,8 +12,12 @@ export class Templates {
      * Template contents
      * @param pathOrElement relative to template path
      */
-    async get(pathOrElement: flowbee.FlowElement | string, prefix = ''): Promise<string> {
-        let path: string;
+    async get(
+        pathOrElement: flowbee.FlowElement | string,
+        prefix = ''
+    ): Promise<string | flowbee.ConfigTemplate> {
+        let path: string | undefined;
+        let template: string | flowbee.ConfigTemplate | undefined;
         if (prefix && !prefix.endsWith('/')) {
             prefix += '/';
         }
@@ -21,13 +25,23 @@ export class Templates {
             path = `${prefix}${pathOrElement}`;
         } else {
             const flowElement: flowbee.FlowElement = pathOrElement;
-            const flowElementPath =
-                flowElement.type === 'flow'
-                    ? 'flow'
-                    : (flowElement as any).path || flowElement.type;
-            path = `${prefix}${flowElementPath}.yaml`;
+            path = flowElement.path;
+            if (path?.endsWith('.ts')) {
+                const descriptor = this.customDescriptors?.find((d) => d.path === path);
+                if (descriptor?.template) {
+                    if (typeof descriptor.template === 'object') {
+                        template = descriptor.template as flowbee.ConfigTemplate;
+                    } else {
+                        template = '' + descriptor.template;
+                    }
+                }
+            } else {
+                const flowElementPath =
+                    flowElement.type === 'flow' ? 'flow' : flowElement.path || flowElement.type;
+                path = `${prefix}${flowElementPath}.yaml`;
+            }
         }
-        let template = this.templates.get(path);
+        if (!template) template = this.templates.get(path);
         if (!template) {
             let resp = await fetch(`${this.templatePath}/${path}`);
             if (resp.status === 404) {

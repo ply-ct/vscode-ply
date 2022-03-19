@@ -57,6 +57,13 @@
           @updateValue="onUpdateHeaders"
         />
       </el-tab-pane>
+      <el-tab-pane label="Query">
+        <table-comp
+          :value="queryParams"
+          :readonly="options.readonly"
+          @updateValue="onUpdateQuery"
+        />
+      </el-tab-pane>
       <el-tab-pane label="Source">
         <editor
           resource="Request Source"
@@ -150,6 +157,25 @@ export default defineComponent({
         }
       }
       return params;
+    },
+    queryParams() {
+      const params: { [key: string]: string } = {};
+      const q = this.request.url.indexOf('?');
+      if (q > 0 && q < this.request.url.length - 1) {
+        for (const seg of this.request.url.substring(q + 1).split('&')) {
+          const eq = seg.indexOf('=');
+          let name: string;
+          let val = '';
+          if (eq > 0 && eq < seg.length) {
+            name = seg.substring(0, eq);
+            val = eq < seg.length - 1 ? seg.substring(eq + 1) : '';
+          } else {
+            name = seg;
+          }
+          params[name] = val;
+        }
+      }
+      return params;
     }
   },
   methods: {
@@ -226,6 +252,20 @@ export default defineComponent({
     },
     onUpdateHeaders(updatedHeaders: { [key: string]: string }) {
       this.$emit('updateRequest', { ...this.request, headers: updatedHeaders });
+    },
+    onUpdateQuery(updatedParams: { [key: string]: string }) {
+      let query = '?';
+      for (const [i, name] of Object.keys(updatedParams).entries()) {
+        if (i > 0) query += '&';
+        query += name;
+        const value = updatedParams[name];
+        if (value) query += `=${value}`;
+      }
+      let url: string;
+      const q = this.request.url.indexOf('?');
+      if (q > 0) url = this.request.url.substring(0, q) + query;
+      else url = `${this.request.url}${query}`;
+      this.$emit('updateRequest', { ...this.request, url });
     },
     onUpdateSource(content: string) {
       this.$emit('updateSource', content);

@@ -69,7 +69,7 @@ export class PlyAdapter implements TestAdapter {
         readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly outputChannel: vscode.OutputChannel,
-        private readonly log: ply.Log
+        readonly log: ply.Log
     ) {
         this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
         this.disposables.push(this.testsEmitter);

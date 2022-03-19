@@ -5,6 +5,7 @@ export interface OptionToggleEvent {
 }
 export interface FlowActionEvent {
     action: string;
+    element?: string;
     target?: any;
     options?: any;
 }

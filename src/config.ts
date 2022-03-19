@@ -8,6 +8,7 @@ export enum Setting {
     requestFiles = 'requestFiles',
     caseFiles = 'caseFiles',
     flowFiles = 'flowFiles',
+    customSteps = 'customSteps',
     excludes = 'excludes',
     expectedLocation = 'expectedLocation',
     actualLocation = 'actualLocation',
@@ -55,7 +56,7 @@ export class PlyConfig {
                     setting === Setting.testsLocation ||
                     setting === Setting.requestFiles ||
                     setting === Setting.caseFiles ||
-                    setting === Setting.flowFiles ||
+                    setting === Setting.customSteps ||
                     setting === Setting.excludes ||
                     setting === Setting.nodePath ||
                     setting === Setting.plyPath

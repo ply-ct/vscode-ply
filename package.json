@@ -61,7 +61,7 @@
   "dependencies": {
     "@ply-ct/ply": "^3.0.33",
     "find-up": "^4.1.0",
-    "flowbee": "^0.3.7",
+    "flowbee": "^0.4.1",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",
     "vscode-uri": "^3.0.3",
@@ -94,13 +94,27 @@
   "activationEvents": [
     "*"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Requests and Flows can be run in untrusted workspaces, but Cases cannot. Flows with Custom steps or TypeScript steps are NOT executed without trust.",
+      "restrictedConfigurations": [
+        "ply.nodePath",
+        "ply.plyPath",
+        "ply.useDist",
+        "ply.cwd",
+        "ply.env",
+        "ply.customSteps"
+      ]
+    }
+  },
   "contributes": {
     "configuration": {
       "title": "Ply",
       "properties": {
         "ply.testsLocation": {
           "type": "string",
-          "description": "Base directory (absolute or relative to workspace folder) for all Ply request and case files.  Defaults from plyrc if present, otherwise '.'",
+          "description": "Base directory (absolute or relative to workspace folder) for all Ply request and case files.  Defaults from plyconfig if present, otherwise '.'",
           "scope": "resource"
         },
         "ply.requestFiles": {
@@ -116,6 +130,11 @@
         "ply.flowFiles": {
           "type": "string",
           "description": "Glob pattern for Ply flow files, relative to testsLocation ('**/*.flow').",
+          "scope": "resource"
+        },
+        "ply.customSteps": {
+          "type": "string",
+          "description": "Glob pattern for step descriptor JSON files, relative to workspace folder.",
           "scope": "resource"
         },
         "ply.ignore": {
@@ -141,6 +160,12 @@
         "ply.logLocation": {
           "type": "string",
           "description": "Ply log file base dir (actualLocation).",
+          "scope": "resource"
+        },
+        "ply.flowSourceTab": {
+          "description": "Show Source tab in flow configurator",
+          "type": "boolean",
+          "default": false,
           "scope": "resource"
         },
         "ply.logpanel": {

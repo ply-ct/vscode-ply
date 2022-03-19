@@ -81,10 +81,6 @@ export class ToolboxSplitter {
             isSplitterDrag = isSplitterHover(e);
         };
         toolboxContainer.onmouseup = (_e: MouseEvent) => {
-            if (isSplitterDrag) {
-                this.flowRequestsContainer.style.height = '100%';
-                this.flowRequestsContainer.style.minHeight = '100%';
-            }
             isSplitterDrag = false;
             document.body.style.cursor = 'default';
             this.flowRequestsHeader.style.cursor = 'pointer';
@@ -105,6 +101,9 @@ export class ToolboxSplitter {
                     this.flowToolboxContainer.style.height = y + 'px';
                     this.flowToolboxContainer.style.minHeight = y + 'px';
                     this.flowToolboxContainer.style.maxHeight = y + 'px';
+
+                    this.flowRequestsContainer.style.height = `calc(100% - ${y}px)`;
+                    this.flowRequestsContainer.style.minHeight = `calc(100% - ${y}px)`;
                 }
             } else if (e.buttons === 0 && isSplitterHover(e)) {
                 document.body.style.cursor = 'ns-resize';

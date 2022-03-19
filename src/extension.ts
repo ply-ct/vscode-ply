@@ -35,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     console.log('vscode-ply activating...');
 
-    const outputChannel = vscode.window.createOutputChannel('Ply Tests');
+    const outputChannel = vscode.window.createOutputChannel('Ply');
     context.subscriptions.push(outputChannel);
     const log = new Log('ply', undefined, 'Ply Invoker');
     context.subscriptions.push(log);

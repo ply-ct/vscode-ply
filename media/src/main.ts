@@ -9,7 +9,7 @@ import {
     FlowActionEvent,
     ZoomChangeEvent
 } from './actions';
-import { descriptors } from './descriptors';
+import { getDescriptors } from './descriptors';
 import { MenuProvider } from './menu';
 import { Request } from './request';
 import { Values } from './values';
@@ -44,6 +44,12 @@ class DialogProvider implements flowbee.DialogProvider {
 let oldFlow: flowbee.Disposable;
 let requests: (flowbee.Descriptor & { request: Request })[] = [];
 
+interface Config {
+    customDescriptors?: flowbee.Descriptor[];
+    websocketPort: number;
+    showSourceTab: boolean;
+}
+
 export class Flow implements flowbee.Disposable {
     readonly options: Options;
     readonly flowDiagram: flowbee.FlowDiagram;
@@ -59,14 +65,14 @@ export class Flow implements flowbee.Disposable {
      */
     constructor(
         private base: string,
-        readonly websocketPort: number,
+        readonly config: Config,
         text: string,
         private file: string,
         private readonly: boolean
     ) {
         oldFlow?.dispose();
         oldFlow = this;
-        const webSocketUrl = `ws://localhost:${websocketPort}/websocket`;
+        const webSocketUrl = `ws://localhost:${config.websocketPort}/websocket`;
         this.options = new Options(base, webSocketUrl);
         this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
 
@@ -139,48 +145,51 @@ export class Flow implements flowbee.Disposable {
             text,
             canvasElement,
             file,
-            descriptors,
+            getDescriptors(this.config.customDescriptors),
             this.options.diagramOptions
         );
         this.disposables.push(this.flowDiagram.onFlowChange((_e) => this.updateFlow()));
         this.disposables.push(
             this.flowDiagram.onFlowElementAdd((onAdd) => {
-                if (onAdd.descriptor.link) {
-                    // dragged from requests toolpane
-                    const request = requests.find((req) => {
-                        return req.link?.url && req.link.url === onAdd.descriptor.link?.url;
-                    });
-                    if (request) {
-                        if ((onAdd.element as any).name) {
-                            (onAdd.element as any).name = `${(onAdd.element as any).name} Copy`;
-                        }
-                        if (!onAdd.element.attributes) onAdd.element.attributes = {};
-                        onAdd.element.attributes.url = request.request.url;
-                        onAdd.element.attributes.method = request.request.method;
-                        if (request.request.headers) {
-                            const headers: string[][] = [];
-                            Object.keys(request.request.headers).forEach((header) => {
-                                headers.push([header, request.request.headers[header]]);
-                            });
-                            onAdd.element.attributes.headers = JSON.stringify(headers);
-                        }
-                        if (request.request.body) {
-                            onAdd.element.attributes.body = request.request.body;
-                        }
-                        const step = this.findStep(onAdd.element.id || '');
-                        if (step) {
-                            step.name = (onAdd.element as any).name;
-                            // redraw to reflect name
-                            this.flowDiagram.render(this.options.diagramOptions);
-                            this.updateFlow();
+                if (onAdd.element.type === 'step' && onAdd.descriptor) {
+                    // added a step
+                    if (onAdd.descriptor.link) {
+                        // dragged from requests toolpane
+                        const request = requests.find((req) => {
+                            return req.link?.url && req.link.url === onAdd.descriptor!.link!.url;
+                        });
+                        if (request) {
+                            if ((onAdd.element as any).name) {
+                                (onAdd.element as any).name = `${(onAdd.element as any).name} Copy`;
+                            }
+                            if (!onAdd.element.attributes) onAdd.element.attributes = {};
+                            onAdd.element.attributes.url = request.request.url;
+                            onAdd.element.attributes.method = request.request.method;
+                            if (request.request.headers) {
+                                const headers: string[][] = [];
+                                Object.keys(request.request.headers).forEach((header) => {
+                                    headers.push([header, request.request.headers[header]]);
+                                });
+                                onAdd.element.attributes.headers = JSON.stringify(headers);
+                            }
+                            if (request.request.body) {
+                                onAdd.element.attributes.body = request.request.body;
+                            }
+                            const step = this.findStep(onAdd.element.id || '');
+                            if (step) {
+                                step.name = (onAdd.element as any).name;
+                                // redraw to reflect name
+                                this.flowDiagram.render(this.options.diagramOptions);
+                                this.updateFlow();
+                            }
                         }
                     }
+                    this.updateConfigurator(
+                        onAdd.element,
+                        undefined,
+                        onAdd.descriptor.path === 'request'
+                    );
                 }
-                this.updateConfigurator(
-                    onAdd.element,
-                    undefined,
-                    onAdd.descriptor.path === 'request'
-                );
             })
         );
 
@@ -227,7 +236,10 @@ export class Flow implements flowbee.Disposable {
         } else {
             const toolboxElement = document.getElementById('flow-toolbox') as HTMLDivElement;
             toolboxElement.innerHTML = '';
-            this.toolbox = new flowbee.Toolbox(descriptors, toolboxElement);
+            this.toolbox = new flowbee.Toolbox(
+                getDescriptors(this.config.customDescriptors),
+                toolboxElement
+            );
 
             // open/close toolbox
             const toolboxHeader = toolboxContainer.querySelector(
@@ -320,11 +332,34 @@ export class Flow implements flowbee.Disposable {
                 cfgr.flowElement,
                 cfgr.instance ? [cfgr.instance] : [],
                 cfgr.template || {},
-                this.options.configuratorOptions
+                this.getConfiguratorOptions(),
+                this.getSourceLink(cfgr.flowElement)
             );
             if (cfgr.flowElement.id) {
                 this.flowDiagram.select(cfgr.flowElement.id);
             }
+        }
+    }
+
+    getConfiguratorOptions(): flowbee.ConfiguratorOptions {
+        return {
+            ...this.options.configuratorOptions,
+            ...(this.config.showSourceTab && { sourceTab: 'yaml' })
+        };
+    }
+
+    getSourceLink(flowElement: flowbee.FlowElement): flowbee.SourceLink | undefined {
+        if (flowElement.path?.endsWith('.ts')) {
+            return { path: flowElement.path };
+        } else if (flowElement.path === 'typescript' && flowElement.attributes?.tsFile) {
+            return { path: flowElement.attributes.tsFile };
+        } else if (flowElement.path === 'request') {
+            let path = this.file;
+            let lastSep = path.lastIndexOf('/');
+            if (lastSep === -1) lastSep = path.lastIndexOf('\\');
+            if (lastSep > 0) path = path.substring(lastSep + 1);
+            path += `#${flowElement.id}`;
+            return { path, action: 'edit_request' };
         }
     }
 
@@ -408,7 +443,8 @@ export class Flow implements flowbee.Disposable {
                 flowElement,
                 instances || [],
                 template,
-                this.options.configuratorOptions,
+                this.getConfiguratorOptions(),
+                this.getSourceLink(flowElement),
                 position
             );
             updateState({
@@ -529,6 +565,7 @@ export class Flow implements flowbee.Disposable {
         vscode.postMessage({
             type: flowAction === 'values' ? 'run' : flowAction, // can elect Run from values prompt even when launched as 'values' action
             flow: this.flowDiagram.flow.path,
+            ...(e.element && { element: e.element }),
             ...(e.target && { target: e.target }),
             ...(e.options && { options: e.options }),
             ...(vals && { values: vals })
@@ -555,7 +592,7 @@ export class Flow implements flowbee.Disposable {
             base: this.base,
             file: this.file,
             text,
-            config: { websocketPort: this.websocketPort },
+            config: this.config,
             readonly: this.flowDiagram.readonly,
             mode: 'select'
         });
@@ -574,7 +611,7 @@ window.addEventListener('message', async (event) => {
     console.debug(`message: ${JSON.stringify(message, null, 2)}`);
     if (message.type === 'update') {
         if (!templates) {
-            templates = new Templates(message.base);
+            templates = new Templates(message.base, message.config.customDescriptors);
         }
         let text = message.text?.trim();
         let isNew = false;
@@ -583,8 +620,7 @@ window.addEventListener('message', async (event) => {
             isNew = true;
             text = await templates.get('default.flow');
         }
-        const websocketPort = message.config.websocketPort;
-        const flow = new Flow(message.base, websocketPort, text, message.file, message.readonly);
+        const flow = new Flow(message.base, message.config, text, message.file, message.readonly);
         flow.switchMode('select');
         flow.flowDiagram.readonly = message.readonly;
         if (isNew) {
@@ -606,7 +642,7 @@ window.addEventListener('message', async (event) => {
             text,
             readonly: message.readonly,
             mode: 'select',
-            config: { websocketPort },
+            config: message.config,
             values: values?.defaults
         });
         if (message.select) {
@@ -685,9 +721,7 @@ interface FlowState {
     text?: string;
     readonly?: boolean; // this means the file is readonly
     mode?: flowbee.Mode;
-    config?: {
-        websocketPort: number;
-    };
+    config?: Config;
     selected?: {
         id?: string; // selected but no id means flow selected
         instances?: flowbee.FlowElementInstance[];
@@ -709,14 +743,8 @@ function updateState(delta: FlowState) {
 function readState(loadInstance = true): Flow | undefined {
     const state = vscode.getState();
     if (state && state.base && state.file) {
-        templates = new Templates(state.base);
-        const flow = new Flow(
-            state.base,
-            state.config?.websocketPort || 0,
-            state.text,
-            state.file,
-            state.readonly
-        );
+        templates = new Templates(state.base, state.config.customDescriptors);
+        const flow = new Flow(state.base, state.config, state.text, state.file, state.readonly);
         flow.flowDiagram.readonly = state.readonly;
         const mode = state.mode || 'select';
         if (mode === 'runtime' && loadInstance) {

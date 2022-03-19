@@ -17,12 +17,7 @@ export class AdapterHelper {
         // without try/catch, user sees the following with no info in console/log:
         // "Unable to open 'xxx.ply.yaml': Assertion Failed: argument is undefined or null."
         try {
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-                uri.with({ scheme: 'file', fragment: '' })
-            );
-            if (!workspaceFolder) {
-                throw new Error(`Workspace folder not found for flow path: ${uri}`);
-            }
+            const workspaceFolder = this.getWorkspaceFolder(uri);
             const adapter = this.adapters.get(workspaceFolder.uri.toString());
             if (!adapter) {
                 throw new Error(
@@ -30,6 +25,22 @@ export class AdapterHelper {
                 );
             }
             return adapter;
+        } catch (err: unknown) {
+            console.error(err);
+            vscode.window.showErrorMessage(`${err}`);
+            throw err;
+        }
+    }
+
+    getWorkspaceFolder(uri: vscode.Uri): vscode.WorkspaceFolder {
+        try {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+                uri.with({ scheme: 'file', fragment: '' })
+            );
+            if (!workspaceFolder) {
+                throw new Error(`Workspace folder not found for flow path: ${uri}`);
+            }
+            return workspaceFolder;
         } catch (err: unknown) {
             console.error(err);
             vscode.window.showErrorMessage(`${err}`);

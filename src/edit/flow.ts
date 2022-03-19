@@ -147,8 +147,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 base: baseUri.toString(),
                 file: isFile ? document.uri.fsPath : document.uri.toString(),
                 text: document.getText(),
-                config: { websocketPort: this.websocketPort },
-                readonly: !isFile || (fs.statSync(document.uri.fsPath).mode & 146) === 0
+                config: {
+                    customDescriptors: await this.getCustomDescriptors(document.uri),
+                    websocketPort: this.websocketPort,
+                    showSourceTab: vscode.workspace
+                        .getConfiguration('ply', document.uri)
+                        .get('flowSourceTab', false)
+                },
+                readonly:
+                    !isFile || ((await fs.promises.stat(document.uri.fsPath)).mode & 146) === 0
             } as any;
             if (select) {
                 msg.select = select;
@@ -285,7 +292,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     if (message.element === 'file') {
                         const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
                         const fileUri = wsFolder!.uri.with({
-                            path: `${wsFolder!.uri.path}/${message.path}`
+                            path: `${wsFolder!.uri.path}/${
+                                message.target ? message.target : message.path
+                            }`
                         });
                         const filepath = await this.pathInWorkspaceFolder(wsFolder!, fileUri);
                         if (filepath) {
@@ -636,5 +645,57 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (res === runFlow) {
             this.adapterHelper.run(uri);
         }
+    }
+
+    private async getCustomDescriptors(uri: vscode.Uri): Promise<flowbee.Descriptor[]> {
+        const descriptors: flowbee.Descriptor[] = [];
+        const customSteps = vscode.workspace
+            .getConfiguration('ply', uri)
+            .get(Setting.customSteps, '');
+        if (customSteps) {
+            const adapter = this.adapterHelper.getAdapter(uri);
+            const descriptorUris = await vscode.workspace.findFiles(
+                new vscode.RelativePattern(adapter.workspaceFolder.uri, customSteps)
+            );
+            for (const descriptorUri of descriptorUris) {
+                const fsPath = descriptorUri.fsPath;
+                if (fs.existsSync(fsPath)) {
+                    const obj = JSON.parse(await fs.promises.readFile(fsPath, 'utf-8'));
+                    if (obj.path && obj.name && obj.type === 'step') {
+                        if (obj.icon && !obj.icon.startsWith('<svg')) {
+                            // inline
+                            const iconFile = path.join(path.resolve(fsPath, '..'), obj.icon);
+                            if (fs.existsSync(iconFile)) {
+                                obj.icon = await fs.promises.readFile(iconFile, 'utf-8');
+                            }
+                        }
+                        if (obj.template) {
+                            if (typeof obj.template === 'string') {
+                                const templateFile = path.join(
+                                    path.resolve(fsPath, '..'),
+                                    obj.template
+                                );
+                                if (fs.existsSync(templateFile)) {
+                                    const yaml = await fs.promises.readFile(templateFile, 'utf-8');
+                                    obj.template = loadYaml(templateFile, yaml);
+                                } else {
+                                    adapter.log.error(`Template not found: ${templateFile}`);
+                                    delete obj.template;
+                                }
+                            } else {
+                                if (typeof obj.template !== 'object') {
+                                    adapter.log.error(`Bad template property: ${obj.name}`);
+                                    delete obj.template;
+                                }
+                            }
+                        }
+                        descriptors.push(obj as flowbee.Descriptor);
+                    } else {
+                        adapter.log.error(`Invalid descriptor: ${fsPath}`);
+                    }
+                }
+            }
+        }
+        return descriptors;
     }
 }

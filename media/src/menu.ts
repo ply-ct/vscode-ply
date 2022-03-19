@@ -33,9 +33,13 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         }
         let designItems: flowbee.MenuItem[] | undefined;
         if (type !== 'link' && this.flowDiagram.mode !== 'connect') {
-            const canRun = type === 'flow' || step?.path === 'request';
+            const isReq = step?.path === 'request';
+            const isCode = step?.path === 'typescript' || step?.path.endsWith('.ts');
+            const canRun = type === 'flow' || isReq;
             designItems = [
                 { id: 'expected', label: 'Expected Results', icon: 'expected.svg' },
+                ...(isReq ? [{ id: 'request', label: 'Open Request', icon: 'open-file.svg' }] : []),
+                ...(isCode ? [{ id: 'source', label: 'Open Source', icon: 'open-file.svg' }] : []),
                 ...(canRun ? [{ id: 'submit', label: 'Submit', icon: 'submit.svg' }] : []),
                 ...(canRun ? [{ id: 'run', label: 'Run', icon: 'run.svg' }] : [])
             ];
@@ -93,6 +97,17 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
             // TODO target in subflow
             const target = selectEvent.element.type === 'flow' ? null : selectEvent.element.id;
             this._onFlowAction.emit({ action: selectEvent.item.id, target });
+            return true;
+        } else if (selectEvent.item.id === 'request') {
+            const target = selectEvent.element.id;
+            this._onFlowAction.emit({ action: 'edit', element: 'request', target });
+            return true;
+        } else if (selectEvent.item.id === 'source') {
+            let path = selectEvent.element.path;
+            if (!path?.endsWith('.ts')) {
+                path = selectEvent.element.attributes?.tsFile;
+            }
+            this._onFlowAction.emit({ action: 'edit', element: 'file', target: path });
             return true;
         } else {
             return super.onSelectItem(selectEvent);

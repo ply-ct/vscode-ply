@@ -162,6 +162,7 @@ body {
   flex-basis: 50%;
   flex-grow: 1;
   min-width: 0;
+  border-bottom: 1px solid var(--vscode-tab-border);
 }
 .toolbox-header {
   user-select: none;
@@ -206,7 +207,7 @@ body {
   outline: none;
 }
 .flow-toolbox {
-  height: 100%;
+  height: calc(100% - 25px);
   overflow: auto;
   background-color: var(--vscode-sideBar-background);
 }
