@@ -248,9 +248,11 @@ export class Flow implements flowbee.Disposable {
             toolboxHeader.style.cursor = 'pointer';
             const toolboxCaret = flowHeader.querySelector('.toolbox-caret') as HTMLSpanElement;
             toolboxCaret.style.display = 'none';
-            toolboxHeader.onclick = (_e: MouseEvent) => {
-                toolboxContainer.style.display = 'none';
-                toolboxCaret.style.display = 'inline-block';
+            toolboxHeader.onclick = (e: MouseEvent) => {
+                if ((e.target as any).id !== 'newCustom') {
+                    toolboxContainer.style.display = 'none';
+                    toolboxCaret.style.display = 'inline-block';
+                }
             };
             toolboxCaret.onclick = (_e: MouseEvent) => {
                 toolboxCaret.style.display = 'none';
@@ -267,6 +269,14 @@ export class Flow implements flowbee.Disposable {
             // flow splitter
             const containerElement = document.getElementById('container') as HTMLDivElement;
             new FlowSplitter(containerElement, toolboxContainer, toolboxCaret);
+
+            // new custom
+            const newCustom = document.getElementById('newCustom') as HTMLInputElement;
+            newCustom.onclick = (_e: MouseEvent) => {
+                toolboxCaret.style.display = 'none';
+                toolboxContainer.style.display = 'flex';
+                vscode.postMessage({ type: 'new', element: 'custom' });
+            };
 
             // toolbox splitter
             const toolboxSplitter = new ToolboxSplitter(toolboxContainer);

@@ -10,6 +10,8 @@ import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
+import { CreateFileOptions, WorkspaceFiles } from '../util/files';
+import { Custom } from './custom';
 
 export interface FlowItemSelectEvent {
     uri: vscode.Uri;
@@ -30,7 +32,6 @@ interface InstanceSubscribed {
 export class FlowEditor implements vscode.CustomTextEditorProvider {
     private websocketPort: number;
     private websocketBound = false;
-    private disposables: flowbee.Disposable[] = [];
     private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
 
     constructor(
@@ -126,6 +127,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
+        let disposables: { dispose(): void }[] = [];
         this.bindWebsocket();
 
         const mediaPath = path.join(this.context.extensionPath, 'media');
@@ -140,6 +142,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         webviewPanel.webview.html = web.html;
 
+        const adapter = this.adapterHelper.getAdapter(document.uri);
+
+        const plyPath = this.adapterHelper.getConfig(document.uri).plyPath;
+        const files = new WorkspaceFiles(document.uri, path.join(plyPath, 'templates'));
+
+        const custom = new Custom(document.uri, files.workspaceFolder, adapter.log);
+        disposables.push(custom);
+        let customDescriptors = await custom.getDescriptors();
+
         const updateWebview = async (select?: string) => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
@@ -148,7 +159,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 file: isFile ? document.uri.fsPath : document.uri.toString(),
                 text: document.getText(),
                 config: {
-                    customDescriptors: await this.getCustomDescriptors(document.uri),
+                    customDescriptors,
                     websocketPort: this.websocketPort,
                     showSourceTab: vscode.workspace
                         .getConfiguration('ply', document.uri)
@@ -163,7 +174,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             await webviewPanel.webview.postMessage(msg);
         };
 
-        this.disposables.push(
+        disposables.push(
+            custom.onDescriptorsChange(async () => {
+                customDescriptors = await custom.getDescriptors();
+                updateWebview();
+            })
+        );
+
+        disposables.push(
             webviewPanel.webview.onDidReceiveMessage(async (message) => {
                 if (message.type === 'change') {
                     const isNew = !document.getText().trim();
@@ -235,50 +253,72 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     }
                 } else if (message.type === 'new') {
                     if (message.element === 'file') {
-                        const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-                        let dir = wsFolder!.uri;
-                        if (
-                            vscode.workspace.asRelativePath('src') !==
-                            path.join(wsFolder!.name, 'src')
-                        ) {
-                            dir = dir.with({ path: `${dir.path}/src` });
+                        // TODO conditional
+                        const dlgOptions: CreateFileOptions = {
+                            dirpath: 'src',
+                            template: path.join('exec.ts.txt'),
+                            filters: { 'TypeScript Source File': ['ts'] },
+                            doOpen: true
+                        };
+                        const filepath = await files.createFile(dlgOptions);
+                        if (filepath) {
+                            webviewPanel.webview.postMessage({
+                                type: 'step',
+                                stepId: message.target,
+                                file: filepath
+                            });
                         }
-                        const selUri = await vscode.window.showSaveDialog({
-                            defaultUri: dir,
-                            filters: { 'TypeScript Source File': ['ts'] }
-                        });
-                        if (selUri) {
-                            const filepath = await this.pathInWorkspaceFolder(wsFolder!, selUri);
-                            if (filepath) {
-                                const plyPath = this.adapterHelper.getConfig(document.uri).plyPath;
-                                const templatePath = path.join(plyPath, 'templates', 'exec.ts.txt');
-                                const template = await fs.promises.readFile(templatePath, 'utf8');
-                                await fs.promises.writeFile(selUri.fsPath, template, 'utf8');
-                                await vscode.commands.executeCommand('vscode.open', selUri);
-                                webviewPanel.webview.postMessage({
-                                    type: 'step',
-                                    stepId: message.target,
-                                    file: filepath
+                    } else if (message.element === 'custom') {
+                        const customStepsPatterns = custom.getCustomStepsPattern();
+                        if (customStepsPatterns) {
+                            const tsPath = await files.createFile({
+                                dirpath: 'src',
+                                template: 'exec.ts.txt',
+                                filters: { 'Custom Step TypeScript': ['ts'] },
+                                doOpen: true
+                            });
+                            if (tsPath) {
+                                const dirpath = path.dirname(tsPath);
+                                const basename = path.basename(tsPath, '.ts');
+                                await files.createFile({
+                                    dirpath,
+                                    filename: `${basename}.json`,
+                                    template: 'descrip.json',
+                                    substs: {
+                                        '${stepName}': basename,
+                                        '${tsPath}': tsPath,
+                                        '${svgPath}': path.join(dirpath, `${basename}.svg`)
+                                    },
+                                    doOpen: true
+                                });
+                                await files.createFile({
+                                    dirpath,
+                                    filename: `${basename}.svg`,
+                                    template: 'icon.svg'
                                 });
                             }
+                        } else {
+                            vscode.window.showWarningMessage(
+                                `Custom steps pattern setting must be specified: 'ply.customSteps'`
+                            );
                         }
                     } else if (message.element === 'request') {
                         vscode.commands.executeCommand('ply.new.request');
                     }
                 } else if (message.type === 'select') {
                     if (message.element === 'file') {
-                        const selUris = await vscode.window.showOpenDialog({
+                        // TODO conditional
+                        const dlgOptions: vscode.OpenDialogOptions = {
                             openLabel: 'Select',
                             canSelectMany: false,
-                            filters: { 'TypeScript Source File': ['ts'] },
                             title: 'Select TypeScript File'
-                        });
+                        };
+                        dlgOptions.filters = { 'TypeScript Source File': ['ts'] };
+
+                        const selUris = await vscode.window.showOpenDialog(dlgOptions);
                         if (selUris?.length === 1) {
                             const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-                            const filepath = await this.pathInWorkspaceFolder(
-                                wsFolder!,
-                                selUris[0]
-                            );
+                            const filepath = files.pathInWorkspaceFolder(wsFolder!, selUris[0]);
                             if (filepath) {
                                 webviewPanel.webview.postMessage({
                                     type: 'step',
@@ -296,7 +336,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 message.target ? message.target : message.path
                             }`
                         });
-                        const filepath = await this.pathInWorkspaceFolder(wsFolder!, fileUri);
+                        const filepath = files.pathInWorkspaceFolder(wsFolder!, fileUri);
                         if (filepath) {
                             await vscode.commands.executeCommand('vscode.open', fileUri);
                         }
@@ -392,7 +432,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        this.disposables.push(
+        disposables.push(
             vscode.workspace.onDidChangeTextDocument((docChange) => {
                 const uri = docChange.document.uri;
                 if (uri.scheme === 'ply-request' && uri.fragment) {
@@ -408,7 +448,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        this.disposables.push(
+        disposables.push(
             vscode.workspace.onDidChangeConfiguration((configChange) => {
                 if (configChange.affectsConfiguration('workbench.colorTheme')) {
                     webviewPanel.webview.postMessage({
@@ -476,7 +516,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     }
                 };
                 console.debug(`Adapter.onFlow() listener for: ${flowPath}`);
-                this.disposables.push(adapter.onFlow(listener));
+                disposables.push(adapter.onFlow(listener));
             }
 
             const onValuesUpdate = async (resultUri?: vscode.Uri) => {
@@ -501,8 +541,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 }
             };
 
-            const adapter = this.adapterHelper.getAdapter(document.uri);
-            this.disposables.push(
+            disposables.push(
                 adapter.onLoad(async (loaded) => {
                     const requests = loaded.success
                         ? await this.adapterHelper.getRequestDescriptors(document.uri)
@@ -512,7 +551,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             );
 
             if (adapter.values) {
-                this.disposables.push(
+                disposables.push(
                     adapter.values.onValuesUpdate((updateEvent) =>
                         onValuesUpdate(updateEvent.resultUri)
                     )
@@ -540,7 +579,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         storeVals: this.context.workspaceState.get('ply-user-values'),
                         files: e.values.files
                     });
-                    this.disposables.push(
+                    disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
                             onValuesUpdate(updateEvent.resultUri)
                         )
@@ -548,7 +587,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 });
             }
 
-            this.disposables.push(
+            disposables.push(
                 this.onFlowAction(async (flowAction) => {
                     const flowUri = flowAction.uri.with({ fragment: '' });
                     if (flowUri.toString() === document.uri.toString()) {
@@ -563,7 +602,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             );
         }
 
-        this.disposables.push(
+        disposables.push(
             this.onFlowItemSelect((flowItemSelect) => {
                 if (
                     flowItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()
@@ -573,7 +612,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        this.disposables.push(
+        disposables.push(
             this.onFlowModeChange(async (modeChange) => {
                 if (modeChange.mode === 'runtime') {
                     const instance = this.getInstance(document.uri);
@@ -587,17 +626,17 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
-        this.disposables.push(
+        disposables.push(
             this.onFlowConfiguratorOpen(() => {
                 webviewPanel.webview.postMessage({ type: 'open-configurator' });
             })
         );
 
         webviewPanel.onDidDispose(() => {
-            for (const disposable of this.disposables) {
+            for (const disposable of disposables) {
                 disposable.dispose();
             }
-            this.disposables = [];
+            disposables = [];
         });
 
         await updateWebview();
@@ -645,57 +684,5 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (res === runFlow) {
             this.adapterHelper.run(uri);
         }
-    }
-
-    private async getCustomDescriptors(uri: vscode.Uri): Promise<flowbee.Descriptor[]> {
-        const descriptors: flowbee.Descriptor[] = [];
-        const customSteps = vscode.workspace
-            .getConfiguration('ply', uri)
-            .get(Setting.customSteps, '');
-        if (customSteps) {
-            const adapter = this.adapterHelper.getAdapter(uri);
-            const descriptorUris = await vscode.workspace.findFiles(
-                new vscode.RelativePattern(adapter.workspaceFolder.uri, customSteps)
-            );
-            for (const descriptorUri of descriptorUris) {
-                const fsPath = descriptorUri.fsPath;
-                if (fs.existsSync(fsPath)) {
-                    const obj = JSON.parse(await fs.promises.readFile(fsPath, 'utf-8'));
-                    if (obj.path && obj.name && obj.type === 'step') {
-                        if (obj.icon && !obj.icon.startsWith('<svg')) {
-                            // inline
-                            const iconFile = path.join(path.resolve(fsPath, '..'), obj.icon);
-                            if (fs.existsSync(iconFile)) {
-                                obj.icon = await fs.promises.readFile(iconFile, 'utf-8');
-                            }
-                        }
-                        if (obj.template) {
-                            if (typeof obj.template === 'string') {
-                                const templateFile = path.join(
-                                    path.resolve(fsPath, '..'),
-                                    obj.template
-                                );
-                                if (fs.existsSync(templateFile)) {
-                                    const yaml = await fs.promises.readFile(templateFile, 'utf-8');
-                                    obj.template = loadYaml(templateFile, yaml);
-                                } else {
-                                    adapter.log.error(`Template not found: ${templateFile}`);
-                                    delete obj.template;
-                                }
-                            } else {
-                                if (typeof obj.template !== 'object') {
-                                    adapter.log.error(`Bad template property: ${obj.name}`);
-                                    delete obj.template;
-                                }
-                            }
-                        }
-                        descriptors.push(obj as flowbee.Descriptor);
-                    } else {
-                        adapter.log.error(`Invalid descriptor: ${fsPath}`);
-                    }
-                }
-            }
-        }
-        return descriptors;
     }
 }
