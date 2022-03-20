@@ -187,7 +187,9 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                             }
 
                             const runOptions =
-                                message.action === 'submit' ? { submit: true } : undefined;
+                                message.action === 'submit'
+                                    ? { submit: true, responseBodySortedKeys: false }
+                                    : undefined;
                             this.adapterHelper.run(
                                 document.uri,
                                 message.target,

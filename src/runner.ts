@@ -137,7 +137,14 @@ export class PlyRunner {
             execArgv.push(`--inspect-brk=${debugPort}`);
         }
 
-        const options = this.config.plyOptions;
+        let options = this.config.plyOptions;
+        // Request editor Submit button
+        if ((runOptions as any).responseBodySortedKeys !== undefined) {
+            options = {
+                ...options,
+                responseBodySortedKeys: (runOptions as any).responseBodySortedKeys
+            };
+        }
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
