@@ -248,7 +248,15 @@ export class DiffHandler {
         } else {
             const testInfos = this.plyRoots.getTestInfosForSuite(resultPair.infoId);
             for (const actualTest of await resultPair.actualResult.includedTestNames()) {
-                const testInfo = testInfos.find((ti) => ti.label === actualTest);
+                let testInfo = testInfos.find((ti) => ti.label === actualTest);
+                if (!testInfo) {
+                    const lastUs = actualTest.lastIndexOf('_'); // subsequent instances (looping)
+                    if (lastUs > 0 && !isNaN(Number(actualTest.substring(lastUs + 1)))) {
+                        testInfo = testInfos.find(
+                            (ti) => ti.label === actualTest.substring(0, lastUs)
+                        );
+                    }
+                }
                 if (!testInfo) {
                     vscode.window.showErrorMessage(
                         `Test info '${actualTest}' not found in suite: ${resultPair.infoId}`
