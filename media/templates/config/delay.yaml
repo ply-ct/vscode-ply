@@ -1,0 +1,5 @@
+Timeout:
+  widgets:
+    - type: text
+      attribute: interval
+      label: Interval (ms)

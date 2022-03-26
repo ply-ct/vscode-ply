@@ -1,9 +1,5 @@
-# configurator template for "Request" step
 Request:
   widgets:
-    - type: link
-      default: edit_request
-      label: Request Editor
     - type: text
       attribute: url
       label: URL

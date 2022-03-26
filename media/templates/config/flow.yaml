@@ -1,4 +1,3 @@
-# configurator template for flow
 Options:
   widgets:
     - type: checkbox

@@ -1,4 +1,3 @@
-# configurator template for "TypeScript" step
 TypeScript:
   widgets:
     - type: file
