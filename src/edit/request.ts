@@ -382,7 +382,20 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     // TODO subflow step
                     const plyFlow = (suite as any).plyFlow as Flow;
                     const step = plyFlow.flow.steps?.find((s) => s.id === uri.fragment);
-                    if (step) return responses[step.name.replace(/\r?\n/g, ' ')];
+                    if (step) {
+                        const name = step.name.replace(/\r?\n/g, ' ');
+                        let response = responses[name];
+                        // find latest if looping
+                        for (const key of Object.keys(responses)) {
+                            if (
+                                key.startsWith(`${name}_`) &&
+                                !isNaN(Number(key.substring(name.length + 1)))
+                            ) {
+                                response = responses[key];
+                            }
+                        }
+                        return response;
+                    }
                 } else {
                     return responses[uri.fragment];
                 }
