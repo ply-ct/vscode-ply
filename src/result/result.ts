@@ -108,12 +108,12 @@ export class Result {
         }
     }
 
-    async getStart(testName?: string): Promise<number> {
+    async getStart(testName?: string, instNum = 0): Promise<number> {
         if (testName) {
             let yamlObj = await this.loadYaml();
             if (yamlObj) {
                 if (this.type === 'flow') {
-                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName);
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName, instNum);
                 } else {
                     yamlObj = yamlObj[testName];
                 }
@@ -125,12 +125,12 @@ export class Result {
         }
     }
 
-    async getEnd(testName?: string): Promise<number> {
+    async getEnd(testName?: string, instNum = 0): Promise<number> {
         if (testName) {
             let yamlObj = await this.loadYaml();
             if (yamlObj) {
                 if (this.type === 'flow') {
-                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName);
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, testName, instNum);
                 } else {
                     yamlObj = yamlObj[testName];
                 }
@@ -153,7 +153,8 @@ export class Result {
             if (this.testName) {
                 let yamlObj = await this.loadYaml();
                 if (this.type === 'flow') {
-                    yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName);
+                    const instNum = 0;
+                    yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName, instNum);
                 } else {
                     yamlObj = yamlObj[this.testName];
                 }
@@ -175,7 +176,8 @@ export class Result {
         if (this.testName) {
             let yamlObj = ply.loadYaml(fileUri.toString(), resultContents, true);
             if (this.type === 'flow') {
-                yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName);
+                const instNum = 0;
+                yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName, instNum);
             } else {
                 yamlObj = yamlObj[this.testName];
             }
