@@ -59,7 +59,7 @@
     "vscode": "^1.63.1"
   },
   "dependencies": {
-    "@ply-ct/ply": "^3.0.35",
+    "@ply-ct/ply": "^3.0.36",
     "find-up": "^4.1.0",
     "flowbee": "^0.4.1",
     "vscode-test-adapter-api": "^1.9.0",
