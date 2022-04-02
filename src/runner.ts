@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
@@ -17,6 +18,7 @@ import { WorkerArgs } from './worker/args';
 import { DiffState } from './result/diff';
 
 export class PlyRunner {
+    private static plyVersion = '';
     private runningTestProcess: ChildProcess | undefined;
     private testRunId = 0;
 
@@ -146,11 +148,14 @@ export class PlyRunner {
             };
         }
 
+        const plyPath = this.config.plyPath;
+
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
             env: this.config.env,
             plyees, // file locs and/or uris
-            plyPath: this.config.plyPath,
+            plyPath,
+            plyVersion: await this.getPlyVersion(plyPath),
             plyOptions: options,
             runOptions,
             logEnabled: this.log.enabled,
@@ -420,5 +425,19 @@ export class PlyRunner {
             }
         }
         return result;
+    }
+
+    private async getPlyVersion(plyPath: string): Promise<string> {
+        if (!PlyRunner.plyVersion) {
+            try {
+                if (fs.existsSync(`${plyPath}/package.json`)) {
+                    const contents = await fs.promises.readFile(`${plyPath}/package.json`, 'utf-8');
+                    PlyRunner.plyVersion = JSON.parse(contents).version;
+                }
+            } catch (err: unknown) {
+                console.error(err);
+            }
+        }
+        return PlyRunner.plyVersion;
     }
 }

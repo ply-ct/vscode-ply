@@ -107,7 +107,7 @@ function execute(
         }
 
         plier
-            .run(args.plyees, args.runOptions)
+            .run(args.plyees, args.runOptions, args.plyVersion)
             .then(() => {
                 sendMessage({ type: 'finished' });
                 if (onFinished) {
