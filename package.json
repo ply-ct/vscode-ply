@@ -56,7 +56,7 @@
     "package": "vsce package"
   },
   "engines": {
-    "vscode": "^1.63.1"
+    "vscode": "^1.66.0"
   },
   "dependencies": {
     "@ply-ct/ply": "^3.0.39",
