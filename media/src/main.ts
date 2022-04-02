@@ -431,9 +431,9 @@ export class Flow implements flowbee.Disposable {
         position?: { left: number; top: number; width: number; height: number }
     ) {
         if (Flow.configurator && (doOpen || Flow.configurator?.isOpen)) {
-            const template = await templates.get(
-                flowElement,
-                this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config'
+            const template = await templates.getConfigTemplate(
+                this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config',
+                flowElement
             );
             if (instances && instances.length > 0) {
                 const instance = instances[instances.length - 1] as any;

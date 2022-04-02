@@ -90,8 +90,7 @@ export default defineComponent({
       this.editor.onDidChangeModelDecorations(() => {
         const model = this.editor.getModel();
         if (model === null) return;
-        const owner = model.getModeId();
-        const markers = monaco.editor.getModelMarkers({ owner });
+        const markers = monaco.editor.getModelMarkers({ resource: model.uri });
         this.$emit('updateMarkers', this.resource, markers);
       });
     },
