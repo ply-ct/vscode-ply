@@ -116,6 +116,34 @@ export class PlyAdapter implements TestAdapter {
         flowWatcher.onDidChange((uri) => this.onSuiteChange(uri));
         flowWatcher.onDidDelete((uri) => this.onSuiteDelete(uri));
 
+        this.disposables.push(
+            vscode.workspace.onDidRenameFiles(async (renameEvent) => {
+                for (const file of renameEvent.files) {
+                    if (file.newUri.path.endsWith('.ply')) {
+                        const doc = await vscode.workspace.openTextDocument(file.newUri);
+                        let yamlObj = ply.loadYaml(file.newUri.toString(), doc.getText());
+                        const keys = Object.keys(yamlObj);
+                        if (
+                            keys.length === 1 &&
+                            keys[0] === path.basename(file.oldUri.path, '.ply')
+                        ) {
+                            yamlObj = {
+                                [path.basename(file.newUri.path, '.ply')]: yamlObj[keys[0]]
+                            };
+                            const edit = new vscode.WorkspaceEdit();
+                            edit.replace(
+                                file.newUri,
+                                new vscode.Range(0, 0, doc.lineCount, 0),
+                                ply.dumpYaml(yamlObj, this.config.plyOptions.prettyIndent)
+                            );
+                            await vscode.workspace.applyEdit(edit);
+                            await doc.save();
+                        }
+                    }
+                }
+            })
+        );
+
         const submitCodeLensProvider = new PlyCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(
             vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider)
