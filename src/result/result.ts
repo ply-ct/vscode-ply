@@ -154,7 +154,12 @@ export class Result {
                 let yamlObj = await this.loadYaml();
                 if (this.type === 'flow') {
                     const instNum = 0;
-                    yamlObj = ply.ResultPaths.extractById(yamlObj, this.testName, instNum);
+                    // extraction expects hyphens instead of dots separating f from s (why?)
+                    yamlObj = ply.ResultPaths.extractById(
+                        yamlObj,
+                        this.testName.replace('.', '-'),
+                        instNum
+                    );
                 } else {
                     yamlObj = yamlObj[this.testName];
                 }

@@ -79,7 +79,15 @@ function execute(
             sendMessage(msg);
         });
         plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
-            const testId = getUri(outcomeEvent.plyee);
+            let testId = getUri(outcomeEvent.plyee);
+            // request steps in subflows have hyphens instead of dots separating f and s (why?)
+            const hash = testId.lastIndexOf('#');
+            if (hash > 0) {
+                const hyphen = testId.lastIndexOf('-');
+                if (hyphen > hash && hyphen < testId.length - 1) {
+                    testId = testId.substring(0, hyphen) + '.' + testId.substring(hyphen + 1);
+                }
+            }
             sendMessage({
                 type: 'test',
                 test: testId,
