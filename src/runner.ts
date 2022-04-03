@@ -18,7 +18,7 @@ import { WorkerArgs } from './worker/args';
 import { DiffState } from './result/diff';
 
 export class PlyRunner {
-    private static plyVersion = '';
+    private plyVersion = '';
     private runningTestProcess: ChildProcess | undefined;
     private testRunId = 0;
 
@@ -428,16 +428,16 @@ export class PlyRunner {
     }
 
     private async getPlyVersion(plyPath: string): Promise<string> {
-        if (!PlyRunner.plyVersion) {
+        if (!this.plyVersion) {
             try {
                 if (fs.existsSync(`${plyPath}/package.json`)) {
                     const contents = await fs.promises.readFile(`${plyPath}/package.json`, 'utf-8');
-                    PlyRunner.plyVersion = JSON.parse(contents).version;
+                    this.plyVersion = JSON.parse(contents).version;
                 }
             } catch (err: unknown) {
                 console.error(err);
             }
         }
-        return PlyRunner.plyVersion;
+        return this.plyVersion;
     }
 }
