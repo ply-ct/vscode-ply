@@ -29,6 +29,14 @@ export const initialize = () => {
                 return new Worker(URL.createObjectURL(blob));
             }
         };
+
+        monaco.editor.onDidCreateModel((model) => {
+            // compatibility https://github.com/microsoft/monaco-editor/blob/main/CHANGELOG.md#breaking-changes-3
+            // (this is because monaco-yaml still expects this method)
+            (model as any).getModeId = () => {
+                return model.getLanguageId();
+            };
+        });
     }
 };
 
