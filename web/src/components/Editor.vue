@@ -53,6 +53,9 @@ export default defineComponent({
       if (this.editor) {
         this.editor.updateOptions({ ...this.editor.getOptions(), readOnly: newReadonly });
       }
+    },
+    language(newLanguage) {
+      monaco.editor.setModelLanguage(this.editor.getModel(), newLanguage);
     }
   },
   mounted: function () {
