@@ -23,6 +23,19 @@ tsconfig.json
 rollup.config.js
 *.code-workspace
 *.vsix
+# bundled/unused dependencies
+node_modules/@kurkle/color/**
+node_modules/chart.js/**
+node_modules/chartjs-adapter-date-fns/**
+node_modules/date-fns/**
+node_modules/handlebars/**
+node_modules/neo-async/**
+node_modules/semver/**
+node_modules/uglify-js/**
+node_modules/wordwrap/**
+node_modules/yargs/**
+node_modules/yargs-parser/**
+node_modules/read-excel-file/modules/**
 # unneeded typescript components
 node_modules/typescript/bin/**
 node_modules/typescript/lib/tsc.js

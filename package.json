@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.2.0-beta.3",
+  "version": "2.2.0-beta.4",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -52,7 +52,7 @@
     "watch": "tsc -watch",
     "lint": "eslint",
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
-    "vscode:prepublish": "npm install && npm run build && npm prune --production",
+    "vscode:prepublish": "npm run build && npm prune --production",
     "package": "vsce package"
   },
   "engines": {
