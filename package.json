@@ -59,7 +59,11 @@
     "vscode": "^1.66.0"
   },
   "dependencies": {
+    "@kurkle/color": "^0.1.9",
     "@ply-ct/ply": "^3.0.39",
+    "chart.js": "^3.7.1",
+    "chartjs-adapter-date-fns": "^2.0.0",
+    "date-fns": "^2.28.0",
     "find-up": "^5.0.0",
     "flowbee": "^0.4.3",
     "js-yaml": "^4.1.0",
@@ -313,6 +317,14 @@
         }
       },
       {
+        "command": "ply.visualize",
+        "title": "Ply: Visualize Results",
+        "icon": {
+          "dark": "./icons/graph-dark.svg",
+          "light": "./icons/graph-light.svg"
+        }
+      },
+      {
         "command": "ply.import.postman",
         "title": "Ply: Import from Postman"
       },
@@ -515,6 +527,26 @@
           "when": "view == test-explorer && viewItem == debuggableTestWithSource"
         },
         {
+          "command": "ply.visualize",
+          "group": "inline@5",
+          "when": "view == test-explorer && viewItem == suiteWithSource"
+        },
+        {
+          "command": "ply.visualize",
+          "group": "inline@6",
+          "when": "view == test-explorer && viewItem == testWithSource"
+        },
+        {
+          "command": "ply.visualize",
+          "group": "inline@5",
+          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
+        },
+        {
+          "command": "ply.visualize",
+          "group": "inline@6",
+          "when": "view == test-explorer && viewItem == debuggableTestWithSource"
+        },
+        {
           "command": "ply.import.postman-item",
           "group": "6_postman",
           "when": "view == test-explorer && viewItem == collection"
@@ -545,6 +577,10 @@
         {
           "command": "ply.diff.fragment-item",
           "when": "false"
+        },
+        {
+          "command": "ply.visualize",
+          "when": "false"
         }
       ]
     },
@@ -555,6 +591,16 @@
         "selector": [
           {
             "filenamePattern": "*.flow"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "ply.viz",
+        "displayName": "Ply Viz",
+        "selector": [
+          {
+            "filenamePattern": "*.ply-viz"
           }
         ],
         "priority": "default"

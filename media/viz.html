@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; img-src ${cspSource} 'self' blob: data:; style-src ${cspSource}; script-src 'nonce-${nonce}'; connect-src ${cspSource};" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="${webBase}/css/flowbee.css" rel="stylesheet" />
+  <link href="${webBase}/css/viz.css" rel="stylesheet" />
+  <title>Ply Viz</title>
+</head>
+
+<body>
+  <div id="container" class="container" class="container">
+    <div id="viz-container" class="viz-container">
+      <div id="viz-header" class="viz-header">
+        <div id="viz-title" class="viz-title"></div>
+        <div id="viz-overall" class="viz-overall"></div>
+        <div class="viz-actions">
+          <select id="viz-select" class="monaco-select-box viz-select">
+            <option>Request Counts</option>
+            <option>Request Throughput</option>
+            <option>Response Times</option>
+          </select>
+        </div>
+      </div>
+      <div id="viz-chart" class="viz-chart">
+        <canvas id="viz-canvas"></canvas>
+      </div>
+      <div id="viz-data" class="viz-data"></div>
+    </div>
+  </div>
+
+  <script nonce="${nonce}" src="${webBase}/out/viz.js"></script>
+</body>
+
+</html>

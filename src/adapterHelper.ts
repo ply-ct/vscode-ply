@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { RunOptions, loadYaml } from '@ply-ct/ply';
+import { RunOptions, loadYaml, loadSuiteRuns, TestRun } from '@ply-ct/ply';
 import { Descriptor } from 'flowbee';
 import { PlyAdapter } from './adapter';
+import { PlyRoots } from './plyRoots';
 import { Request } from './request/request';
 import { Result } from './result/result';
 import { PlyConfig } from './config';
@@ -160,5 +161,21 @@ export class AdapterHelper {
 
     getConfig(uri: vscode.Uri): PlyConfig {
         return this.getAdapter(uri)?.config;
+    }
+
+    async getSuiteRuns(uri: vscode.Uri) {
+        const adapter = this.getAdapter(uri);
+        const id = PlyRoots.fromUri(uri.with({ scheme: 'file', fragment: '' }));
+        const suite = adapter.plyRoots.getSuite(id);
+        if (suite) {
+            const suiteLoc = suite.runtime.results.runs;
+            let filter: ((testRun: TestRun) => boolean) | undefined;
+            if (uri.fragment) {
+                filter = (testRun) => testRun.test === uri.fragment;
+            }
+            return await loadSuiteRuns(suiteLoc, '**/*.json', filter);
+        } else {
+            throw new Error(`Cannot find suite: ${id}`);
+        }
     }
 }

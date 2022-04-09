@@ -29,10 +29,26 @@ export default [
     },
     {
         // flow webview
-        input: 'media/src/main.ts',
+        input: 'media/src/flow/main.ts',
         output: {
             name: 'flow',
-            file: 'media/out/bundle.js',
+            file: 'media/out/flow.js',
+            format: 'umd'
+        },
+        plugins: [
+            resolve(),
+            commonjs(),
+            typescript({
+                tsconfigOverride: { compilerOptions: { module: 'es2015' } }
+            })
+        ]
+    },
+    {
+        // viz webview
+        input: 'media/src/viz/main.ts',
+        output: {
+            name: 'viz',
+            file: 'media/out/viz.js',
             format: 'umd'
         },
         plugins: [

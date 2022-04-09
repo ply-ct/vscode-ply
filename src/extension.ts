@@ -21,6 +21,7 @@ import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
 import { RequestFs } from './request/request-fs';
 import { ResultFragmentFs } from './result/result-fs';
+import { VizEditor } from './edit/viz';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
@@ -232,6 +233,22 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.flow.mode.inspect', () => setFlowMode('runtime'))
+    );
+
+    const vizEditor = new VizEditor(context, new AdapterHelper('requests', testAdapters));
+    context.subscriptions.push(
+        vscode.window.registerCustomEditorProvider('ply.viz', vizEditor, {
+            webviewOptions: { retainContextWhenHidden: true }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ply.visualize', async (...args: any[]) => {
+            const item = await PlyItem.getItem(...args);
+            if (item) {
+                vscode.commands.executeCommand('vscode.openWith', item.uri, 'ply.viz');
+            }
+        })
     );
 
     context.subscriptions.push(

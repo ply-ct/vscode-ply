@@ -8,38 +8,39 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    inkscape:version="1.0 (4035a4f, 2020-05-01)"
-   sodipodi:docname="fdiff-dark.svg"
-   id="svg3802"
+   sodipodi:docname="graph-dark.svg"
+   id="svg837"
    version="1.1"
-   fill="none"
+   fill="currentColor"
    viewBox="0 0 16 16"
    height="16"
    width="16">
   <metadata
-     id="metadata3808">
+     id="metadata843">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <defs
-     id="defs3806" />
+     id="defs841" />
   <sodipodi:namedview
-     inkscape:current-layer="svg3802"
+     inkscape:current-layer="svg837"
      inkscape:window-maximized="0"
-     inkscape:window-y="25"
-     inkscape:window-x="0"
-     inkscape:cy="8"
+     inkscape:window-y="92"
+     inkscape:window-x="198"
+     inkscape:cy="3.1398536"
      inkscape:cx="8"
-     inkscape:zoom="52.1875"
+     inkscape:zoom="41.75"
      showgrid="false"
-     id="namedview3804"
-     inkscape:window-height="550"
-     inkscape:window-width="1183"
+     id="namedview839"
+     inkscape:window-height="736"
+     inkscape:window-width="1440"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0"
      guidetolerance="10"
@@ -49,10 +50,11 @@
      bordercolor="#666666"
      pagecolor="#ffffff" />
   <path
-     style="stroke-width:1"
-     id="path3800"
-     fill="#c5c5c5"
-     d="M 1.5,3.5 2,3 h 5 l 0.5,0.5 v 9 L 7,13 H 2 L 1.5,12.5 Z m 1,8.5 H 6.4999999 V 6 H 2.5 Z m 0,-7 H 6.4999999 V 4 H 2.5 Z M 9,3 h 5 l 0.5,0.5 v 9 L 14,13 H 9 L 8.5,12.5 v -9 z m 0.5,9 h 4 v -2 h -4 z m 0,-4 h 4 V 4 h -4 z"
-     clip-rule="evenodd"
-     fill-rule="evenodd" />
+     style="fill:#c5c5c5;fill-opacity:1;stroke-width:0.963624"
+     id="path833"
+     d="M 16,13.071429 V 14 H 2.5 L 2,13.535714 V 1 h 1 v 12.071429 z" />
+  <path
+     style="fill:#c5c5c5;fill-opacity:1;stroke-width:0.992678"
+     id="path835"
+     d="M 13.780804,3.2066445 8.7093483,8.3530192 H 8.012545 L 6.3901032,6.7065933 2.7968033,10.353 2.1,9.6458903 6.0416967,5.6459488 H 6.7385 L 8.3609516,7.2923748 13.432358,2.146 h 0.696794 L 16.1,4.1459708 15.403207,4.8530704 Z" />
 </svg>

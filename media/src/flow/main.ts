@@ -588,8 +588,8 @@ export class Flow implements flowbee.Disposable {
     updateFlow(post = true) {
         const indent = this.options.indent;
         const text = this.options.yaml
-            ? this.flowDiagram.toYaml(indent)
-            : this.flowDiagram.toJson(indent);
+            ? this.flowDiagram.toYaml({ indent })
+            : this.flowDiagram.toJson({ indent });
 
         if (post) {
             vscode.postMessage({
