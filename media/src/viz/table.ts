@@ -51,7 +51,7 @@ export class VizTable {
         table.onTableAction((actionEvent) => {
             this._onTableAction.emit({
                 action: actionEvent.action,
-                requestRun: requestRuns[actionEvent.value]
+                requestRun: requestRuns[actionEvent.rownum]
             });
         });
 
