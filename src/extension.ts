@@ -170,10 +170,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // open request in custom editor
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.open-request', async (...args: any[]) => {
-            const uri =
+            let uri =
                 typeof args[0] === 'string'
                     ? vscode.Uri.parse(args[0]).with({ fragment: '' })
                     : args[0].uri;
+            if (typeof args[0].runNumber === 'number') {
+                uri = uri.with({ query: `runNumber=${args[0].runNumber}` });
+            }
             vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
         })
     );

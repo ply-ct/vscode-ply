@@ -29,14 +29,18 @@ window.addEventListener('message', async (event) => {
     const message = event.data; // json message data from extension
     console.debug(`message: ${JSON.stringify(message, null, 2)}`);
     if (message.type === 'update') {
+        const file = message.file;
         const testRunData = new TestRunData(message.runs, { intervals: 10 });
         vizChart = new VizChart(testRunData);
+        vizChart.onChartAction((chartAction) => {
+            vizTable?.setRequest(chartAction.requestName);
+        });
         vizTable = new VizTable(testRunData);
         vizTable.onTableAction((tableAction) => {
-            console.log('TABLE ACTION: ' + JSON.stringify(tableAction));
             vscode.postMessage({
                 type: tableAction.action,
-                testRun: tableAction.requestRun
+                request: `${file}#${tableAction.requestRun.test}`,
+                runNumber: tableAction.requestRun.run - 1
             });
         });
     }

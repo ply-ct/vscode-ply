@@ -32,7 +32,7 @@ export class VizEditor implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.html = web.html;
 
         const updateWebview = async () => {
-            const suiteRuns = await this.adapterHelper.getSuiteRuns(document.uri);
+            const suiteRuns = await this.adapterHelper.getPlyResults(document.uri);
             const msg = {
                 type: 'update',
                 base: baseUri.toString(),
@@ -44,17 +44,19 @@ export class VizEditor implements vscode.CustomTextEditorProvider {
 
         disposables.push(
             webviewPanel.webview.onDidReceiveMessage(async (message) => {
-                const uri = vscode.Uri.parse(
-                    'ply-request:/Users/donoakes/workspaces/ply/ticketing-api-test/flows/Ticket%20Requests.ply.flow#s2'
-                );
-                vscode.commands.executeCommand('ply.open-request', { uri });
-                console.log('MESSAGE: ' + JSON.stringify(message, null, 2));
+                if (message.type === 'request') {
+                    const uri = vscode.Uri.parse(message.request).with({ scheme: 'ply-request' });
+                    vscode.commands.executeCommand('ply.open-request', {
+                        uri,
+                        runNumber: message.runNumber
+                    });
+                }
             })
         );
 
         disposables.push(
             vscode.workspace.onDidChangeTextDocument((docChange) => {
-                console.log('WHAT TO DO');
+                // TODO: live view
             })
         );
 

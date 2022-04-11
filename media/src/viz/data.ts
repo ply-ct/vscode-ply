@@ -18,6 +18,7 @@ export interface Dataset {
 }
 
 export interface RequestRun extends TestRun {
+    run: number;
     request: Request;
     submittedTime: number;
 }
@@ -37,6 +38,7 @@ export class TestRunData {
                 if (testRun.type === 'request' && testRun.request?.submitted) {
                     const requestRun: RequestRun = {
                         ...testRun,
+                        run: suiteRun.run,
                         request: testRun.request,
                         submittedTime: new Date(testRun.request.submitted).getTime()
                     };

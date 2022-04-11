@@ -148,6 +148,13 @@ export class PlyRunner {
             };
         }
 
+        if (vscode.workspace.isTrusted) {
+            runOptions = {
+                trusted: true,
+                ...(runOptions || {})
+            };
+        }
+
         const plyPath = this.config.plyPath;
 
         const workerArgs: WorkerArgs = {

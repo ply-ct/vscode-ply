@@ -269,8 +269,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             });
                         }
                     } else if (message.element === 'custom') {
-                        const customStepsPatterns = custom.getCustomStepsPattern();
-                        if (customStepsPatterns) {
+                        const customStepsPattern = custom.getCustomStepsPattern();
+                        if (customStepsPattern) {
                             const tsPath = await files.createFile({
                                 dirpath: 'src',
                                 template: 'exec.ts.txt',
@@ -280,7 +280,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             if (tsPath) {
                                 const dirpath = path.dirname(tsPath);
                                 const basename = path.basename(tsPath, '.ts');
-                                await files.createFile({
+                                const jsonFile = await files.createFile({
                                     dirpath,
                                     filename: `${basename}.json`,
                                     template: 'descrip.json',
@@ -296,6 +296,19 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                     filename: `${basename}.svg`,
                                     template: 'icon.svg'
                                 });
+                                if (jsonFile) {
+                                    const descriptorFiles = await vscode.workspace.findFiles(
+                                        custom.getDescriptorPattern() || ''
+                                    );
+                                    const newDescriptorFile = descriptorFiles?.find((uri) => {
+                                        return vscode.workspace.asRelativePath(uri) === jsonFile;
+                                    });
+                                    if (!newDescriptorFile) {
+                                        vscode.window.showWarningMessage(
+                                            `Custom step ${jsonFile} not found via pattern: '${customStepsPattern}'`
+                                        );
+                                    }
+                                }
                             }
                         } else {
                             vscode.window.showWarningMessage(

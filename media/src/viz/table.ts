@@ -28,19 +28,28 @@ export class VizTable {
 
         const requestRuns = this.testRunData.requestRuns[requestName];
         const rows = requestRuns.map((requestRun) => {
+            const submitted = new Date(requestRun.submittedTime);
             return [
+                requestRun.run,
                 requestRun.name,
                 requestRun.test,
-                new Date(requestRun.submittedTime).toLocaleTimeString(),
-                requestRun.request.url,
-                '' + requestRun.response?.time || ''
+                requestRun.result.status,
+                requestRun.result.message || '',
+                submitted.toLocaleString(undefined, { hour12: false }) +
+                    ':' +
+                    ('' + submitted.getMilliseconds()).padStart(3, '0'),
+                requestRun.request?.url,
+                '' + (requestRun.response?.time || '')
             ];
         });
 
         const table = new Table(
             [
+                { type: 'text', label: '' },
                 { type: 'link', label: 'Request', action: 'request' },
                 { type: 'text', label: 'ID' },
+                { type: 'text', label: 'Status' },
+                { type: 'text', label: 'Message' },
                 { type: 'text', label: 'Submitted' },
                 { type: 'text', label: 'URL' },
                 { type: 'text', label: 'Response ms' }

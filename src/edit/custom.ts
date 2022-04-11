@@ -28,7 +28,7 @@ export class Custom {
     getCustomStepsPattern(): string | undefined {
         const setting = vscode.workspace
             .getConfiguration('ply', this.resourceUri)
-            .get(Setting.customSteps, '');
+            .get(Setting.customSteps, 'steps/**/*.json');
         if (setting) return setting;
     }
 

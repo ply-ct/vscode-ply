@@ -370,37 +370,49 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         const adapter = this.adapterHelper.getAdapter(uri);
         let suiteUri = uri;
         if (uri.scheme === 'ply-request') {
-            suiteUri = uri.with({ scheme: 'file', fragment: '' });
+            suiteUri = uri.with({ scheme: 'file', fragment: '', query: '' });
         }
         const suiteId =
             (uri.path.endsWith('.flow') ? 'flows|' : 'requests|') + suiteUri.toString(true);
         const suite = adapter.plyRoots.getSuite(suiteId);
-        if (suite && suite.runtime.results.actual.exists) {
-            const responses = suite.runtime.results.responsesFromActual();
-            if (uri.fragment) {
-                if (suite.type === 'flow') {
-                    // TODO subflow step
-                    const plyFlow = (suite as any).plyFlow as Flow;
-                    const step = plyFlow.flow.steps?.find((s) => s.id === uri.fragment);
-                    if (step) {
-                        const name = step.name.replace(/\r?\n/g, ' ');
-                        let response = responses[name];
-                        // find latest if looping
-                        for (const key of Object.keys(responses)) {
-                            if (
-                                key.startsWith(`${name}_`) &&
-                                !isNaN(Number(key.substring(name.length + 1)))
-                            ) {
-                                response = responses[key];
+        if (suite) {
+            if (uri.fragment && uri.query.startsWith('runNumber=')) {
+                const runNumber = parseInt(uri.query.substring(10));
+                let name = suite.name;
+                // TODO why here does suite name end with .flow?
+                if (name.endsWith('.flow')) name = name.substring(0, name.length - 5);
+                const run = suite.runtime.results.runs.readRun(name, runNumber, uri.fragment);
+                if (run?.response) {
+                    // TODO source
+                    return { ...run.response, source: JSON.stringify(run.response, null, 2) };
+                }
+            } else if (suite.runtime.results.actual.exists) {
+                const responses = suite.runtime.results.responsesFromActual();
+                if (uri.fragment) {
+                    if (suite.type === 'flow') {
+                        // TODO subflow step
+                        const plyFlow = (suite as any).plyFlow as Flow;
+                        const step = plyFlow.flow.steps?.find((s) => s.id === uri.fragment);
+                        if (step) {
+                            const name = step.name.replace(/\r?\n/g, ' ');
+                            let response = responses[name];
+                            // find latest if looping
+                            for (const key of Object.keys(responses)) {
+                                if (
+                                    key.startsWith(`${name}_`) &&
+                                    !isNaN(Number(key.substring(name.length + 1)))
+                                ) {
+                                    response = responses[key];
+                                }
                             }
+                            return response;
                         }
-                        return response;
+                    } else {
+                        return responses[uri.fragment];
                     }
                 } else {
-                    return responses[uri.fragment];
+                    return responses[Object.keys(responses)[0]];
                 }
-            } else {
-                return responses[Object.keys(responses)[0]];
             }
         }
     }

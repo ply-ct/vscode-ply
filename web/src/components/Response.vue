@@ -40,7 +40,7 @@
         <editor
           resource="Response Source"
           :value="response.source || ''"
-          language="yaml"
+          :language="sourceLanguage"
           :readonly="true"
           :options="options"
           @updateMarkers="onUpdateMarkers"
@@ -120,6 +120,9 @@ export default defineComponent({
     },
     bodyLanguage() {
       return getLanguage(this.response);
+    },
+    sourceLanguage() {
+      return this.response.source?.startsWith('{') ? 'json' : 'yaml';
     },
     requestDt() {
       if (this.response.submitted) {
