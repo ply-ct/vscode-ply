@@ -235,11 +235,14 @@ a:hover {
   font-family: var(--vscode-font-family);
 }
 .el-input__suffix {
-  right: 0;
+  right: 5px;
 }
 .el-input__icon {
   width: 2em;
   padding-right: 10px;
+}
+.el-input.is-disabled .el-input__inner {
+  opacity: 0.5;
 }
 
 .el-select {

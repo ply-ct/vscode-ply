@@ -12,7 +12,7 @@ export default defineComponent({
   data() {
     return {} as any as {
       rightPane: HTMLDivElement;
-      isSplitterDrag: boolean;
+      isSplitterDrag: boolean | undefined;
     };
   },
   mounted: function () {
@@ -23,6 +23,8 @@ export default defineComponent({
   methods: {
     initSplitter() {
       this.rightPane = this.$el.querySelector('.pane-right');
+      if (!this.rightPane) return; // read-only
+
       this.$el.onmousedown = (e: MouseEvent) => {
         this.isSplitterDrag = this.isSplitterHover(e);
       };
@@ -52,6 +54,7 @@ export default defineComponent({
       };
     },
     isSplitterHover(e: MouseEvent) {
+      if (!this.rightPane) return; // read-only
       const rightPaneWidth = this.rightPane.offsetWidth - 2;
       const x = e.clientX - this.$el.getBoundingClientRect().left;
       return Math.abs(x - (this.$el.offsetWidth - rightPaneWidth)) <= 3;

@@ -2,5 +2,5 @@ TypeScript:
   widgets:
     - type: file
       attribute: tsFile
-      label: Select File
       default: Create File
+      action: Select File
