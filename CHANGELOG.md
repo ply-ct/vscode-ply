@@ -1,5 +1,32 @@
 # Change Log
 
+## [2.2.0](https://github.com/ply-ct/vscode-ply/tree/2.2.0) (2022-04-11)
+
+- Enhancement: Implement "Typescript" step [\#42](https://github.com/ply-ct/vscode-ply/issues/42)
+
+- Enhancement: Support Workspace Trust [\#85](https://github.com/ply-ct/vscode-ply/issues/85)
+
+- Enhancement: Decider flow step [\#125](https://github.com/ply-ct/vscode-ply/issues/125)
+
+- Enhancement: Link from Instance view Request Inspector to Request Editor [\#133](https://github.com/ply-ct/vscode-ply/issues/133)
+
+- Enhancement: Flow editor right-click menu items to open request and source [\#134](https://github.com/ply-ct/vscode-ply/issues/134)
+
+- Enhancement: Custom user-created flow steps [\#135](https://github.com/ply-ct/vscode-ply/issues/135)
+
+- Enhancement: Delay flow step [\#137](https://github.com/ply-ct/vscode-ply/issues/137)
+
+- Enhancement: Flow looping support [\#138](https://github.com/ply-ct/vscode-ply/issues/138)
+
+- Bug: Unintuitive .ply file rename handling [\#141](https://github.com/ply-ct/vscode-ply/issues/141)
+
+- Bug: Output window can sometimes indicate "unknown" ply version [\#142](https://github.com/ply-ct/vscode-ply/issues/142)
+
+- Bug: Compare Results doesn't work for request steps in embedded subflows [\#143](https://github.com/ply-ct/vscode-ply/issues/143)
+
+- Enhancement: Test run visualization preview [\#144](https://github.com/ply-ct/vscode-ply/issues/144)
+
+
 ## [2.1.6](https://github.com/ply-ct/vscode-ply/tree/2.1.6) (2022-03-03)
 
 - Bug: Request editor body displays as table even for JSON payloads [\#129](https://github.com/ply-ct/vscode-ply/issues/129)
