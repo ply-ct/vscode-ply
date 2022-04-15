@@ -655,13 +655,16 @@ window.addEventListener('message', async (event) => {
             config: message.config,
             values: values?.defaults
         });
-        if (message.select) {
-            let id = message.select;
+    } else if (message.type === 'select') {
+        const flow = readState(false);
+        if (flow) {
+            flow.closeConfigurator(); // TODO update configurator
+            let id = message.target;
             const dot = id.indexOf('.');
             if (dot > 0) {
                 id = id.substring(dot + 1);
             }
-            flow.flowDiagram.select(id, true);
+            flow.flowDiagram.select(id);
         }
     } else if (message.type === 'instance') {
         const flow = readState(false);
@@ -792,4 +795,9 @@ function readState(loadInstance = true): Flow | undefined {
     }
 }
 
-readState();
+if (vscode.getState()?.ready) {
+    readState();
+} else {
+    vscode.postMessage({ type: 'ready' });
+    vscode.setState({ ...vscode.getState(), ready: true });
+}

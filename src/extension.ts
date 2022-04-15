@@ -195,9 +195,23 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
-            const item = await PlyItem.getItem(...args);
+            // hack for runner callback to avoid breaking something
+            const callback = args.length > 1 && typeof args[1] === 'function' ? args[1] : null;
+            const item = callback ? await PlyItem.getItem(args[0]) : await PlyItem.getItem(...args);
             if (item?.uri) {
                 const fileUri = vscode.Uri.file(item.uri.fsPath);
+                if (item.uri.fragment) {
+                    flowEditor.onceWebviewReady = () => {
+                        _onFlowItemSelect.emit({ uri: item.uri });
+                    };
+                }
+                if (callback) {
+                    flowEditor.onceWebviewReady = async (uri) => {
+                        if (uri.toString() === fileUri.toString()) {
+                            await callback();
+                        }
+                    };
+                }
                 await vscode.commands.executeCommand(
                     'vscode.openWith',
                     fileUri,

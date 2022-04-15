@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.2.1](https://github.com/ply-ct/vscode-ply/tree/2.2.1) (2022-04-14)
+
+- Bug: Intermittent non-rendering of flow diagrams [\#145](https://github.com/ply-ct/vscode-ply/issues/145)
+
+
 ## [2.2.0](https://github.com/ply-ct/vscode-ply/tree/2.2.0) (2022-04-11)
 
 - Enhancement: Implement "Typescript" step [\#42](https://github.com/ply-ct/vscode-ply/issues/42)

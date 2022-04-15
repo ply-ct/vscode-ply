@@ -34,6 +34,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     private websocketBound = false;
     private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
 
+    onceWebviewReady?: (uri: vscode.Uri) => void;
+
     constructor(
         private context: vscode.ExtensionContext,
         private adapterHelper: AdapterHelper,
@@ -151,7 +153,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         disposables.push(custom);
         let customDescriptors = await custom.getDescriptors();
 
-        const updateWebview = async (select?: string) => {
+        const updateWebview = async () => {
             const isFile = document.uri.scheme === 'file';
             const msg = {
                 type: 'update',
@@ -168,9 +170,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 readonly:
                     !isFile || ((await fs.promises.stat(document.uri.fsPath)).mode & 146) === 0
             } as any;
-            if (select) {
-                msg.select = select;
-            }
             await webviewPanel.webview.postMessage(msg);
         };
 
@@ -183,7 +182,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
 
         disposables.push(
             webviewPanel.webview.onDidReceiveMessage(async (message) => {
-                if (message.type === 'change') {
+                if (message.type === 'ready') {
+                    await updateWebview();
+                    const requests = await this.adapterHelper.getRequestDescriptors(document.uri);
+                    webviewPanel.webview.postMessage({ type: 'requests', requests });
+                    if (this.onceWebviewReady) {
+                        this.onceWebviewReady(document.uri);
+                        delete this.onceWebviewReady;
+                    }
+                } else if (message.type === 'change') {
                     const isNew = !document.getText().trim();
                     if (isNew) {
                         // applyEdit does not update file -- why?
@@ -620,7 +627,10 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 if (
                     flowItemSelect.uri.with({ fragment: '' }).toString() === document.uri.toString()
                 ) {
-                    updateWebview(flowItemSelect.uri.fragment);
+                    webviewPanel.webview.postMessage({
+                        type: 'select',
+                        target: flowItemSelect.uri.fragment
+                    });
                 }
             })
         );
@@ -651,10 +661,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             }
             disposables = [];
         });
-
-        await updateWebview();
-        const requests = await this.adapterHelper.getRequestDescriptors(document.uri);
-        webviewPanel.webview.postMessage({ type: 'requests', requests });
     }
 
     /**

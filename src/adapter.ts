@@ -343,15 +343,29 @@ export class PlyAdapter implements TestAdapter {
                 uri: uri.with({ fragment: '' })
             });
         } else if (uri.path.endsWith('.flow')) {
-            await vscode.commands.executeCommand('ply.open-flow', editable.id);
-            if (!runOptions?.proceed) {
-                // run through editor to prompt for values if needed
-                await vscode.commands.executeCommand(
-                    'ply.flow-action',
-                    editable.id,
-                    'run',
-                    runOptions
-                );
+            const runThruEd = !runOptions?.proceed;
+            let didRun = false;
+            await vscode.commands.executeCommand('ply.open-flow', editable.id, async () => {
+                if (runThruEd) {
+                    // run through editor to prompt for values if needed
+                    await vscode.commands.executeCommand(
+                        'ply.flow-action',
+                        editable.id,
+                        'run',
+                        runOptions
+                    );
+                    didRun = true;
+                }
+            });
+            if (runThruEd) {
+                if (!didRun) {
+                    await vscode.commands.executeCommand(
+                        'ply.flow-action',
+                        editable.id,
+                        'run',
+                        runOptions
+                    );
+                }
                 return false;
             }
         } else if (
