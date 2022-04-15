@@ -14,6 +14,8 @@ import { MenuProvider } from './menu';
 import { Request } from './request';
 import { Values } from './values';
 
+const container = document.getElementById('container') as HTMLDivElement;
+
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 const EOL = navigator.platform.indexOf('Win') > -1 ? '\r\n' : '\n';
@@ -349,6 +351,7 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.select(cfgr.flowElement.id);
             }
         }
+        container.style.display = 'flex';
     }
 
     getConfiguratorOptions(): flowbee.ConfiguratorOptions {
