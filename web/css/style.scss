@@ -20,7 +20,6 @@ a:hover {
 #app {
   font-family: var(--vscode-font-family);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .split {
@@ -199,6 +198,7 @@ a:hover {
 .editor-container {
   height: calc(100vh - 100px);
   overflow-x: visible;
+  -webkit-font-smoothing: auto;
 }
 
 .table-container {
