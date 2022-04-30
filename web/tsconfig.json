@@ -9,7 +9,8 @@
     "strict": true,
     "lib": ["dom", "es2020"],
     "sourceMap": true,
-    "allowJs": true
+    "allowJs": true,
+    "jsx": "preserve"
   },
   "include": ["src"],
   "exclude": ["dist", "node_modules"]
