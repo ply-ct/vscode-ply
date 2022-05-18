@@ -109,7 +109,7 @@ export class Flow implements flowbee.Disposable {
                     } else if (e.action === 'edit_request') {
                         vscode.postMessage({ type: 'edit', element: 'request', target: id });
                     }
-                } else if (e.action?.endsWith('.ts')) {
+                } else if (typeof e.action === 'string' && e.action.endsWith('.ts')) {
                     vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
                 } else {
                     this.updateFlow();
