@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.2.2](https://github.com/ply-ct/vscode-ply/tree/2.2.2) (2022-05-17)
+
+- Bug: Flow editor rendering broken by vscode 1.67.1 [\#147](https://github.com/ply-ct/vscode-ply/issues/147)
+
+
 ## [2.2.1](https://github.com/ply-ct/vscode-ply/tree/2.2.1) (2022-04-14)
 
 - Bug: Intermittent non-rendering of flow diagrams [\#145](https://github.com/ply-ct/vscode-ply/issues/145)

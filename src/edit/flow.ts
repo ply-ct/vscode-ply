@@ -577,7 +577,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     )
                 );
                 // initial values
-                await webviewPanel.webview.postMessage({
+                webviewPanel.webview.postMessage({
                     type: 'values',
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
