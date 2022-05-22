@@ -39,7 +39,7 @@ export class VizEditor implements vscode.CustomTextEditorProvider {
                 file: document.uri.toString(),
                 runs: suiteRuns
             } as any;
-            await webviewPanel.webview.postMessage(msg);
+            webviewPanel.webview.postMessage(msg);
         };
 
         disposables.push(
@@ -77,6 +77,6 @@ export class VizEditor implements vscode.CustomTextEditorProvider {
             disposables = [];
         });
 
-        await updateWebview();
+        updateWebview();
     }
 }

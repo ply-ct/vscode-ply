@@ -142,9 +142,11 @@ body {
 }
 .icon-link {
   outline: none;
+  user-select: none;
 }
 .icon-link:focus {
   outline: none;
+  user-select: none;
 }
 .flow-diagram {
   height: 100%;

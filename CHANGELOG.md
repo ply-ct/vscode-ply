@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.2.3](https://github.com/ply-ct/vscode-ply/tree/2.2.3) (2022-05-22)
+
+- Bug: Visualization rendering broken by vscode 1.67.1 [\#148](https://github.com/ply-ct/vscode-ply/issues/148)
+
+
 ## [2.2.2](https://github.com/ply-ct/vscode-ply/tree/2.2.2) (2022-05-17)
 
 - Bug: Flow editor rendering broken by vscode 1.67.1 [\#147](https://github.com/ply-ct/vscode-ply/issues/147)
