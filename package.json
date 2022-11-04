@@ -65,7 +65,7 @@
     "chartjs-adapter-date-fns": "^2.0.0",
     "date-fns": "^2.28.0",
     "find-up": "^5.0.0",
-    "flowbee": "^0.4.4",
+    "flowbee": "^0.4.15",
     "js-yaml": "^4.1.0",
     "vscode-test-adapter-api": "^1.9.0",
     "vscode-test-adapter-util": "^0.7.1",

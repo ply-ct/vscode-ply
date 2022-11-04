@@ -22,7 +22,9 @@ export class Options {
             snapToGrid: this.snap,
             webSocketUrl: this.webSocketUrl,
             resizeWithContainer: true,
-            promptToDelete: false // TODO prompt first time
+            promptToDelete: false, // TODO prompt first time,
+            multiLink: true,
+            loopbackLink: true
         };
     }
 

@@ -245,6 +245,233 @@
   .flowbee-diagram-dark .note {
     border-color: #d3d3d3; }
 
+.flowbee-toolbar-light {
+  display: flex;
+  height: 25px;
+  padding-top: 1px;
+  align-items: center;
+  background-color: #ffffff;
+  border-top: 1px solid #f3f3f3;
+  border-bottom: 1px solid #dddddd; }
+  .flowbee-toolbar-light .hidden {
+    display: none; }
+  .flowbee-toolbar-light .drawing-tools {
+    padding-top: 1px;
+    padding-left: 10px; }
+    .flowbee-toolbar-light .drawing-tools .unselected {
+      opacity: 0.5; }
+  .flowbee-toolbar-light .drawing-tools input[type='image'] {
+    margin-right: 10px;
+    width: 16px; }
+  .flowbee-toolbar-light .drawing-tools #zoom-out {
+    margin-right: 0; }
+  .flowbee-toolbar-light .drawing-tools input[type='image']:focus {
+    outline: none; }
+  .flowbee-toolbar-light .drawing-tools input[type='image']:disabled {
+    opacity: 0.5; }
+  .flowbee-toolbar-light .drawing-tools input[type='range'] {
+    width: 80px;
+    height: 2px;
+    position: relative;
+    top: -9px;
+    background-color: #616161cc;
+    cursor: pointer;
+    -webkit-appearance: none; }
+  .flowbee-toolbar-light .drawing-tools input[type='range']:focus {
+    outline: none; }
+  .flowbee-toolbar-light .drawing-tools input[type='range']::-webkit-slider-runnable-track {
+    height: 2px;
+    background: #616161cc; }
+  .flowbee-toolbar-light .drawing-tools input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: #616161cc;
+    margin-top: -4px; }
+  .flowbee-toolbar-light .tool-group {
+    margin-left: 15px;
+    border-left: 1px solid #e7e7e7; }
+  .flowbee-toolbar-light .mode-group {
+    padding-top: 0;
+    padding-left: 5px;
+    margin-left: 0;
+    margin-right: 0; }
+  .flowbee-toolbar-light .mode-select {
+    padding: 3px 5px 0 6px;
+    border-radius: 2px;
+    user-select: none;
+    transform: scale(1.2);
+    filter: contrast(1.4); }
+    .flowbee-toolbar-light .mode-select #runtime {
+      width: 15px;
+      height: 14px; }
+  .flowbee-toolbar-light .mode-select:hover {
+    background-color: #e4e6f1;
+    cursor: pointer; }
+  .flowbee-toolbar-light .mode-select input[type='image'] {
+    width: 14px;
+    margin-right: 0; }
+  .flowbee-toolbar-light .mode-menu {
+    position: absolute;
+    list-style-type: none;
+    margin-top: 2px;
+    padding: 5px 0;
+    background-color: #ffffff;
+    border: 1px solid #cecece;
+    border-radius: 3px;
+    user-select: none;
+    outline: none;
+    z-index: 1000; }
+  .flowbee-toolbar-light .mode-menu li {
+    white-space: nowrap;
+    line-height: 20px;
+    padding: 0 8px 2px 8px; }
+  .flowbee-toolbar-light .mode-menu li:hover {
+    color: #ffffff;
+    background-color: #0060c0; }
+  .flowbee-toolbar-light .mode-menu img {
+    width: 12px;
+    vertical-align: middle;
+    margin-right: 5px; }
+  .flowbee-toolbar-light .drop-caret {
+    transform: scale(1, 0.5);
+    display: inline-block;
+    position: relative;
+    top: -2px;
+    opacity: 0.5; }
+  .flowbee-toolbar-light .action-group {
+    flex-grow: 1;
+    margin-left: 7px; }
+  .flowbee-toolbar-light .icon-link {
+    outline: none; }
+  .flowbee-toolbar-light .icon-link:focus {
+    outline: none; }
+
+.flowbee-toolbar-dark {
+  display: flex;
+  height: 25px;
+  padding-top: 1px;
+  align-items: center;
+  background-color: #ffffff;
+  border-top: 1px solid #f3f3f3;
+  border-bottom: 1px solid #dddddd;
+  background-color: #1e1e1e;
+  border-top: #252526;
+  border-bottom: #000000; }
+  .flowbee-toolbar-dark .hidden {
+    display: none; }
+  .flowbee-toolbar-dark .drawing-tools {
+    padding-top: 1px;
+    padding-left: 10px; }
+    .flowbee-toolbar-dark .drawing-tools .unselected {
+      opacity: 0.5; }
+  .flowbee-toolbar-dark .drawing-tools input[type='image'] {
+    margin-right: 10px;
+    width: 16px; }
+  .flowbee-toolbar-dark .drawing-tools #zoom-out {
+    margin-right: 0; }
+  .flowbee-toolbar-dark .drawing-tools input[type='image']:focus {
+    outline: none; }
+  .flowbee-toolbar-dark .drawing-tools input[type='image']:disabled {
+    opacity: 0.5; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range'] {
+    width: 80px;
+    height: 2px;
+    position: relative;
+    top: -9px;
+    background-color: #616161cc;
+    cursor: pointer;
+    -webkit-appearance: none; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range']:focus {
+    outline: none; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range']::-webkit-slider-runnable-track {
+    height: 2px;
+    background: #616161cc; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: #616161cc;
+    margin-top: -4px; }
+  .flowbee-toolbar-dark .tool-group {
+    margin-left: 15px;
+    border-left: 1px solid #e7e7e7; }
+  .flowbee-toolbar-dark .mode-group {
+    padding-top: 0;
+    padding-left: 5px;
+    margin-left: 0;
+    margin-right: 0; }
+  .flowbee-toolbar-dark .mode-select {
+    padding: 3px 5px 0 6px;
+    border-radius: 2px;
+    user-select: none;
+    transform: scale(1.2);
+    filter: contrast(1.4); }
+    .flowbee-toolbar-dark .mode-select #runtime {
+      width: 15px;
+      height: 14px; }
+  .flowbee-toolbar-dark .mode-select:hover {
+    background-color: #e4e6f1;
+    cursor: pointer; }
+  .flowbee-toolbar-dark .mode-select input[type='image'] {
+    width: 14px;
+    margin-right: 0; }
+  .flowbee-toolbar-dark .mode-menu {
+    position: absolute;
+    list-style-type: none;
+    margin-top: 2px;
+    padding: 5px 0;
+    background-color: #ffffff;
+    border: 1px solid #cecece;
+    border-radius: 3px;
+    user-select: none;
+    outline: none;
+    z-index: 1000; }
+  .flowbee-toolbar-dark .mode-menu li {
+    white-space: nowrap;
+    line-height: 20px;
+    padding: 0 8px 2px 8px; }
+  .flowbee-toolbar-dark .mode-menu li:hover {
+    color: #ffffff;
+    background-color: #0060c0; }
+  .flowbee-toolbar-dark .mode-menu img {
+    width: 12px;
+    vertical-align: middle;
+    margin-right: 5px; }
+  .flowbee-toolbar-dark .drop-caret {
+    transform: scale(1, 0.5);
+    display: inline-block;
+    position: relative;
+    top: -2px;
+    opacity: 0.5; }
+  .flowbee-toolbar-dark .action-group {
+    flex-grow: 1;
+    margin-left: 7px; }
+  .flowbee-toolbar-dark .icon-link {
+    outline: none; }
+  .flowbee-toolbar-dark .icon-link:focus {
+    outline: none; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range'] {
+    background-color: #cccccccc; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range']::-webkit-slider-runnable-track {
+    background-color: #cccccccc; }
+  .flowbee-toolbar-dark .drawing-tools input[type='range']::-webkit-slider-thumb {
+    background-color: #cccccccc; }
+  .flowbee-toolbar-dark .tool-group {
+    border-left: 1px solid #444444; }
+  .flowbee-toolbar-dark .mode-select:hover {
+    background-color: #37373d; }
+  .flowbee-toolbar-dark .mode-menu {
+    background-color: #3c3c3c;
+    border: 1px solid #3c3c3c; }
+  .flowbee-toolbar-dark .mode-menu li:hover {
+    color: #ffffff;
+    background-color: #094771; }
+
 .flowbee-toolbox-light {
   height: 100%;
   overflow: auto;
@@ -380,6 +607,10 @@
     text-decoration: none;
     margin-left: 7px;
     font-weight: normal; }
+  .flowbee-configurator-light .flowbee-edit-icon {
+    cursor: pointer;
+    user-select: none;
+    margin-right: 5px; }
   .flowbee-configurator-light .flowbee-config-close {
     cursor: pointer;
     user-select: none; }
@@ -425,8 +656,16 @@
   .flowbee-configurator-light .flowbee-config-tab-content input[type=text] {
     border-width: 1px;
     border-style: solid; }
+  .flowbee-configurator-light .flowbee-config-tab-content input[type=number] {
+    border-width: 1px;
+    border-style: solid;
+    width: 64px; }
   .flowbee-configurator-light .flowbee-config-tab-content input[type=checkbox] {
-    margin-top: 5px; }
+    margin-top: 5px;
+    opacity: .75;
+    width: fit-content; }
+  .flowbee-configurator-light .flowbee-config-tab-content input[type=radio] {
+    opacity: .75; }
   .flowbee-configurator-light .flowbee-config-tab-content button {
     background-color: #007acc;
     color: #ffffff;
@@ -457,6 +696,8 @@
     border-width: 0;
     background-color: #ffffff;
     color: #404040; }
+  .flowbee-configurator-light .flowbee-config-tab-content pre {
+    outline: none; }
   .flowbee-configurator-light .flowbee-config-tab-content a {
     outline: none;
     text-decoration: none;
@@ -471,10 +712,17 @@
     table-layout: fixed;
     margin-bottom: 10px;
     height: fit-content; }
+  .flowbee-configurator-light .flowbee-table-select-link {
+    position: relative;
+    top: -1px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 6px; }
   .flowbee-configurator-light .flowbee-config-tab-content th, .flowbee-configurator-light td {
-    border: 1px solid #4f4f4f;
+    border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
+    padding-right: 3px;
     min-width: 25px;
     white-space: nowrap; }
   .flowbee-configurator-light .flowbee-config-tab-content div > label {
@@ -530,6 +778,10 @@
     text-decoration: none;
     margin-left: 7px;
     font-weight: normal; }
+  .flowbee-configurator-dark .flowbee-edit-icon {
+    cursor: pointer;
+    user-select: none;
+    margin-right: 5px; }
   .flowbee-configurator-dark .flowbee-config-close {
     cursor: pointer;
     user-select: none; }
@@ -575,8 +827,16 @@
   .flowbee-configurator-dark .flowbee-config-tab-content input[type=text] {
     border-width: 1px;
     border-style: solid; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input[type=number] {
+    border-width: 1px;
+    border-style: solid;
+    width: 64px; }
   .flowbee-configurator-dark .flowbee-config-tab-content input[type=checkbox] {
-    margin-top: 5px; }
+    margin-top: 5px;
+    opacity: .75;
+    width: fit-content; }
+  .flowbee-configurator-dark .flowbee-config-tab-content input[type=radio] {
+    opacity: .75; }
   .flowbee-configurator-dark .flowbee-config-tab-content button {
     background-color: #007acc;
     color: #ffffff;
@@ -607,6 +867,8 @@
     border-width: 0;
     background-color: #ffffff;
     color: #404040; }
+  .flowbee-configurator-dark .flowbee-config-tab-content pre {
+    outline: none; }
   .flowbee-configurator-dark .flowbee-config-tab-content a {
     outline: none;
     text-decoration: none;
@@ -621,10 +883,17 @@
     table-layout: fixed;
     margin-bottom: 10px;
     height: fit-content; }
+  .flowbee-configurator-dark .flowbee-table-select-link {
+    position: relative;
+    top: -1px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 6px; }
   .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
-    border: 1px solid #4f4f4f;
+    border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
+    padding-right: 3px;
     min-width: 25px;
     white-space: nowrap; }
   .flowbee-configurator-dark .flowbee-config-tab-content div > label {
@@ -660,10 +929,6 @@
   .flowbee-configurator-dark .flowbee-config-tab-content input {
     background-color: #3c3c3c;
     color: #cccccc; }
-  .flowbee-configurator-dark .flowbee-config-tab-content input[type=checkbox] {
-    opacity: .8; }
-  .flowbee-configurator-dark .flowbee-config-tab-content input[type=radio] {
-    opacity: .8; }
   .flowbee-configurator-dark .flowbee-config-tab-content button {
     background-color: #0e639c; }
   .flowbee-configurator-dark .flowbee-config-tab-content button:hover {
@@ -681,7 +946,7 @@
     background-color: #3c3c3c;
     color: #cccccc; }
   .flowbee-configurator-dark .flowbee-config-tab-content th, .flowbee-configurator-dark td {
-    border: 1px solid #cccccc; }
+    border: 1px solid #606060; }
   .flowbee-configurator-dark .flowbee-config-footer {
     background-color: #323232;
     color: #c8c8c8;
