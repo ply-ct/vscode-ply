@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.2.4](https://github.com/ply-ct/vscode-ply/tree/2.2.4) (2023-01-07)
+
+- Bug: Missing templates for flow custom steps [\#155](https://github.com/ply-ct/vscode-ply/issues/155)
+
+
 ## [2.2.3](https://github.com/ply-ct/vscode-ply/tree/2.2.3) (2022-05-22)
 
 - Bug: Visualization rendering broken by vscode 1.67.1 [\#148](https://github.com/ply-ct/vscode-ply/issues/148)
