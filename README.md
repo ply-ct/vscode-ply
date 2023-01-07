@@ -9,7 +9,7 @@
 </div>
 </h2>
 
-![GitHub Workflow Status](https://github.com/ply-ct/vscode-ply/workflows/vscode-ply/badge.svg) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code) ![CodeQL](https://github.com/ply-ct/vscode-ply/workflows/CodeQL/badge.svg)
+![GitHub Workflow Status](https://github.com/ply-ct/vscode-ply/workflows/Build/badge.svg) ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ply-ct.vscode-ply?color=blue&label=VS%20Code%20Marketplace&logo=visual-studio-code) ![CodeQL](https://github.com/ply-ct/vscode-ply/workflows/CodeQL/badge.svg)
 
 [Ply](https://ply-ct.org/) is simply a more intuitive way of autotesting your REST and GraphQL APIs. Create and run HTTP requests
 using Ply's visual request editor.

@@ -1,5 +1,5 @@
 # github workflow to build and test
-name: 'vscode-ply'
+name: 'Build'
 
 on:
   push:
