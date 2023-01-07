@@ -310,7 +310,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                     const newDescriptorFile = descriptorFiles?.find((uri) => {
                                         return vscode.workspace.asRelativePath(uri) === jsonFile;
                                     });
-                                    if (!newDescriptorFile) {
+                                    if (newDescriptorFile) {
+                                        customDescriptors = await custom.getDescriptors();
+                                        await vscode.commands.executeCommand(
+                                            'vscode.open',
+                                            document.uri
+                                        );
+                                        updateWebview();
+                                    } else {
                                         vscode.window.showWarningMessage(
                                             `Custom step ${jsonFile} not found via pattern: '${customStepsPattern}'`
                                         );
