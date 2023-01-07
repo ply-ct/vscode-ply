@@ -55,6 +55,4 @@ web/package.json
 web/rollup.config.js
 web/tsconfig.json
 !web/request.html
-
-
-
+!node_modules/@ply-ct/ply/templates/**
