@@ -79,7 +79,7 @@
     "@types/chai": "^4.3.4",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^17.0.23",
+    "@types/node": "^16.11.7",
     "@types/resize-observer-browser": "^0.1.7",
     "@types/vscode": "^1.66.0",
     "@types/ws": "^8.5.3",
