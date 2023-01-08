@@ -285,7 +285,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 doOpen: true
                             });
                             if (tsPath) {
-                                const dirpath = path.dirname(tsPath);
+                                // backslashes would need to be escaped in JSON
+                                const dirpath = path.dirname(tsPath).replace(/\\/g, '/');
                                 const basename = path.basename(tsPath, '.ts');
                                 const jsonFile = await files.createFile({
                                     dirpath,
@@ -294,7 +295,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                     substs: {
                                         '${stepName}': basename,
                                         '${tsPath}': tsPath,
-                                        '${svgPath}': path.join(dirpath, `${basename}.svg`)
+                                        '${svgPath}': `${dirpath}/${basename}.svg`
                                     },
                                     doOpen: true
                                 });

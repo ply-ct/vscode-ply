@@ -4,6 +4,7 @@
 
 - Bug: Missing templates for flow custom steps [\#155](https://github.com/ply-ct/vscode-ply/issues/155)
 - Bug: Newly-created custom flow step not available in toolbox [\#156](https://github.com/ply-ct/vscode-ply/issues/156)
+- Bug: On Windows new custom steps are created with invalid JSON descriptors [\#158](https://github.com/ply-ct/vscode-ply/issues/158)
 
 
 ## [2.2.3](https://github.com/ply-ct/vscode-ply/tree/2.2.3) (2022-05-22)
