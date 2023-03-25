@@ -123,20 +123,20 @@ export class ResultDecorator {
             opacity: '1.0',
             overviewRulerColor: bg,
             dark: {
-                gutterIconPath: `${contextPath}/icons/check-dark.svg`
+                gutterIconPath: `${contextPath}/icons/dark/check.svg`
             },
             light: {
-                gutterIconPath: `${contextPath}/icons/check-light.svg`
+                gutterIconPath: `${contextPath}/icons/light/check.svg`
             }
         });
         this.disposables.push(this.ignoredDiffDecorator);
 
         this.legitDiffDecorator = vscode.window.createTextEditorDecorationType({
             dark: {
-                gutterIconPath: `${contextPath}/icons/error-dark.svg`
+                gutterIconPath: `${contextPath}/icons/dark/error.svg`
             },
             light: {
-                gutterIconPath: `${contextPath}/icons/error-light.svg`
+                gutterIconPath: `${contextPath}/icons/light/error.svg`
             }
         });
         this.disposables.push(this.legitDiffDecorator);
@@ -146,10 +146,10 @@ export class ResultDecorator {
                 contentText: ' # NOTE: Run tests before comparing results'
             },
             dark: {
-                gutterIconPath: `${contextPath}/icons/warning-dark.svg`
+                gutterIconPath: `${contextPath}/icons/dark/warning.svg`
             },
             light: {
-                gutterIconPath: `${contextPath}/icons/warning-light.svg`
+                gutterIconPath: `${contextPath}/icons/light/warning.svg`
             }
         });
         this.disposables.push(this.noDiffStateDecorator);

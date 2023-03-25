@@ -163,7 +163,8 @@ export class Values {
             if (expressions.length > 0) {
                 for (const expression of expressions) {
                     if (inclRefs || !expression.startsWith('${@')) {
-                        const res = this.get(expression, this.defaults);
+                        const trusted = false; // TODO
+                        const res = flowbee.resolve(expression, this.defaults, trusted);
                         needed[expression] = res === expression ? '' : res || '';
                     }
                 }
@@ -183,49 +184,6 @@ export class Values {
 
     private getExpressions(content: string): string[] | null {
         return content.match(/\$\{.+?}/g);
-    }
-
-    /**
-     * duplicated from ply/src/subst.ts
-     */
-    get(input: string, context: object): string {
-        if (input.startsWith('${~')) {
-            return input; // ignore regex
-        }
-
-        // escape all \
-        let path = input.replace(/\\/g, '\\\\');
-        // trim ${ and }
-        path = path.substring(2, path.length - 1);
-        if (path.startsWith('@')) {
-            path = '__ply_results.' + path.substring(1);
-        }
-
-        let res: any = context;
-        for (let seg of path.split('.')) {
-            const idx = seg.search(/\[.+?]$/);
-            let indexer;
-            if (idx > 0) {
-                indexer = seg.substring(idx + 1, seg.length - 1);
-                seg = seg.substring(0, idx);
-            }
-            if (!res[seg]) {
-                return '';
-            }
-            res = res[seg];
-            if (indexer) {
-                if (
-                    (indexer.startsWith("'") || indexer.startsWith('"')) &&
-                    (indexer.endsWith("'") || indexer.endsWith('"'))
-                ) {
-                    res = res[indexer.substring(1, indexer.length - 1)]; // object property
-                } else {
-                    res = res[parseInt(indexer)]; // array index
-                }
-            }
-        }
-
-        return '' + res;
     }
 
     toString(values: { [key: string]: string }): string {
@@ -286,7 +244,8 @@ export class Values {
         const consol: { [key: string]: string } = {};
         for (const key of Object.keys(vals)) {
             const expr = `\${${key}}`;
-            const res = this.get(expr, this.defaults);
+            const trusted = false; // TODO
+            const res = flowbee.resolve(expr, this.defaults, trusted);
             if (expr.startsWith('${__ply_') || '' + res !== vals[key]) {
                 consol[key] = vals[key];
             }
@@ -348,8 +307,7 @@ export class Values {
                     { type: 'text', label: 'Expression' },
                     { type: 'text', label: 'Value' }
                 ],
-                value,
-                false
+                value
             );
             this.shadeUserTds(table, userKeys, theme === 'dark');
             table.onTableUpdate((updateEvent) => {

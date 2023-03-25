@@ -2,7 +2,7 @@ export interface WorkerArgs {
     cwd: string;
     env: { [name: string]: string };
     plyees: string[]; // Plyee paths
-    plyPath: string;
+    plyPath?: string;
     plyVersion: string;
     plyOptions: object;
     runOptions?: object;

@@ -14,6 +14,7 @@ export class PlyCodeLensProvider implements vscode.CodeLensProvider {
         const codeLenses: vscode.CodeLens[] = [];
         if (
             document.uri.scheme === 'file' &&
+            (document.uri.path.endsWith('.yaml') || document.uri.path.endsWith('.yml')) &&
             document.uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
         ) {
             const suiteInfo = this.plyRoots.getSuiteInfo(PlyRoots.fromUri(document.uri));
@@ -23,6 +24,19 @@ export class PlyCodeLensProvider implements vscode.CodeLensProvider {
                         const range = new vscode.Range(
                             new vscode.Position(child.line, 0),
                             new vscode.Position(child.line, 0)
+                        );
+                        codeLenses.push(
+                            new vscode.CodeLens(range, {
+                                title: 'Request Editor',
+                                command: 'ply.open-request',
+                                arguments: [
+                                    {
+                                        id: child.id,
+                                        uri: document.uri,
+                                        workspaceFolder: this.workspaceFolder
+                                    }
+                                ]
+                            })
                         );
                         codeLenses.push(
                             new vscode.CodeLens(range, {
@@ -37,30 +51,6 @@ export class PlyCodeLensProvider implements vscode.CodeLensProvider {
                                 ]
                             })
                         );
-                        if (child.file?.startsWith('ply-dummy:')) {
-                            const uri = vscode.Uri.parse(child.file);
-                            if (uri.fragment) {
-                                codeLenses.push(
-                                    new vscode.CodeLens(range, {
-                                        title: 'Request Editor',
-                                        command: 'ply.open-request',
-                                        arguments: [
-                                            { uri: uri.with({ scheme: 'ply-request', query: '' }) }
-                                        ]
-                                    })
-                                );
-                                // restore Test Explorer missing codeLenses
-                                if (child.line > 0) {
-                                    codeLenses.push(
-                                        new vscode.CodeLens(range, {
-                                            title: 'Test Explorer',
-                                            command: 'test-explorer.reveal',
-                                            arguments: [child.id]
-                                        })
-                                    );
-                                }
-                            }
-                        }
                     }
                 }
             }

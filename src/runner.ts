@@ -1,4 +1,6 @@
 import * as fs from 'fs';
+import * as path from 'path';
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
@@ -11,7 +13,7 @@ import {
     TestSuiteEvent,
     TestEvent,
     TestDecoration
-} from 'vscode-test-adapter-api';
+} from './test-adapter/api/index';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
 import { WorkerArgs } from './worker/args';
@@ -22,7 +24,7 @@ export class PlyRunner {
     private runningTestProcess: ChildProcess | undefined;
     private testRunId = 0;
 
-    private readonly workerScript = require.resolve('../../out/worker/bundle.js');
+    private readonly workerScript = require.resolve('../out/worker/bundle.js');
 
     private _onFlow = new Event<FlowEvent>();
     onFlow(listener: Listener<FlowEvent>) {
@@ -73,14 +75,14 @@ export class PlyRunner {
             if (this.config.useDist) {
                 runOptions.useDist = true;
             }
-            // if (this.config.requireTsNode) {
-            runOptions.requireTsNode = true;
-            // }
+            if (this.config.requireTsNode) {
+                runOptions.requireTsNode = true;
+            }
             runOptions.values = runValues;
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
-            // if we don't fire suite events for all ancestors, Test Explorer UI fails to update
+            // if we don't fire suite events for all ancestors, Ply Explorer UI fails to update
             const ancestors = this.plyRoots.getAncestorSuites(testInfos);
             for (const ancestor of ancestors) {
                 this.fire(<TestSuiteEvent>{
@@ -140,7 +142,7 @@ export class PlyRunner {
         }
 
         let options = this.config.plyOptions;
-        // Request editor Submit button
+        // request editor Submit button
         if ((runOptions as any).responseBodySortedKeys !== undefined) {
             options = {
                 ...options,
@@ -156,13 +158,22 @@ export class PlyRunner {
         }
 
         const plyPath = this.config.plyPath;
+        const plyVersion = await this.getPlyVersion(plyPath);
+        if (options.valuesFiles && semver.lt(plyVersion, '3.0.54')) {
+            // use array-style valuesFiles for old @ply-ct/ply
+            options.valuesFiles = Object.keys(options.valuesFiles).filter(
+                (vf) => options.valuesFiles[vf]
+            ) as any;
+        }
 
         const workerArgs: WorkerArgs = {
             cwd: this.config.cwd,
             env: this.config.env,
             plyees, // file locs and/or uris
-            plyPath,
-            plyVersion: await this.getPlyVersion(plyPath),
+            plyPath: path.dirname(require.resolve('@ply-ct/ply')).startsWith(plyPath)
+                ? undefined
+                : plyPath,
+            plyVersion,
             plyOptions: options,
             runOptions,
             logEnabled: this.log.enabled,

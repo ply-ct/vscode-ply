@@ -1,5 +1,5 @@
 import { URI as Uri } from 'vscode-uri';
-import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
+import { TestSuiteInfo, TestInfo } from './test-adapter/api/index';
 import { Suite, Request, Case, Step, Test } from '@ply-ct/ply';
 
 export type Info = TestInfo | TestSuiteInfo;
@@ -39,7 +39,6 @@ export class PlyRoot {
      */
     build(
         testUris: [Uri, number][],
-        customSchemes?: boolean,
         description?: string,
         suiteLabeler?: (suiteId: string) => string,
         testLabeler?: (suiteId: string) => string
@@ -73,15 +72,11 @@ export class PlyRoot {
                 line: testUris[i][1],
                 debuggable: testUri.path.endsWith('.ts') || testUri.path.endsWith('.flow')
             };
-            if (this.id === 'requests' && customSchemes && testUri.scheme === 'file') {
-                // request files should be open in request editor
-                test.file = testUri.with({ scheme: 'ply-dummy' }).toString(true);
-            } else if (this.id === 'flows' && customSchemes && testUri.scheme === 'file') {
-                // flows should not be opened in text editor
-                test.file = testUri.with({ scheme: 'ply-dummy', query }).toString(true);
-            } else {
-                test.file = testUri.scheme === 'file' ? testUri.fsPath : testUri.toString(true);
-            }
+
+            // in flows, query designates request step
+            const uri = testUri.with({ query });
+            test.file = uri.scheme === 'file' ? uri.fsPath : uri.toString(true);
+
             if (testLabeler) {
                 test.description = testName;
             }
@@ -104,13 +99,7 @@ export class PlyRoot {
                     line: 0,
                     children: []
                 };
-                if (this.id === 'flows' && fileUri.scheme === 'file') {
-                    // flows should not be opened in text editor
-                    suite.file = testUri.with({ scheme: 'ply-dummy' }).toString(true);
-                } else {
-                    suite.file =
-                        fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
-                }
+                suite.file = fileUri.scheme === 'file' ? fileUri.fsPath : fileUri.toString(true);
                 if (suiteLabeler) {
                     suite.description = fileName;
                 }
@@ -299,8 +288,7 @@ export class PlyRoots {
     build(
         requestSuites: Map<Uri, Suite<Request>>,
         caseSuites: Map<Uri, Suite<Case>>,
-        flowSuites: Map<Uri, Suite<Step>>,
-        customSchemes: boolean
+        flowSuites: Map<Uri, Suite<Step>>
     ) {
         this.testsById.clear();
         this.suitesByTestOrSuiteId.clear();
@@ -331,7 +319,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.requestsRoot.build(requestUris, customSchemes);
+        this.requestsRoot.build(requestUris);
 
         // cases
         const caseSuiteUris = Array.from(caseSuites.keys());
@@ -357,7 +345,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.casesRoot.build(caseUris, false, undefined, (suiteId) => {
+        this.casesRoot.build(caseUris, undefined, (suiteId) => {
             return this.suitesByTestOrSuiteId.get(suiteId)!.name;
         });
 
@@ -394,7 +382,7 @@ export class PlyRoots {
         if (flowCount > 0) {
             description = `${flowCount} ${flowCount === 1 ? 'flow' : 'flows'}`;
         }
-        this.flowsRoot.build(flowUris, customSchemes, description, undefined, (testId) => {
+        this.flowsRoot.build(flowUris, description, undefined, (testId) => {
             const test = this.testsById.get(testId) as Step;
             return (
                 (test.subflow ? `${test.subflow.name} → ` : '') +

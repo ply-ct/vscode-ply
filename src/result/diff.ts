@@ -87,8 +87,7 @@ export class DiffHandler {
         readonly plyRoots: PlyRoots,
         private readonly diffState: DiffState,
         private readonly decorator: ResultDecorator,
-        private readonly retire: (testIds: string[]) => void,
-        private readonly log: ply.Log
+        private readonly retire: (testIds: string[]) => void
     ) {
         this.disposables.push(
             vscode.window.onDidChangeActiveTextEditor((editor) => {

@@ -7,6 +7,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import * as flowbee from 'flowbee';
+import { values } from '../util/values';
 
 export default defineComponent({
   name: 'Table',
@@ -16,6 +17,10 @@ export default defineComponent({
       required: true
     },
     readonly: {
+      type: Boolean,
+      default: false
+    },
+    singleLine: {
       type: Boolean,
       default: false
     }
@@ -43,8 +48,46 @@ export default defineComponent({
           { type: 'text', label: 'Value' }
         ],
         this.stringValue(this.value),
-        this.readonly
+        { readonly: this.readonly, singleLine: this.singleLine }
       );
+
+      table.addDecorator((text) => {
+        const lines = text.split(/\r?\n/);
+        return lines.reduce((decs, line, i) => {
+          for (const expr of flowbee.findExpressions(line)) {
+            // TODO refs and late-arriving values
+            if (!expr.text.startsWith('${~') && !expr.text.startsWith('${@')) {
+              const location = values.access.getLocation(expr.text, values.trusted);
+              const value = values.access.evaluate(expr.text, values.trusted);
+              const hoverLines: flowbee.HoverLine[] = [];
+              if (location && value) {
+                let loc = location.path.replace(/\\/g, '/');
+                const lastSlash = loc.lastIndexOf('/');
+                if (lastSlash >= 0 && lastSlash < loc.length - 1) {
+                  loc = loc.substring(lastSlash + 1);
+                }
+                hoverLines.push({ label: 'Value:', value });
+                hoverLines.push({
+                  label: 'From:',
+                  link: { label: loc, action: 'open values file' }
+                });
+              } else {
+                hoverLines.push({ label: 'Not found: ', value: expr.text });
+              }
+
+              decs.push({
+                range: { line: i, start: expr.start, end: expr.end },
+                className: 'expression',
+                hover: {
+                  lines: hoverLines
+                }
+              });
+            }
+          }
+          return decs;
+        }, [] as flowbee.Decoration[]);
+      });
+
       this.syncTheme();
       this.$el.style.display = 'flex';
       const tabContentEl = this.$el.querySelector('.flowbee-config-tab-content') as HTMLDivElement;
@@ -88,8 +131,10 @@ export default defineComponent({
       }
     },
     syncTheme() {
-      const theme = document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
-      this.$el.className = `flowbee-configurator-${theme} table-container`;
+      this.$el.className = `flowbee-configurator-${this.getTheme()} table-container`;
+    },
+    getTheme(): string {
+      return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
     }
   }
 });

@@ -58,7 +58,7 @@ export class RequestFs implements vscode.FileSystemProvider {
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
-        const updated = Buffer.from(content).toString('utf8');
+        const updated = Buffer.from(content).toString('utf-8');
         if (uri.path.endsWith('.flow')) {
             await new FlowMerge(this.toFileUri(uri)).writeRequest(uri, updated);
         } else {
@@ -75,7 +75,7 @@ export class RequestFs implements vscode.FileSystemProvider {
         if (openDoc) {
             return openDoc.getText();
         } else {
-            return Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString('utf8');
+            return Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString('utf-8');
         }
     }
 

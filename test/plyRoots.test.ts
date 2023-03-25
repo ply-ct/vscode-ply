@@ -29,7 +29,7 @@ describe('ply roots', function () {
             cases.set(Uri.file(path.normalize(path.resolve(caseSuite.path))), caseSuite);
         });
 
-        plyRoots.build(requests, cases, new Map<Uri, ply.Suite<ply.Step>>(), false);
+        plyRoots.build(requests, cases, new Map<Uri, ply.Suite<ply.Step>>());
 
         const moviesByYearAndRating = plyRoots.requestsRoot.find(
             (t) => t.id === `${movieQueriesUri}#moviesByYearAndRating`

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as flowbee from 'flowbee';
 import { WorkerArgs } from './args';
 // events API must stay compatible
-import { SuiteEvent, PlyEvent, OutcomeEvent } from '@ply-ct/ply';
+import * as ply from '@ply-ct/ply';
 
 (async () => {
     if (process.send) {
@@ -39,25 +39,24 @@ function execute(
             process.env[envVar] = args.env[envVar];
         }
 
-        let plyPath = args.plyPath;
-        if (plyPath) {
-            plyPath = path.join(plyPath, 'dist');
+        let Plier: typeof import('@ply-ct/ply').Plier;
+
+        if (args.plyPath) {
+            // override built-in ply
+            if (args.logEnabled) {
+                sendMessage(`Using ply package at ${args.plyPath}`);
+            }
+            Plier = require(path.join(args.plyPath, 'dist')).Plier;
         } else {
-            plyPath = path.dirname(require.resolve('@ply-ct/ply'));
-        }
-        if (args.logEnabled) {
-            sendMessage(`Using ply package at ${plyPath}`);
+            Plier = ply.Plier;
         }
 
-        // actual execution uses ply on specified path
-        const ply = require(plyPath + '/index.js');
-        const Plier: typeof import('@ply-ct/ply').Plier = ply.Plier;
         const plier = new Plier(args.plyOptions);
 
         const cwd = process.cwd();
         module.paths.push(cwd, path.join(cwd, 'node_modules'));
 
-        plier.on('suite', (suiteEvent: SuiteEvent) => {
+        plier.on('suite', (suiteEvent: ply.SuiteEvent) => {
             const suiteId = `${suiteEvent.type}s|${getUri(suiteEvent.plyee)}`;
             if (suiteEvent.status === 'Started') {
                 startTimes.set(suiteId, Date.now());
@@ -68,7 +67,7 @@ function execute(
                 state: mapStatus(suiteEvent.status)
             });
         });
-        plier.on('test', (plyEvent: PlyEvent) => {
+        plier.on('test', (plyEvent: ply.PlyEvent) => {
             const testId = getUri(plyEvent.plyee);
             startTimes.set(testId, Date.now());
             const msg = {
@@ -78,7 +77,7 @@ function execute(
             } as any;
             sendMessage(msg);
         });
-        plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
+        plier.on('outcome', (outcomeEvent: ply.OutcomeEvent) => {
             let testId = getUri(outcomeEvent.plyee);
             // request steps in subflows have hyphens instead of dots separating f and s (why?)
             const hash = testId.lastIndexOf('#');

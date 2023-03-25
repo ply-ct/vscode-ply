@@ -1,1 +1,18 @@
-{}
+Connector:
+  widgets:
+    - type: select
+      label: Shape
+      options:
+        - Elbow
+        - Straight
+        - ElbowH
+        - ElbowV
+      default:
+        display.type: Elbow
+      action: shape
+    - type: number
+      label: Points
+      min: 2
+      default:
+        display.xs.length: 2
+      action: points

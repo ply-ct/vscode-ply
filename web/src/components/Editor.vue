@@ -6,7 +6,16 @@
 import { defineComponent } from 'vue';
 import * as monaco from 'monaco-editor';
 import * as time from '../util/time';
-import { initialize, getEditor } from '../util/monaco.js';
+import { values } from '../util/values';
+import {
+  initialize,
+  getEditor,
+  getExpressions,
+  getDecorations,
+  filterMarkers,
+  expressionLanguages,
+  registeredHoverLanguages
+} from '../util/monaco.js';
 
 initialize();
 
@@ -34,10 +43,10 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['updateSource', 'updateMarkers'],
+  emits: ['updateSource', 'updateMarkers', 'openFile'],
   data() {
     return {} as any as {
-      editor: any;
+      editor?: monaco.editor.IStandaloneCodeEditor;
       resizeObserver?: ResizeObserver;
     };
   },
@@ -55,7 +64,10 @@ export default defineComponent({
       }
     },
     language(newLanguage) {
-      monaco.editor.setModelLanguage(this.editor.getModel(), newLanguage);
+      const model = this.editor?.getModel();
+      if (model) {
+        monaco.editor.setModelLanguage(model, newLanguage);
+      }
     }
   },
   mounted: function () {
@@ -63,7 +75,7 @@ export default defineComponent({
     this.$nextTick(function () {
       this.initMonaco();
       this.resizeObserver = new ResizeObserver(() => {
-        this.editor.layout();
+        this.editor!.layout();
       });
       this.resizeObserver.observe(this.$el);
     });
@@ -82,19 +94,102 @@ export default defineComponent({
       this.editor = getEditor(this.$el, this.value, this.language, this.readonly, this.options);
       time.logtime('Monaco created');
 
-      if (!this.readonly) {
+      let disposables: monaco.IDisposable[] = [];
+
+      let expressions = getExpressions(this.editor.getModel());
+      const decorations = this.editor.createDecorationsCollection(getDecorations(expressions));
+
+      disposables.push(
         this.editor.onDidChangeModelContent(() => {
-          const value = this.editor.getValue();
+          const value = this.editor?.getValue();
           if (this.value !== value) {
             this.$emit('updateSource', value);
           }
+
+          expressions = getExpressions(this.editor?.getModel());
+          decorations.set(getDecorations(expressions));
+        })
+      );
+
+      disposables.push(
+        this.editor.onDidChangeModelDecorations(() => {
+          const model = this.editor?.getModel();
+          if (!model) return;
+
+          const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+          const newMarkers = filterMarkers(model, markers);
+          if (newMarkers.length !== markers.length) {
+            monaco.editor.setModelMarkers(
+              model,
+              'json',
+              newMarkers.filter((m) => m.owner === 'json')
+            );
+          }
+          this.$emit('updateMarkers', this.resource, newMarkers);
+        })
+      );
+
+      const language = this.editor.getModel()?.getLanguageId();
+      if (
+        language &&
+        expressionLanguages.includes(language) &&
+        !registeredHoverLanguages.includes(language)
+      ) {
+        registeredHoverLanguages.push(language);
+        const commandId = this.editor.addCommand(0, (...args: any[]) => {
+          this.$emit('openFile', args[1].path);
         });
+        disposables.push(
+          monaco.languages.registerHoverProvider(language, {
+            provideHover: (_model, position) => {
+              const expression = expressions.find(
+                (expr) =>
+                  expr.range.startLineNumber === position.lineNumber &&
+                  expr.range.startColumn <= position.column &&
+                  expr.range.endColumn >= position.column
+              );
+              // TODO refs
+              if (
+                expression &&
+                !expression.text.startsWith('${~') &&
+                !expression.text.startsWith('${@')
+              ) {
+                const location = values.access.getLocation(expression.text, values.trusted);
+                const value = values.access.evaluate(expression.text, values.trusted);
+                if (location && value) {
+                  const args = { path: location.path, expression: expression.text };
+                  let label = args.path.replace(/\\/g, '/');
+                  const lastSlash = label.lastIndexOf('/');
+                  if (lastSlash >= 0 && lastSlash < label.length - 1) {
+                    label = label.substring(lastSlash + 1);
+                  }
+                  return {
+                    contents: [
+                      {
+                        supportHtml: true,
+                        value: `Value: \`${value}\``
+                      },
+                      {
+                        isTrusted: true,
+                        value: `From: [${label}](command:${commandId}?${encodeURIComponent(
+                          JSON.stringify(args)
+                        )} "Open values file")`
+                      }
+                    ]
+                  };
+                } else {
+                  return { contents: [{ value: 'Not found: `' + expression.text + '`' }] };
+                }
+              }
+            }
+          })
+        );
       }
-      this.editor.onDidChangeModelDecorations(() => {
-        const model = this.editor.getModel();
-        if (model === null) return;
-        const markers = monaco.editor.getModelMarkers({ resource: model.uri });
-        this.$emit('updateMarkers', this.resource, markers);
+
+      this.editor.onDidDispose(() => {
+        registeredHoverLanguages.splice(0, registeredHoverLanguages.length);
+        disposables.forEach((d) => d.dispose());
+        disposables = [];
       });
     },
     handleMessage(event: MessageEvent) {

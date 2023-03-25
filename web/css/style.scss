@@ -88,20 +88,21 @@ a:hover {
   margin-left: 10px;
   margin-right: 10px;
 }
-.endpoint-url .el-input__inner {
-  border-left-color: transparent;
+.endpoint .el-select {
+  width: 130px;
 }
-.endpoint-url .el-input__inner:hover {
-  border-left-color: inherit;
-}
-.endpoint-url .el-input__inner:focus {
-  border-left-color: #409eff;
+
+.endpoint-url {
+  margin-left: 1.5px;
+  white-space: nowrap;
+  overflow-x: clip;
 }
 
 .action-btn {
   display: block;
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
+  margin-left: 1.5px;
   margin-bottom: 6px;
   text-align: center;
   font-size: 14px;
@@ -201,6 +202,10 @@ a:hover {
   -webkit-font-smoothing: auto;
 }
 
+.expression {
+  color: limegreen !important;
+}
+
 .table-container {
   display: flex;
   position: static;
@@ -211,6 +216,9 @@ a:hover {
 }
 .flowbee-config-tab-content {
   margin-top: -10px;
+}
+.flowbee-configurator-dark .flowbee-config-tab-content {
+  overflow: visible; // tooltips extend outside container
 }
 .table-container .flowbee-config-tab-content th {
   border: 1px solid var(--vscode-panel-border);
@@ -223,17 +231,48 @@ a:hover {
   border-left: 1px solid #409eff;
 }
 
-.el-input__inner {
-  height: 30px;
-  line-height: 30px;
-  padding-left: 7px;
-  padding-right: 0;
+.el-select {
+  border: none;
+  box-shadow: none;
+}
+.el-select:hover {
+  border: none;
+  box-shadow: none;
+}
+.el-select .el-input.is-focus .el-input__wrapper {
+  box-shadow: none !important;
+}
+.el-select .el-input__wrapper.is-focus {
+  box-shadow: none !important;
+}
+.el-select:hover:not(.el-select--disabled) .el-input__wrapper {
+  box-shadow: none !important;
+}
+
+.el-input__wrapper {
+  height: 26px;
+  line-height: 26px;
+  padding: 1px 8px;
   border-radius: 0;
-  background-color: var(--vscode-editor-background);
+  // dark theme doesn't define settings.textInputBorder
+  border: 1px solid var(--vscode-settings-textInputBorder, #80808050);
+  background-color: var(--vscode-settings-textInputBackground);
+  box-shadow: none;
+}
+.el-input__wrapper:hover {
+  box-shadow: none;
+}
+.el-input__wrapper:focus-within {
+  border: 1px solid var(--vscode-settings-focusedRowBorder);
+}
+
+.el-input__inner {
+  height: 26px;
+  line-height: 26px;
   color: var(--vscode-editor-foreground);
-  border: 1px solid var(--vscode-panel-border);
   font-family: var(--vscode-font-family);
 }
+
 .el-input__suffix {
   right: 5px;
 }
@@ -245,12 +284,11 @@ a:hover {
   opacity: 0.5;
 }
 
-.el-select {
-  width: 135px;
-}
-
 .el-tabs {
   margin-left: 12px;
+}
+.el-tabs__content {
+  overflow: unset;
 }
 .request .el-tabs {
   margin-top: -5px;

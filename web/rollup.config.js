@@ -1,12 +1,12 @@
 import vue from 'rollup-plugin-vue';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
+import esbuild from 'rollup-plugin-esbuild';
 import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy-watch';
 import sass from 'node-sass';
-import { terser } from 'rollup-plugin-terser';
+import json from '@rollup/plugin-json';
 import serve from 'rollup-plugin-serve';
 
 export default {
@@ -20,7 +20,9 @@ export default {
         vue(),
         resolve(),
         commonjs(),
-        typescript(),
+        esbuild({
+            minify: true
+        }),
         postcss({
             extract: true
         }),
@@ -39,7 +41,9 @@ export default {
                 }
             ]
         }),
-        terser() // for prod
+        json({
+            compact: true
+        })
         // serve() // for testing
     ],
     onwarn(warning, warn) {

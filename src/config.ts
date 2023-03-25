@@ -1,18 +1,11 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import * as path from 'path';
-import { detectNodePath } from 'vscode-test-adapter-util';
+import { detectNodePath } from './test-adapter/util/misc';
 import * as ply from '@ply-ct/ply';
 
 export enum Setting {
-    testsLocation = 'testsLocation',
-    requestFiles = 'requestFiles',
-    caseFiles = 'caseFiles',
-    flowFiles = 'flowFiles',
     customSteps = 'customSteps',
-    excludes = 'excludes',
-    expectedLocation = 'expectedLocation',
-    actualLocation = 'actualLocation',
-    logLocation = 'logLocation',
     logPanel = 'logPanel',
     debugPort = 'debugPort',
     debugConfig = 'debugConfig',
@@ -21,56 +14,51 @@ export enum Setting {
     cwd = 'cwd',
     env = 'env',
     useDist = 'useDist',
+    requireTsNode = 'requireTsNode',
     openRequestsAndFlowsWhenRun = 'openRequestsAndFlowsWhenRun',
-    testExplorerUseRequestEditor = 'testExplorerUseRequestEditor',
+    plyExplorerUseRequestEditor = 'plyExplorerUseRequestEditor',
     saveBeforeRun = 'saveBeforeRun',
     websocketPort = 'websocketPort'
 }
 
 export class PlyConfig {
     private _plyOptions: ply.PlyOptions | undefined;
+    private configFileWatcher?: vscode.FileSystemWatcher;
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
-        private readonly reload: () => Promise<void> = async () => {},
-        private readonly retire: () => void = () => {},
-        private readonly resetDiffs: () => void = () => {}
-    ) {}
+        private readonly reload?: () => Promise<void>
+    ) {
+        if (reload) {
+            // register file watcher for plyconfig
+            this.configFileWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(this.workspaceFolder, '**/plyconfig.{yaml,yml,json}')
+            );
+            const reactToPlyConfig = () => {
+                this.clearPlyOptions();
+                reload();
+            };
+            this.configFileWatcher.onDidCreate(reactToPlyConfig);
+            this.configFileWatcher.onDidChange(reactToPlyConfig);
+            this.configFileWatcher.onDidDelete(reactToPlyConfig);
+        }
+    }
 
     private getConfiguration(): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri);
     }
 
     async onChange(change: vscode.ConfigurationChangeEvent) {
-        console.debug('config change');
-        if (
-            change.affectsConfiguration('testExplorer.useNativeTesting', this.workspaceFolder.uri)
-        ) {
-            this.reload();
-            this.retire();
-        }
         for (const setting of Object.values(Setting)) {
             if (change.affectsConfiguration(`ply.${setting}`, this.workspaceFolder.uri)) {
                 console.debug(`config change affects ply.${setting}`);
                 if (
-                    setting === Setting.testsLocation ||
-                    setting === Setting.requestFiles ||
-                    setting === Setting.caseFiles ||
                     setting === Setting.customSteps ||
-                    setting === Setting.excludes ||
                     setting === Setting.nodePath ||
                     setting === Setting.plyPath
                 ) {
                     this._plyOptions = undefined;
-                    this.reload();
-                    this.retire();
-                } else if (
-                    setting === Setting.expectedLocation ||
-                    setting === Setting.actualLocation
-                ) {
-                    this._plyOptions = undefined;
-                    this.resetDiffs();
-                    this.retire();
+                    if (this.reload) this.reload();
                 }
             }
         }
@@ -132,8 +120,12 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.useDist, false);
     }
 
-    get testExplorerUseRequestEditor(): boolean {
-        return this.getConfiguration().get(Setting.testExplorerUseRequestEditor, true);
+    get requireTsNode(): boolean {
+        return this.getConfiguration().get(Setting.requireTsNode, false);
+    }
+
+    get plyExplorerUseRequestEditor(): boolean {
+        return this.getConfiguration().get(Setting.plyExplorerUseRequestEditor, false);
     }
     get openRequestsAndFlowsWhenRun(): string {
         return this.getConfiguration().get(Setting.openRequestsAndFlowsWhenRun, 'If Single');
@@ -169,38 +161,66 @@ export class PlyConfig {
                 }
             };
             options = Object.assign({}, options, {
-                // these are the options overridable by settings
-                testsLocation: abs(this.val('testsLocation', options.testsLocation)),
-                requestFiles: this.val('requestFiles', options.requestFiles),
-                caseFiles: this.val('caseFiles', options.caseFiles),
-                flowFiles: this.val('flowFiles', options.flowFiles),
-                ignore: this.val('ignore', options.ignore),
-                skip: this.val('skip', options.skip),
-                expectedLocation: abs(this.val('expectedLocation', options.expectedLocation)),
-                actualLocation: abs(this.val('actualLocation', options.actualLocation)),
-                logLocation: abs(
-                    this.val('logLocation', options.logLocation || options.actualLocation)
-                ),
-                // valuesFiles is not a config prop in package.json
-                valuesFiles: options.valuesFiles.map((vf) => abs(vf))
+                // these are the options NO LONGER overridable by settings
+                // TODO: why make everything absolute?
+                testsLocation: abs(options.testsLocation),
+                requestFiles: options.requestFiles,
+                caseFiles: options.caseFiles,
+                flowFiles: options.flowFiles,
+                ignore: options.ignore,
+                skip: options.skip,
+                expectedLocation: abs(options.expectedLocation),
+                actualLocation: abs(options.actualLocation),
+                logLocation: abs(options.logLocation || options.actualLocation),
+                valuesFiles: Object.keys(options.valuesFiles).reduce(
+                    (vfObj: { [file: string]: boolean }, vf: string) => {
+                        vfObj[abs(vf)] = options.valuesFiles[vf];
+                        return vfObj;
+                    },
+                    {}
+                )
             });
-            console.debug(`plyOptions: ${JSON.stringify(options)}`);
+            // console.trace(`plyOptions: ${JSON.stringify(options)}`);
             this._plyOptions = options;
         }
 
         return this._plyOptions!;
     }
 
+    async updatePlyConfig(delta: { [key: string]: any }) {
+        const indent = this.plyOptions.prettyIndent || 2;
+        let configFile = this.configFile;
+        if (configFile) {
+            const configContent = await fs.promises.readFile(configFile, { encoding: 'utf-8' });
+            let mergedConfig: string;
+            if (configFile.endsWith('.json')) {
+                mergedConfig = ply.mergeJson(configFile, configContent, delta, indent);
+            } else {
+                mergedConfig = ply.mergeYaml(configFile, configContent, delta, indent);
+            }
+            await fs.promises.writeFile(configFile, mergedConfig);
+        } else {
+            configFile = this.defaultFile;
+            await fs.promises.writeFile(configFile, ply.dumpYaml(delta, indent));
+        }
+    }
+
+    get configFile(): string | undefined {
+        return ply.PLY_CONFIGS.map((plyConfig) =>
+            path.join(this.workspaceFolder.uri.fsPath, plyConfig)
+        ).find((file) => fs.existsSync(file));
+    }
+
+    get defaultFile(): string {
+        return path.join(this.workspaceFolder.uri.fsPath, 'plyconfig.yaml');
+    }
+
     clearPlyOptions() {
-        this.resetDiffs();
         this._plyOptions = undefined;
     }
 
     dispose() {
+        this.configFileWatcher?.dispose();
         this.clearPlyOptions();
-    }
-
-    static isPlyConfig(file: string) {
-        return ply.PLY_CONFIGS.includes(path.basename(file));
     }
 }

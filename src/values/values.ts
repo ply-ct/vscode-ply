@@ -1,8 +1,9 @@
+import { existsSync, promises as fs } from 'fs';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
-import { PlyRoots } from './plyRoots';
-import { PlyConfig } from './config';
+import { TypedEvent as Event, Listener, Disposable, ValuesAccess } from 'flowbee';
+import { PlyRoots } from '../plyRoots';
+import { PlyConfig } from '../config';
 
 /**
  * No resultUri means a values file change (potentially)
@@ -20,9 +21,8 @@ export interface ValuesUpdateEvent {
  */
 export class Values implements Disposable {
     private disposables: { dispose(): void }[] = [];
-    private config: PlyConfig;
-    private _plyValues: object | undefined;
-    files: string[] | undefined;
+    readonly config: PlyConfig;
+    private _values: object | undefined;
     private resultWatcher?: vscode.FileSystemWatcher;
     // result file uri to values object
     private resultValues = new Map<string, object>();
@@ -34,14 +34,15 @@ export class Values implements Disposable {
     }
 
     constructor(
-        workspaceFolder: vscode.WorkspaceFolder,
+        readonly workspaceFolder: vscode.WorkspaceFolder,
         private readonly plyRoots: PlyRoots,
         private readonly log: ply.Log
     ) {
         this.config = new PlyConfig(workspaceFolder, async () => {
-            this._plyValues = undefined;
+            this._values = undefined;
             this.watchResultFiles();
             this.watchValuesFiles();
+            this._onValuesUpdate.emit({});
         });
 
         this.watchResultFiles();
@@ -72,13 +73,50 @@ export class Values implements Disposable {
         this.resultWatcher.onDidDelete((uri) => onResultFileChange(uri));
     }
 
+    get valuesFiles(): { [file: string]: boolean } {
+        return this.config.plyOptions.valuesFiles || {};
+    }
+
+    setValuesFile(file: string, enabled: boolean): { [file: string]: boolean } {
+        const valuesFiles = Object.keys(this.valuesFiles || {}).reduce((vfs, vf) => {
+            vfs[vscode.workspace.asRelativePath(vf)] = this.valuesFiles[vf];
+            return vfs;
+        }, {} as { [file: string]: boolean });
+        valuesFiles[file] = enabled;
+        this.config.plyOptions.valuesFiles = valuesFiles;
+        return valuesFiles;
+    }
+
+    get enabledValuesFiles(): string[] {
+        return Object.keys(this.config.plyOptions.valuesFiles || {}).filter(
+            (vf) => this.config.plyOptions.valuesFiles[vf]
+        );
+    }
+
+    async getValuesObjects(): Promise<{ [path: string]: object }> {
+        const valuesObjects: { [path: string]: object } = {};
+        for (const valuesFile of this.enabledValuesFiles) {
+            if (existsSync(valuesFile)) {
+                const contents = await fs.readFile(valuesFile, { encoding: 'utf-8' });
+                try {
+                    valuesObjects[valuesFile] = JSON.parse(contents);
+                } catch (err: unknown) {
+                    console.error(`Cannot parse values file: ${location} (${err})`);
+                }
+            } else {
+                console.error(`Values file does not exist: ${valuesFile}`);
+            }
+        }
+        return valuesObjects;
+    }
+
     /**
      * watch for values file changes
      */
     private watchValuesFiles() {
         this.valuesWatchers.forEach((watcher) => watcher.dispose());
         this.valuesWatchers.clear();
-        for (let file of this.config.plyOptions.valuesFiles) {
+        for (let file of this.enabledValuesFiles) {
             if (process.platform.startsWith('win')) {
                 file = file.replace(/\//g, '\\');
             }
@@ -103,12 +141,12 @@ export class Values implements Disposable {
     async getResultValues(suiteId: string): Promise<object> {
         const suite = this.plyRoots.getSuite(suiteId);
         if (!suite) {
-            return JSON.parse(JSON.stringify(await this.getPlyValues())); // clone
+            return JSON.parse(JSON.stringify(await this.getValues())); // clone
         }
         const resultUri = vscode.Uri.file(suite.runtime.results.actual.toString());
         let values: any = this.resultValues.get(resultUri.toString());
         if (!values) {
-            values = JSON.parse(JSON.stringify(await this.getPlyValues())); // clone
+            values = JSON.parse(JSON.stringify(await this.getValues())); // clone
             if (suite.type === 'flow') {
                 const plyFlow = (suite as any).plyFlow as ply.Flow;
                 if (plyFlow?.flow?.attributes?.values) {
@@ -172,18 +210,17 @@ export class Values implements Disposable {
         return { request, response };
     }
 
-    async getPlyValues(): Promise<object | void> {
-        if (!this._plyValues) {
-            this.files = this.config.plyOptions.valuesFiles;
-            const plyValues = new ply.Values(this.config.plyOptions.valuesFiles, new ply.Logger());
-            this._plyValues = await plyValues.read();
+    async getValues(): Promise<object | void> {
+        if (!this._values) {
+            const env = { ...process.env, ...this.config.env };
+            this._values = new ValuesAccess(await this.getValuesObjects(), env).values;
         }
-        return this._plyValues || {};
+        return this._values;
     }
 
     clear() {
         this.resultValues.clear();
-        this._plyValues = undefined;
+        this._values = undefined;
         this.config.clearPlyOptions();
         this._onValuesUpdate.emit({});
     }

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as findUp from 'find-up';
-import * as WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import * as flowbee from 'flowbee';
 import { PLY_CONFIGS, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
@@ -24,7 +24,6 @@ export interface FlowActionEvent {
 export interface FlowModeChangeEvent {
     mode: flowbee.Mode;
 }
-export interface FlowConfiguratorOpen {}
 interface InstanceSubscribed {
     instanceId: string;
 }
@@ -45,9 +44,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
         private onFlowModeChange: (
             listener: flowbee.Listener<FlowModeChangeEvent>
-        ) => flowbee.Disposable,
-        private onFlowConfiguratorOpen: (
-            listener: flowbee.Listener<FlowConfiguratorOpen>
         ) => flowbee.Disposable
     ) {
         this.websocketPort = vscode.workspace
@@ -79,7 +75,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     private bindWebsocket() {
         if (this.websocketPort && !this.websocketBound) {
             // websocket server for FlowEvents
-            const webSocketServer = new WebSocket.Server({ port: this.websocketPort });
+            const webSocketServer = new WebSocketServer({ port: this.websocketPort });
             webSocketServer.on('connection', (webSocket) => {
                 webSocket.on('message', (message) => {
                     const topic = JSON.parse('' + message).topic;
@@ -562,7 +558,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                     this.adapterHelper.getId(document.uri)
                                 ),
                                 storeVals: this.context.workspaceState.get('ply-user-values'),
-                                files: adapter.values.files
+                                files: adapter.values.enabledValuesFiles
                             });
                         }
                     }
@@ -593,7 +589,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         this.adapterHelper.getId(document.uri)
                     ),
                     storeVals: this.context.workspaceState.get('ply-user-values'),
-                    files: adapter.values.files
+                    files: adapter.values.enabledValuesFiles
                 });
             } else {
                 adapter.onceValues(async (e) => {
@@ -605,7 +601,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             this.adapterHelper.getId(document.uri)
                         ),
                         storeVals: this.context.workspaceState.get('ply-user-values'),
-                        files: e.values.files
+                        files: e.values.enabledValuesFiles
                     });
                     disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
@@ -618,7 +614,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             disposables.push(
                 this.onFlowAction(async (flowAction) => {
                     const flowUri = flowAction.uri.with({ fragment: '' });
-                    if (flowUri.toString() === document.uri.toString()) {
+                    if (flowUri.toString() === document.uri.toString() || flowUri.path === '/') {
                         webviewPanel.webview.postMessage({
                             type: 'action',
                             action: flowAction.action,
@@ -654,12 +650,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 } else {
                     webviewPanel.webview.postMessage({ type: 'mode', mode: modeChange.mode });
                 }
-            })
-        );
-
-        disposables.push(
-            this.onFlowConfiguratorOpen(() => {
-                webviewPanel.webview.postMessage({ type: 'open-configurator' });
             })
         );
 

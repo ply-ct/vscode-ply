@@ -3,7 +3,7 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "watch",
+      "script": "esbuild",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {

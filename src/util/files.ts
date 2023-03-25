@@ -1,3 +1,4 @@
+import { EOL } from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -85,10 +86,17 @@ export class WorkspaceFiles {
         if (fileUri) {
             const filepath = this.pathInWorkspaceFolder(this.workspaceFolder, fileUri);
             if (filepath) {
-                let contents = await fs.promises.readFile(
-                    path.join(this.templatePath, options.template),
-                    'utf-8'
-                );
+                const templateFile = path.join(this.templatePath, options.template);
+                let contents: string | undefined;
+                if (fs.existsSync(templateFile)) {
+                    contents = await fs.promises.readFile(templateFile, 'utf-8');
+                } else if (options.template === 'blank.json') {
+                    contents = ['{', '}'].join(EOL);
+                }
+                if (!contents) {
+                    vscode.window.showErrorMessage(`Ply template not found: ${templateFile}`);
+                    return;
+                }
                 if (options.substs) {
                     for (const subst of Object.keys(options.substs)) {
                         contents = contents.replace(subst, options.substs[subst]);

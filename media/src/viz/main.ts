@@ -6,7 +6,7 @@ import { VizTable } from './table';
 const vscode = acquireVsCodeApi();
 
 const title = document.getElementById('viz-title') as HTMLDivElement;
-title.innerText = 'Request Counts';
+title.innerText = 'Requests Submitted per Second';
 
 let vizChart: VizChart | undefined;
 let vizTable: VizTable | undefined;

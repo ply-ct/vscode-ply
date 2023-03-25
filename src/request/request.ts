@@ -14,7 +14,7 @@ export class RequestMerge {
     constructor(readonly fileUri: vscode.Uri) {}
 
     private async fileText(): Promise<string> {
-        return Buffer.from(await vscode.workspace.fs.readFile(this.fileUri)).toString('utf8');
+        return Buffer.from(await vscode.workspace.fs.readFile(this.fileUri)).toString('utf-8');
     }
 
     /**
@@ -54,7 +54,7 @@ export class RequestMerge {
             updated +
             (reqObj.__end < lines.length - 1 ? os.EOL : '') +
             lines.slice(reqObj.__end + 1).join(os.EOL);
-        await vscode.workspace.fs.writeFile(this.fileUri, Buffer.from(updated, 'utf8'));
+        await vscode.workspace.fs.writeFile(this.fileUri, Buffer.from(updated, 'utf-8'));
     }
 
     getRequestObject(requestUri: vscode.Uri, yaml: string) {

@@ -3,12 +3,12 @@
     "module": "commonjs",
     "target": "es2018",
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "outDir": "out",
     "sourceMap": true,
     "strict": true,
     "noUnusedLocals": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "experimentalDecorators": true
   },
   "exclude": ["out", "node_modules", "web"]
 }

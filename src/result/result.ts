@@ -197,7 +197,7 @@ export class Result {
         } else {
             updatedContents = contents;
         }
-        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(updatedContents, 'utf8'));
+        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(updatedContents, 'utf-8'));
     }
 
     /**

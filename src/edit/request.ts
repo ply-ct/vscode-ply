@@ -107,6 +107,28 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             });
         };
 
+        const updateValues = async (resultUri?: vscode.Uri) => {
+            const adapter = this.adapterHelper.getAdapter(document.uri);
+            if (adapter?.values) {
+                // update suite response
+                const suite = adapter.plyRoots.getSuite(this.adapterHelper.getId(document.uri));
+                if (suite) {
+                    const actualPath = suite.runtime.results.actual.toString();
+                    if (!resultUri || actualPath === resultUri.fsPath.replace(/\\/g, '/')) {
+                        const response = this.getResponse(document.uri);
+                        if (response) updateResponse(response);
+                    }
+                }
+                // post new values
+                webviewPanel.webview.postMessage({
+                    type: 'values',
+                    objects: await adapter.values.getValuesObjects(),
+                    env: { ...process.env, ...adapter.config.env },
+                    trusted: vscode.workspace.isTrusted
+                });
+            }
+        };
+
         let disposables: { dispose(): void }[] = [];
         const problems = new Map<string, Problems>();
         disposables.push(
@@ -121,6 +143,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                         })
                     );
                     updateResponse(this.getResponse(document.uri));
+                    updateValues();
                 } else if (message.type === 'alert' || message.type === 'confirm') {
                     const options: vscode.MessageOptions = {};
                     const items: string[] = [];
@@ -159,6 +182,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     this.adapterHelper.removeActualResult(document.uri);
                 } else if (message.type === 'markers' && Array.isArray(message.markers)) {
                     this.showProblems(problems, document.uri, message.resource, message.markers);
+                } else if (message.type === 'open-file') {
+                    vscode.commands.executeCommand('vscode.open', vscode.Uri.file(message.file));
                 } else if (message.type === 'action') {
                     if (message.action === 'run' || message.action === 'submit') {
                         requestCanceled = false;
@@ -286,20 +311,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         );
 
         if (document.uri.scheme === 'file' || document.uri.scheme === 'ply-request') {
-            const updateSuiteResponse = (resultUri?: vscode.Uri) => {
-                const adapter = this.adapterHelper.getAdapter(document.uri);
-                if (adapter?.values) {
-                    const suite = adapter.plyRoots.getSuite(this.adapterHelper.getId(document.uri));
-                    if (suite) {
-                        const actualPath = suite.runtime.results.actual.toString();
-                        if (!resultUri || actualPath === resultUri.fsPath.replace(/\\/g, '/')) {
-                            const response = this.getResponse(document.uri);
-                            if (response) updateResponse(response);
-                        }
-                    }
-                }
-            };
-
             disposables.push(
                 adapter.testStates((testRunEvent) => {
                     const fileUri = document.uri.with({ scheme: 'file' });
@@ -320,9 +331,10 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             );
 
             if (adapter.values) {
+                updateValues();
                 disposables.push(
                     adapter.values.onValuesUpdate((updateEvent) =>
-                        updateSuiteResponse(updateEvent.resultUri)
+                        updateValues(updateEvent.resultUri)
                     )
                 );
             } else {
@@ -330,7 +342,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     // TODO: Need to send message (or is this just an edge case during extension development)?
                     disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
-                            updateSuiteResponse(updateEvent.resultUri)
+                            updateValues(updateEvent.resultUri)
                         )
                     );
                 });

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { TestHub, testExplorerExtensionId, TestAdapter } from 'vscode-test-adapter-api';
+import { TestHub, testExplorerExtensionId, TestAdapter } from './test-adapter/api/index';
 import { PlyRoots } from './plyRoots';
 import { PlyConfig } from './config';
 
@@ -42,7 +42,7 @@ export class PlyItem {
         } else if (type === 'case') {
             return { 'Ply Case': ['ply.ts'] };
         } else if (type === 'flow') {
-            return { 'Ply Flow': ['flow'] };
+            return { 'Ply Flow': ['ply.flow'] };
         }
     }
 
@@ -51,9 +51,20 @@ export class PlyItem {
         if (args[0] && args[0][0] && args[0][0].info) {
             const id = args[0][0].info.id;
             dir = PlyRoots.toUri(id);
+        } else {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders?.length) {
+                const plyOptions = new PlyConfig(workspaceFolders[0]).plyOptions;
+                dir = vscode.Uri.file(plyOptions.testsLocation);
+            }
         }
+
+        let loc = dir;
+        if (type === 'flow') loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply.flow`);
+        else if (type === 'case') loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply.ts`);
+        else loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply`);
         const uri = await vscode.window.showSaveDialog({
-            defaultUri: dir,
+            defaultUri: loc,
             filters: this.getFilters(type)
         });
         if (uri) {
@@ -69,7 +80,7 @@ export class PlyItem {
                         await fs.promises.writeFile(
                             uri.fsPath,
                             await this.defaultContents(type),
-                            'utf8'
+                            'utf-8'
                         );
                         this.openItem(type, uri);
                     } else {
@@ -85,7 +96,7 @@ export class PlyItem {
                     await fs.promises.writeFile(
                         uri.fsPath,
                         await this.defaultContents(type),
-                        'utf8'
+                        'utf-8'
                     );
 
                     const pos = vscode.workspace.workspaceFolders

@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
-import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
-import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
+import { TestHub } from './test-adapter/api/index';
+import { activate as plyExplorerActivate } from './test-explorer/main';
+import { Log } from './test-adapter/util/log';
+import { TestAdapterRegistrar } from './test-adapter/util/registrar';
 import { PlyAdapter } from './adapter';
 import { Result } from './result/result';
 import { PlyRoots } from './plyRoots';
@@ -9,37 +11,30 @@ import { ResultDecorator } from './result/decorator';
 import { SegmentCodeLensProvider } from './result/codeLens';
 import { DiffHandler, DiffState } from './result/diff';
 import { RequestActionEvent, RequestEditor } from './edit/request';
-import {
-    FlowEditor,
-    FlowActionEvent,
-    FlowItemSelectEvent,
-    FlowModeChangeEvent,
-    FlowConfiguratorOpen
-} from './edit/flow';
+import { FlowEditor, FlowActionEvent, FlowItemSelectEvent, FlowModeChangeEvent } from './edit/flow';
 import { Importer } from './import';
 import { PlyItem } from './item';
 import { AdapterHelper } from './adapterHelper';
 import { RequestFs } from './request/request-fs';
 import { ResultFragmentFs } from './result/result-fs';
 import { VizEditor } from './edit/viz';
+import { PlyExplorerDecorationProvider } from './decorations';
+import { PlyValuesTree } from './values/values-tree';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
-
-    // get the Test Explorer extension
-    const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
-    console.log(`Test Explorer extension ${testExplorerExtension ? '' : 'not '}found`);
-
-    if (!testExplorerExtension) {
-        return;
-    }
-
     console.log('vscode-ply activating...');
+
+    const testHub: TestHub = plyExplorerActivate(context);
 
     const outputChannel = vscode.window.createOutputChannel('Ply');
     context.subscriptions.push(outputChannel);
     const log = new Log('ply', undefined, 'Ply Invoker');
     context.subscriptions.push(log);
+
+    // context.subscriptions.push(
+    //     vscode.window.registerFileDecorationProvider(new PlyExplorerDecorationProvider())
+    // );
 
     // result diffs decorator
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
@@ -67,28 +62,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const onFlowModeChange = (listener: Listener<FlowModeChangeEvent>): Disposable => {
         return _onFlowModeChange.on(listener);
     };
-    const _onFlowConfiguratorOpen = new Event<FlowConfiguratorOpen>();
-    const onFlowConfiguratorOpen = (listener: Listener<FlowConfiguratorOpen>): Disposable => {
-        return _onFlowConfiguratorOpen.on(listener);
-    };
-
-    const openEditor = async (fileUri: vscode.Uri, lineNumber?: number) => {
-        await vscode.commands.executeCommand('vscode.open', fileUri);
-        if (lineNumber) {
-            const editor = vscode.window.visibleTextEditors.find((editor) => {
-                let docUri = editor.document.uri;
-                if (docUri.scheme === Result.URI_SCHEME) {
-                    // when codelens is 'Compare result files' clicked in actual, scheme is ply-result;
-                    // so convert to file uri
-                    docUri = Result.convertUri(editor.document.uri);
-                }
-                return docUri.toString() === fileUri.toString();
-            });
-            if (editor) {
-                await vscode.commands.executeCommand('revealLine', { lineNumber, at: 'top' });
-            }
-        }
-    };
 
     const requestEditor = new RequestEditor(
         context,
@@ -98,64 +71,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerCustomEditorProvider('ply.request', requestEditor, {
             webviewOptions: { retainContextWhenHidden: true }
-        })
-    );
-
-    // ply-dummy scheme provider to prevent test explorer from opening as text
-    context.subscriptions.push(
-        vscode.workspace.registerTextDocumentContentProvider('ply-dummy', {
-            provideTextDocumentContent() {
-                return '';
-            }
-        })
-    );
-    context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-            const uri = editor?.document.uri;
-            if (uri?.scheme === 'ply-dummy') {
-                await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                const fileUri = uri.with({ scheme: 'file', query: '' });
-                if (uri.path.endsWith('.flow') && uri.query !== 'request') {
-                    vscode.commands.executeCommand('ply.open-flow', { uri: fileUri });
-                } else {
-                    if (uri.path.endsWith('.ply')) {
-                        vscode.commands.executeCommand('ply.open-request', {
-                            uri: uri.with({ scheme: 'file', query: '', fragment: '' })
-                        });
-                    } else if (
-                        vscode.workspace
-                            .getConfiguration('ply', fileUri)
-                            .get('testExplorerUseRequestEditor')
-                    ) {
-                        // open sub req in request editor
-                        vscode.commands.executeCommand('ply.open-request', {
-                            uri: uri.with({ scheme: 'ply-request', query: '' })
-                        });
-                    } else {
-                        if (uri.path.endsWith('.flow')) {
-                            vscode.commands.executeCommand('ply.open-flow', { uri: fileUri });
-                        } else {
-                            let lineNumber = 0;
-                            if (uri.fragment) {
-                                const workspaceFolder =
-                                    vscode.workspace.getWorkspaceFolder(fileUri);
-                                if (workspaceFolder) {
-                                    const adapter = testAdapters.get(
-                                        workspaceFolder.uri.toString()
-                                    );
-                                    if (adapter) {
-                                        const test = adapter.plyRoots.findInfo(
-                                            fileUri.with({ query: '' }).toString()
-                                        );
-                                        lineNumber = test?.line || 0;
-                                    }
-                                }
-                            }
-                            openEditor(fileUri.with({ fragment: '', query: '' }), lineNumber);
-                        }
-                    }
-                }
-            }
         })
     );
 
@@ -177,7 +92,14 @@ export async function activate(context: vscode.ExtensionContext) {
             if (typeof args[0].runNumber === 'number') {
                 uri = uri.with({ query: `runNumber=${args[0].runNumber}` });
             }
-            vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
+            if (uri.path.endsWith('.ply')) {
+                // honor preview if possible
+                vscode.commands.executeCommand('vscode.open', uri, { preview: args[0].preview });
+            } else {
+                // eg: my-requests.ply.yaml#Request1 -- cannot honor preview
+                // https://github.com/microsoft/vscode/issues/123360
+                vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
+            }
         })
     );
 
@@ -186,8 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
         new AdapterHelper('flows', testAdapters),
         onFlowItemSelect,
         onFlowAction,
-        onFlowModeChange,
-        onFlowConfiguratorOpen
+        onFlowModeChange
     );
 
     context.subscriptions.push(
@@ -212,11 +133,9 @@ export async function activate(context: vscode.ExtensionContext) {
                         }
                     };
                 }
-                await vscode.commands.executeCommand(
-                    'vscode.openWith',
-                    fileUri,
-                    'ply.flow.diagram'
-                );
+                await vscode.commands.executeCommand('vscode.open', fileUri, {
+                    preview: args[0].preview
+                });
                 if (item.uri.fragment) {
                     _onFlowItemSelect.emit({ uri: item.uri });
                 }
@@ -226,8 +145,20 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('ply.flow.configurator', async (..._args: any[]) => {
-            _onFlowConfiguratorOpen.emit({});
+        vscode.commands.registerCommand('ply.flow.configurator', async () => {
+            _onFlowAction.emit({
+                uri: vscode.Uri.file('/'),
+                action: 'configurator',
+                options: { state: 'open' }
+            });
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ply.flow.source-to-side', async (uri) => {
+            const textDoc = await vscode.workspace.openTextDocument(uri);
+            _onFlowAction.emit({ uri, action: 'toolbox', options: { state: 'closed' } });
+            vscode.window.showTextDocument(textDoc, vscode.ViewColumn.Beside, true);
         })
     );
 
@@ -289,7 +220,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(
         new TestAdapterRegistrar(
-            testExplorerExtension.exports,
+            testHub,
             (workspaceFolder) => {
                 // TODO dispose plyRoots and diffHandlers in onDidChangeWorkspaceFolders
                 const plyRoots = new PlyRoots(workspaceFolder.uri);
@@ -302,13 +233,15 @@ export async function activate(context: vscode.ExtensionContext) {
                     plyRoots,
                     diffState,
                     decorator,
-                    retire,
-                    log
+                    retire
                 );
                 context.subscriptions.push(diffHandler);
                 diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
                 adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
                 testAdapters.set(workspaceFolder.uri.toString(), adapter);
+                adapter.onceValues(
+                    (valuesEvent) => new PlyValuesTree(context, valuesEvent.values, log)
+                );
                 return adapter;
             },
             log
@@ -329,10 +262,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (adapter.plyRoots.find((i) => i.id === item.id)) {
                     await adapter.run([item.id], {}, { submit: true });
                 } else {
-                    // could be a suite/test from another adapter (eg: mocha)
-                    // workaround pending https://github.com/hbenl/vscode-test-explorer/issues/158
-                    console.warn(`Ply test info not found for id: ${item.id} (not a ply test?)`);
-                    vscode.commands.executeCommand('test-explorer.run', args[0]);
+                    throw new Error(`Ply test info not found for id: ${item.id} (not a ply test?)`);
                 }
             }
         } catch (err: unknown) {
@@ -341,7 +271,6 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     };
     context.subscriptions.push(vscode.commands.registerCommand('ply.submit', submitCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('ply.submit-item', submitCommand));
 
     const resultFs = new ResultFragmentFs();
     context.subscriptions.push(
@@ -371,10 +300,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (info) {
                     await diffHandler.doDiff(info);
                 } else {
-                    // could be a suite/test from another adapter (eg: mocha)
-                    // workaround pending https://github.com/hbenl/vscode-test-explorer/issues/158
-                    console.warn(`Ply test info not found for id: ${item.id} (not a ply test?)`);
-                    vscode.commands.executeCommand('test-explorer.show-source', args[0]);
+                    throw new Error(`Ply test info not found for id: ${item.id} (not a ply test?)`);
                 }
             }
         } catch (err: unknown) {
@@ -383,10 +309,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     };
     context.subscriptions.push(vscode.commands.registerCommand('ply.diff', diffCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('ply.diff-item', diffCommand));
-    context.subscriptions.push(
-        vscode.commands.registerCommand('ply.diff.fragment-item', diffCommand)
-    );
+    context.subscriptions.push(vscode.commands.registerCommand('ply.diff.fragment', diffCommand));
 
     const openResultCommand = async (...args: any[]) => {
         try {
@@ -444,18 +367,14 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.import.postman', importPostmanCommand)
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('ply.import.postman-item', importPostmanCommand)
-    );
     const importInsomniaCommand = async (...args: any[]) => await importer.import('insomnia', args);
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.import.insomnia', importInsomniaCommand)
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('ply.import.insomnia-item', importInsomniaCommand)
-    );
 
-    console.log(`vscode-ply activated in ${Date.now() - before} ms`);
+    const after = Date.now() - before;
+    console.log(`vscode-ply activated in ${after} ms`);
+    log.info(`vscode-ply activated in ${after} ms`);
 
     const toOpen = context.workspaceState.get('ply.to.open');
     if (toOpen) {
@@ -469,6 +388,15 @@ export async function activate(context: vscode.ExtensionContext) {
             const doc = await vscode.workspace.openTextDocument(uri);
             vscode.window.showTextDocument(doc);
         }
+    }
+
+    // plyconfig.json supports comments
+    const fileAssociationsConfig = vscode.workspace.getConfiguration('files');
+    let fileAssociations: any = fileAssociationsConfig?.get('associations');
+    if (!fileAssociations) fileAssociations = {};
+    if (!fileAssociations['plyconfig.json']) {
+        fileAssociations['plyconfig.json'] = 'jsonc';
+        fileAssociationsConfig.update('associations', fileAssociations);
     }
 }
 

@@ -3,8 +3,9 @@
     "out": false
   },
   "search.exclude": {
-    "out": true,
+    "dist": true,
     "media/out": true,
+    "out": true,
     "web/out": true
   },
   "files.trimTrailingWhitespace": true,

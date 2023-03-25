@@ -1127,3 +1127,63 @@
       display: block;
       padding: 0;
       height: 7px; }
+
+.flowbee-tipped {
+  position: relative; }
+
+.flowbee-tooltip-light {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  padding: 4px 8px 3px 8px;
+  line-height: 22px;
+  font-weight: 500;
+  background-color: #f3f3f3;
+  color: #616161;
+  border: 1px solid #f3f3f3; }
+  .flowbee-tooltip-light .tooltip-label {
+    margin-right: 4px;
+    font-size: 12px; }
+  .flowbee-tooltip-light .tooltip-value {
+    padding: 1px 3px;
+    font-family: Menlo, Monaco, "Courier New", monospace; }
+  .flowbee-tooltip-light .tooltip-line {
+    border: 1px solid #dddddd; }
+  .flowbee-tooltip-light .tooltip-value {
+    background-color: #eaeaea;
+    color: #a31516; }
+  .flowbee-tooltip-light .tooltip-link {
+    color: #217dba; }
+
+.flowbee-tipped:hover .flowbee-tooltip-light {
+  display: block;
+  transition-delay: 200ms; }
+
+.flowbee-tooltip-dark {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  padding: 4px 8px 3px 8px;
+  line-height: 22px;
+  font-weight: 500;
+  background-color: #252526;
+  color: #cccccc;
+  border: 1px solid #454545; }
+  .flowbee-tooltip-dark .tooltip-label {
+    margin-right: 4px;
+    font-size: 12px; }
+  .flowbee-tooltip-dark .tooltip-value {
+    padding: 1px 3px;
+    font-family: Menlo, Monaco, "Courier New", monospace; }
+  .flowbee-tooltip-dark .tooltip-line {
+    border-bottom: 1px solid #353536; }
+  .flowbee-tooltip-dark .tooltip-value {
+    background-color: #1a1a1b;
+    color: #d7ba7d;
+    font-family: Menlo, Monaco, "Courier New", monospace; }
+  .flowbee-tooltip-dark .tooltip-link {
+    color: #3794ff; }
+
+.flowbee-tipped:hover .flowbee-tooltip-dark {
+  display: block;
+  transition-delay: 200ms; }

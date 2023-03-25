@@ -6,6 +6,7 @@ let initialized = false;
 export const initialize = () => {
     if (!initialized) {
         time.logtime('Monaco initialize()');
+
         initialized = true;
         setDiagnosticsOptions({
             enableSchemaRequest: false,
@@ -46,7 +47,7 @@ export const getEditor = (
     language: string,
     readOnly: boolean,
     options: any
-) => {
+): monaco.editor.IStandaloneCodeEditor => {
     const editor = monaco.editor.create(el, {
         value,
         language,
@@ -68,8 +69,94 @@ export const getEditor = (
         minimap: {
             enabled: false
         },
-        hover: options.hovers
+        hover: {
+            ...(options.hovers || {}),
+            enabled: expressionLanguages.includes(language) || options.hovers?.enabled || true
+        }, // force hover enable for json, yaml
+        fixedOverflowWidgets: true // hover position
     });
 
     return editor;
+};
+
+export interface Expression {
+    text: string;
+    range: monaco.Range;
+}
+
+export const getDecorations = (
+    expressions: Expression[]
+): monaco.editor.IModelDeltaDecoration[] => {
+    return expressions.map((expression) => ({
+        range: expression.range,
+        options: { inlineClassName: 'expression' }
+    }));
+};
+
+export const getExpressions = (model?: monaco.editor.ITextModel | null): Expression[] => {
+    if (model && expressionLanguages.includes(model.getLanguageId())) {
+        return model
+            .findMatches('\\$\\{.+?\\}', true, true, true, null, true, undefined)
+            .map((match) => ({ text: match.matches ? match.matches[0] : '', range: match.range }));
+    }
+    return [];
+};
+
+export const expressionLanguages = ['json', 'yaml'];
+export const registeredHoverLanguages: string[] = [];
+
+export const filterMarkers = (
+    model: monaco.editor.ITextModel,
+    markers: monaco.editor.IMarker[]
+): monaco.editor.IMarker[] => {
+    const expressionMarkers: monaco.editor.IMarker[] = [];
+
+    let newMarkers = markers.filter((marker) => {
+        if (isJsonMarker(marker) && marker.code === '516' && marker.startColumn > 1) {
+            // Value expected
+            const line = model.getLineContent(marker.startLineNumber);
+            const seg = line.substring(marker.startColumn - 1).trim();
+            if (seg.startsWith('${')) {
+                const endCurly = seg.indexOf('}');
+                if (endCurly > 2) {
+                    const rest = seg.substring(endCurly + 1).trim();
+                    if (!rest || rest === ',') {
+                        expressionMarkers.push(marker);
+                        return false; // i'll allow it
+                    }
+                }
+            }
+        }
+        return true;
+    });
+
+    if (expressionMarkers.length) {
+        newMarkers = newMarkers.filter((marker) => {
+            if ((isJsonMarker(marker) && marker.code === '0') || marker.code === '514') {
+                // End of file expected, Expected comma
+                if (
+                    expressionMarkers.find((exprMarker) => {
+                        return marker.startLineNumber - exprMarker.startLineNumber === 1;
+                    })
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    return newMarkers;
+};
+
+/**
+ * Is json marker of interest
+ */
+const isJsonMarker = (marker: monaco.editor.IMarker): boolean => {
+    return (
+        marker.owner === 'json' &&
+        marker.source === 'json' &&
+        marker.startLineNumber === marker.endLineNumber &&
+        marker.endColumn - marker.startColumn === 1
+    );
 };

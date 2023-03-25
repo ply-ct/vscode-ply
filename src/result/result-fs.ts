@@ -36,7 +36,7 @@ export class ResultFragmentFs implements vscode.FileSystemProvider {
     async writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
         Result.fromUri(uri).updateResultContents(
             Result.convertUri(uri),
-            Buffer.from(content).toString('utf8')
+            Buffer.from(content).toString('utf-8')
         );
     }
 

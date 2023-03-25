@@ -7,12 +7,19 @@
     >
       <el-option v-for="item in methods" :key="item.value" :value="item.value" />
     </el-select>
-    <el-input
-      v-model="request.url"
-      class="endpoint-url"
-      :readonly="options.readonly"
-      @input="update('url', $event)"
-    />
+    <div class="el-input endpoint-url">
+      <div class="el-input__wrapper">
+        <div
+          class="el-input__inner"
+          :contenteditable="contentEditable"
+          title="Request URL"
+          spellcheck="false"
+          @input="update('url', $event)"
+        >
+          {{ request.url }}
+        </div>
+      </div>
+    </div>
     <button v-if="options.runnable" class="action-btn" type="button" @click="submit">Submit</button>
   </div>
 </template>
@@ -55,8 +62,17 @@ export default defineComponent({
       ]
     };
   },
+  computed: {
+    contentEditable() {
+      return this.options.readonly ? 'false' : ('plaintext-only' as any);
+    }
+  },
   methods: {
-    update(field: string, value: string) {
+    update(field: string, valueOrEvent: string | Event) {
+      let value = valueOrEvent;
+      if (typeof value !== 'string') {
+        value = (valueOrEvent as any).currentTarget?.innerText || '';
+      }
       this.$emit('updateRequest', { ...this.request, [field]: value });
     },
     submit() {

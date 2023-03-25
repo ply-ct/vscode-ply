@@ -30,7 +30,7 @@
           :language="bodyLanguage"
           :readonly="true"
           :options="bodyOptions"
-          @updateMarkers="onUpdateMarkers"
+          @update-markers="onUpdateMarkers"
         />
       </el-tab-pane>
       <el-tab-pane v-if="response.status.code !== 0" label="Headers">
@@ -43,7 +43,7 @@
           :language="sourceLanguage"
           :readonly="true"
           :options="options"
-          @updateMarkers="onUpdateMarkers"
+          @update-markers="onUpdateMarkers"
         />
       </el-tab-pane>
     </el-tabs>

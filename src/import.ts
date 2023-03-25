@@ -71,9 +71,15 @@ export class Importer {
                     const plyOptions = new PlyConfig(workspaceFolder).plyOptions;
                     const importer = new ply.Import(format, this.log);
                     let valuesLoc = `${plyOptions.testsLocation}/values`;
-                    if (plyOptions.valuesFiles?.length) {
-                        const firstValuesFile = plyOptions.valuesFiles[0];
-                        valuesLoc = path.dirname(firstValuesFile);
+                    if (plyOptions.valuesFiles) {
+                        const firstEnabledValFile = Object.keys(plyOptions.valuesFiles).find(
+                            (vf) => {
+                                return plyOptions.valuesFiles[vf];
+                            }
+                        );
+                        if (firstEnabledValFile) {
+                            valuesLoc = valuesLoc = path.dirname(firstEnabledValFile);
+                        }
                     }
                     const importOptions: ImportOptions = {
                         testsLocation: plyOptions.testsLocation,

@@ -1,4 +1,4 @@
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 
 export class WebSocketSender {
     private static subscriptions: Map<string, WebSocketSender[]> = new Map();

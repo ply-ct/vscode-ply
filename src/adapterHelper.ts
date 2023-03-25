@@ -132,7 +132,6 @@ export class AdapterHelper {
         const adapter = this.getAdapter(uri);
         if (adapter) {
             const dotPlys = adapter.plyRoots.filter((info) => {
-                // TODO better test than this?
                 return (info.file && info.description?.endsWith('.ply')) || false;
             });
             for (const dotPly of dotPlys) {

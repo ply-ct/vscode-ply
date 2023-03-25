@@ -13,6 +13,7 @@ import { getDescriptors } from './descriptors';
 import { MenuProvider } from './menu';
 import { Request } from './request';
 import { Values } from './values';
+import { safeEval } from './eval';
 
 const container = document.getElementById('container') as HTMLDivElement;
 
@@ -111,6 +112,38 @@ export class Flow implements flowbee.Disposable {
                     }
                 } else if (typeof e.action === 'string' && e.action.endsWith('.ts')) {
                     vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
+                } else if (typeof e.action === 'object') {
+                    if (e.element.type === 'link') {
+                        const disp = flowbee.LinkLayout.fromAttr(e.element.attributes?.display);
+                        const from = this.flowDiagram.flow.steps?.find((s) =>
+                            s.links?.find((l) => l.id === e.element.id)
+                        );
+                        const to = this.flowDiagram.flow.steps?.find(
+                            (s) => s.id === (e.element as any).to
+                        );
+                        // TODO from/to in subflow
+                        if (from?.attributes?.display && to?.attributes?.display) {
+                            const linkLayout = new flowbee.LinkLayout(
+                                disp,
+                                flowbee.parseDisplay(from)!,
+                                flowbee.parseDisplay(to)!
+                            );
+                            let points: number | undefined;
+                            const action: any = e.action;
+                            if (action.name === 'shape' && typeof action.value === 'string') {
+                                disp.type = action.value;
+                            }
+                            if (action.name === 'points' && typeof action.value === 'string') {
+                                const pts = parseInt(action.value);
+                                if (!isNaN(pts)) points = pts;
+                            }
+                            linkLayout.calcLink(points);
+                            linkLayout.calcLabel();
+                            e.element.attributes!.display = flowbee.LinkLayout.toAttr(disp);
+                            this.updateFlow();
+                            this.flowDiagram.render(this.options.diagramOptions);
+                        }
+                    }
                 } else {
                     this.updateFlow();
                 }
@@ -198,7 +231,9 @@ export class Flow implements flowbee.Disposable {
         this.flowDiagram.dialogProvider = new DialogProvider();
         const menuProvider = new MenuProvider(
             this.flowDiagram,
-            this.updateConfigurator,
+            (flowElement, instances, doOpen) => {
+                this.updateConfigurator(flowElement, instances, doOpen);
+            },
             templates,
             this.options
         );
@@ -223,9 +258,9 @@ export class Flow implements flowbee.Disposable {
             })
         );
         this.disposables.push(
-            this.flowDiagram.onFlowElementUpdate(async (flowElementUpdate) => {
-                if (Flow.configurator?.flowElement?.id === flowElementUpdate.element.id) {
-                    this.updateConfigurator(flowElementUpdate.element);
+            this.flowDiagram.onFlowElementUpdate(async (flowElemUpdate) => {
+                if (Flow.configurator?.flowElement?.id === flowElemUpdate.element.id) {
+                    this.updateConfigurator(flowElemUpdate.element);
                 }
             })
         );
@@ -252,13 +287,11 @@ export class Flow implements flowbee.Disposable {
             toolboxCaret.style.display = 'none';
             toolboxHeader.onclick = (e: MouseEvent) => {
                 if ((e.target as any).id !== 'newCustom') {
-                    toolboxContainer.style.display = 'none';
-                    toolboxCaret.style.display = 'inline-block';
+                    this.setToolboxOpen(false);
                 }
             };
             toolboxCaret.onclick = (_e: MouseEvent) => {
-                toolboxCaret.style.display = 'none';
-                toolboxContainer.style.display = 'flex';
+                this.setToolboxOpen(true);
             };
 
             // requests tool pane
@@ -438,6 +471,25 @@ export class Flow implements flowbee.Disposable {
                 this.flowDiagram.mode === 'runtime' ? 'inspect' : 'config',
                 flowElement
             );
+            for (const tab of Object.keys(template)) {
+                for (const widget of (template as flowbee.ConfigTemplate)[tab].widgets) {
+                    // dynamic default value
+                    if (typeof widget.default === 'object') {
+                        const defaultObj = widget.default;
+                        widget.default = (element) => {
+                            const expr = Object.keys(defaultObj)[0];
+                            return this.getDynamicDefault(expr, element, defaultObj[expr]);
+                        };
+                    }
+                    // dynamic options values
+                    if (typeof widget.options === 'string') {
+                        const optsAttrName = widget.options;
+                        widget.options = () => {
+                            return this.getDynamicOptions(optsAttrName);
+                        };
+                    }
+                }
+            }
             if (instances && instances.length > 0) {
                 const instance = instances[instances.length - 1] as any;
                 if (instance.data?.request) {
@@ -491,6 +543,59 @@ export class Flow implements flowbee.Disposable {
     closeConfigurator() {
         Flow.configurator?.close();
         updateState({ configurator: { open: false } });
+    }
+
+    setToolboxOpen(open: boolean) {
+        const toolboxContainer = document.getElementById('toolbox-container') as HTMLDivElement;
+        const flowHeader = document.querySelector('.flow-header') as HTMLDivElement;
+        const toolboxCaret = flowHeader.querySelector('.toolbox-caret') as HTMLSpanElement;
+        if (open) {
+            toolboxCaret.style.display = 'none';
+            toolboxContainer.style.display = 'flex';
+        } else {
+            toolboxContainer.style.display = 'none';
+            toolboxCaret.style.display = 'inline-block';
+        }
+    }
+
+    /**
+     * Get options list from flow table attributes
+     * TODO other possibilities besides flow attributes
+     * (especially attribute from another tab on same step)
+     * other types besides tables?
+     */
+    getDynamicOptions(optsAttrName: string): string[] {
+        const attributes = this.flowDiagram.flow.attributes;
+        if (attributes) {
+            const attrVal = attributes[optsAttrName];
+            if (attrVal) {
+                if (attrVal.startsWith('[[') && attrVal.endsWith(']]')) {
+                    return JSON.parse(attrVal).map((row: string[]) => row[0]);
+                }
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Get dynamically-determined default attribute value.
+     * Used for link waypoint configuration
+     */
+    getDynamicDefault(
+        expr: string,
+        element: { attributes?: { [key: string]: string } },
+        fallback: string
+    ): string {
+        if (element.attributes) {
+            if (expr.startsWith('display.') && element.attributes.display) {
+                return safeEval(expr, {
+                    ...element.attributes,
+                    display: flowbee.LinkLayout.fromAttr(element.attributes.display)
+                });
+            }
+            return safeEval(expr, element.attributes);
+        }
+        return fallback;
     }
 
     onOptionToggle(e: OptionToggleEvent) {
@@ -575,6 +680,19 @@ export class Flow implements flowbee.Disposable {
                 return;
             }
         }
+
+        if (flowAction === 'toolbox') {
+            readState()?.setToolboxOpen(e.options?.state === 'open');
+            return;
+        } else if (flowAction === 'configurator') {
+            if (e.options?.state === 'open') {
+                readState()?.openConfigurator();
+            } else {
+                readState()?.closeConfigurator();
+            }
+            return;
+        }
+
         vscode.postMessage({
             type: flowAction === 'values' ? 'run' : flowAction, // can elect Run from values prompt even when launched as 'values' action
             flow: this.flowDiagram.flow.path,
@@ -725,9 +843,6 @@ window.addEventListener('message', async (event) => {
         readState();
     } else if (message.type === 'confirm') {
         dlgEvt.emit({ result: message.result });
-    } else if (message.type === 'open-configurator') {
-        const flow = readState();
-        flow?.openConfigurator();
     }
 });
 

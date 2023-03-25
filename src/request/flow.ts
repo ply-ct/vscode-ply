@@ -8,7 +8,7 @@ export class FlowMerge {
     constructor(readonly fileUri: vscode.Uri) {}
 
     private async fileText(): Promise<string> {
-        return Buffer.from(await vscode.workspace.fs.readFile(this.fileUri)).toString('utf8');
+        return Buffer.from(await vscode.workspace.fs.readFile(this.fileUri)).toString('utf-8');
     }
 
     /**
@@ -25,7 +25,7 @@ export class FlowMerge {
      */
     async writeRequest(requestUri: vscode.Uri, text: string) {
         const updated = await this.updateRequest(requestUri, text);
-        await vscode.workspace.fs.writeFile(this.fileUri, Buffer.from(updated, 'utf8'));
+        await vscode.workspace.fs.writeFile(this.fileUri, Buffer.from(updated, 'utf-8'));
     }
 
     /**

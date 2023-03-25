@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "2.2.4",
+  "version": "3.0.0-beta35",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -37,68 +37,65 @@
     "Linters",
     "Other"
   ],
-  "main": "./out/src/extension.js",
-  "files": [
-    "out/src",
-    "out/worker"
-  ],
+  "main": "./dist/extension.js",
   "scripts": {
     "preinstall": "npm install --prefix web",
     "build": "tsc && npm run build-bundles && npm run build-web",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:../out/worker/bundle.js --external:stacktracey --format=cjs --platform=node --main-fields=module,main",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build-bundles": "rollup -c && cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css ",
     "watch-bundles": "rollup --watch -c",
     "build-web": "npm --prefix web run build",
     "compile": "tsc",
-    "watch": "tsc -watch",
     "lint": "eslint",
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
-    "vscode:prepublish": "npm run build && npm prune --production",
-    "package": "vsce package"
+    "package": "vsce package",
+    "vscode:prepublish": "npm run esbuild-base -- --minify"
   },
   "engines": {
-    "vscode": "^1.66.0"
+    "vscode": "^1.75.1"
   },
   "dependencies": {
-    "@kurkle/color": "^0.1.9",
-    "@ply-ct/ply": "^3.0.51",
-    "chart.js": "^3.7.1",
-    "chartjs-adapter-date-fns": "^2.0.0",
-    "date-fns": "^2.28.0",
-    "find-up": "^5.0.0",
-    "flowbee": "^0.4.16",
+    "@kurkle/color": "^0.3.2",
+    "@ply-ct/ply": "^3.2.0",
+    "chart.js": "^4.2.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^2.29.3",
+    "escape-string-regexp": "^4.0.0",
+    "flowbee": "^1.0.1",
     "js-yaml": "^4.1.0",
-    "vscode-test-adapter-api": "^1.9.0",
-    "vscode-test-adapter-util": "^0.7.1",
-    "vscode-uri": "^3.0.3",
-    "ws": "^8.5.0"
+    "semver": "^7.3.8",
+    "stacktracey": "^2.1.8",
+    "vscode-uri": "^3.0.7",
+    "ws": "^8.12.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^21.0.3",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.1.3",
+    "@cspotcode/source-map-support": "^0.8.1",
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@types/chai": "^4.3.4",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^16.11.7",
     "@types/resize-observer-browser": "^0.1.7",
-    "@types/vscode": "^1.66.0",
-    "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.47.0",
-    "@typescript-eslint/parser": "^5.47.0",
+    "@types/vscode": "^1.75.0",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
-    "eslint": "^8.30.0",
+    "esbuild": "^0.17.8",
+    "eslint": "^8.34.0",
     "mocha": "^10.2.0",
-    "rollup": "^2.70.1",
-    "rollup-plugin-typescript2": "^0.31.2",
+    "rollup": "^2.79.1",
+    "rollup-plugin-typescript2": "^0.34.1",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
-  "extensionDependencies": [
-    "hbenl.vscode-test-explorer"
-  ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -117,57 +114,23 @@
     }
   },
   "contributes": {
+    "colors": [
+      {
+        "id": "ply.explorer.errorDecorationBackground",
+        "description": "Background color of the editor error decoration",
+        "defaults": {
+          "dark": "inputValidation.errorBackground",
+          "light": "inputValidation.errorBackground",
+          "highContrast": "inputValidation.errorBackground"
+        }
+      }
+    ],
     "configuration": {
       "title": "Ply",
       "properties": {
-        "ply.testsLocation": {
-          "type": "string",
-          "description": "Base directory (absolute or relative to workspace folder) for all Ply request and case files.  Defaults from plyconfig if present, otherwise '.'",
-          "scope": "resource"
-        },
-        "ply.requestFiles": {
-          "type": "string",
-          "description": "Glob pattern for Ply request files, relative to testsLocation ('**/*.{ply.yaml,ply.yml}').",
-          "scope": "resource"
-        },
-        "ply.caseFiles": {
-          "type": "string",
-          "description": "Glob pattern for Ply case files, relative to testsLocation ('**/*.ply.ts').",
-          "scope": "resource"
-        },
-        "ply.flowFiles": {
-          "type": "string",
-          "description": "Glob pattern for Ply flow files, relative to testsLocation ('**/*.flow').",
-          "scope": "resource"
-        },
         "ply.customSteps": {
           "type": "string",
           "description": "Glob pattern for step descriptor JSON files, relative to workspace folder.",
-          "scope": "resource"
-        },
-        "ply.ignore": {
-          "type": "string",
-          "description": "Glob pattern for places to ignore, relative to testsLocation ('**/{node_modules,bin,dist,out}/**').",
-          "scope": "resource"
-        },
-        "ply.skip": {
-          "type": "string",
-          "description": "Glob pattern for tests to skip, relative to testsLocation ('').",
-          "scope": "resource"
-        },
-        "ply.expectedLocation": {
-          "type": "string",
-          "description": "Expected results base dir (testsLocation + '/results/expected').",
-          "scope": "resource"
-        },
-        "ply.actualLocation": {
-          "type": "string",
-          "description": "Actual results base dir (testsLocation + '/results/actual').",
-          "scope": "resource"
-        },
-        "ply.logLocation": {
-          "type": "string",
-          "description": "Ply log file base dir (actualLocation).",
           "scope": "resource"
         },
         "ply.flowSourceTab": {
@@ -213,14 +176,8 @@
           "type": "object",
           "scope": "resource"
         },
-        "ply.useDist": {
-          "description": "Import case suite modules from generated .js instead of .ts source.  This same runOption needs to be set in your case's calls to Suite.run.",
-          "type": "boolean",
-          "default": false,
-          "scope": "resource"
-        },
         "ply.openRequestsAndFlowsWhenRun": {
-          "description": "Automatically open requests/flows in custom editor when executing from Test Explorer",
+          "description": "Automatically open requests/flows in custom editor when executing from Ply Explorer",
           "type": "string",
           "enum": [
             "If Single",
@@ -230,10 +187,10 @@
           "default": "If Single",
           "scope": "window"
         },
-        "ply.testExplorerUseRequestEditor": {
-          "descripton": "When opening individual requests within flow/request suites from Test Explorer, open in Ply request editor",
+        "ply.plyExplorerUseRequestEditor": {
+          "descripton": "When opening individual requests within flow/request suites from Ply Explorer, open in Ply request editor",
           "type": "boolean",
-          "default": true,
+          "default": false,
           "scope": "window"
         },
         "ply.saveBeforeRun": {
@@ -241,6 +198,18 @@
           "type": "boolean",
           "default": true,
           "scope": "window"
+        },
+        "ply.useDist": {
+          "description": "Import case suite modules from generated .js instead of .ts source.  This same runOption needs to be set in your case's calls to Suite.run.",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
+        "ply.requireTsNode": {
+          "description": "TODO",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
         },
         "ply.enableDiffEditorCodeLens": {
           "descripton": "How to handle when vscode setting 'diffEditor.codeLens' is not enabled for a workspace folder that contains ply tests",
@@ -263,137 +232,519 @@
           "type": "boolean",
           "description": "Enable Ply preview features.",
           "default": false,
+          "scope": "window"
+        },
+        "ply.explorer.onStart": {
+          "description": "Retire or reset all test states whenever a test run is started",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "retire",
+            "reset",
+            null
+          ],
+          "enumDescriptions": [
+            "Retire all test states whenever a test run is started",
+            "Reset all test states whenever a test run is started",
+            "Don't change the test states when a test run is started"
+          ],
+          "default": null,
+          "scope": "resource"
+        },
+        "ply.explorer.onReload": {
+          "description": "Retire or reset all test states whenever the test tree is reloaded",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "retire",
+            "reset",
+            null
+          ],
+          "enumDescriptions": [
+            "Retire all test states whenever the test tree is reloaded",
+            "Reset all test states whenever the test tree is reloaded",
+            "Don't change the test states when the test tree is reloaded"
+          ],
+          "default": null,
+          "scope": "resource"
+        },
+        "ply.explorer.codeLens": {
+          "description": "Show a CodeLens above each test or suite for running or debugging the tests",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.gutterDecoration": {
+          "description": "Show the state of each test in the editor using Gutter Decorations",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.errorDecoration": {
+          "description": "Show error messages from test failures as decorations in the editor",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.errorDecorationHover": {
+          "description": "Provide hover messages for the error decorations in the editor",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.sort": {
+          "description": "Sort the tests and suites by label. If this is not set (or set to null), they will be shown in natural order",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "byLabel",
+            null
+          ],
+          "enumDescriptions": [
+            "sort by label",
+            "don't sort, the tests and suites will be shown in natural order"
+          ],
+          "default": null,
+          "scope": "resource"
+        },
+        "ply.explorer.showExpandButton": {
+          "description": "Show a button for expanding the top nodes of the test tree, recursively for the given number of levels",
+          "type": "number",
+          "default": 3,
+          "scope": "resource"
+        },
+        "ply.explorer.showCollapseButton": {
+          "description": "Show a button for collapsing the nodes of the test tree",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.addToEditorContextMenu": {
+          "description": "Add menu items to the editor context menu for running and debugging the tests in the current file",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
+        "ply.explorer.showOnRun": {
+          "description": "Switch to the Ply Explorer view whenever a test run is started",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
+        "ply.explorer.hideEmptyLog": {
+          "description": "Hide the output channel used to show a test's log when the user clicks on a test whose log is empty",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },
+        "ply.explorer.hideWhen": {
+          "description": "Hide the Ply Explorer when no test adapters have been registered or when no tests have been found",
+          "type": "string",
+          "enum": [
+            "never",
+            "noAdapters",
+            "noTests"
+          ],
+          "default": "never",
           "scope": "resource"
         }
       }
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ply-explorer",
+          "title": "Ply",
+          "icon": "icons/ply.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "ply-start",
+        "contents": "\n[New Request](command:ply.new.request)\n[New Flow](command:ply.new.flow)\nLearn about Ply [Requests](https://ply-ct.org/ply/topics/requests) and [Flows](https://ply-ct.org/ply/topics/flows)"
+      }
+    ],
+    "views": {
+      "ply-explorer": [
+        {
+          "id": "ply-start",
+          "name": "Start",
+          "initialSize": 1
+        },
+        {
+          "id": "ply-tests",
+          "name": "Ply Files",
+          "initialSize": 100
+        },
+        {
+          "id": "ply-values",
+          "name": "Values",
+          "visibility": "collapsed"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "ply.open-request",
-        "title": "Ply: Open Request",
+        "category": "Ply",
+        "title": "Open Request",
         "icon": {
-          "dark": "./icons/open-file-dark.svg",
-          "light": "./icons/open-file-light.svg"
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
         }
       },
       {
         "command": "ply.open-flow",
-        "title": "Ply: Open Flow"
+        "category": "Ply",
+        "title": "Open Flow"
       },
       {
         "command": "ply.flow.configurator",
-        "title": "Ply: Open Configurator",
+        "category": "Ply",
+        "title": "Open Configurator",
+        "enablement": "resourceFilename =~ /.*\\.ply\\.flow/",
         "icon": {
-          "dark": "./icons/open-file-dark.svg",
-          "light": "./icons/open-file-light.svg"
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
         }
       },
       {
         "command": "ply.open-cases",
-        "title": "Ply: Open Case Suite",
+        "category": "Ply",
+        "title": "Open Case Suite",
         "icon": {
-          "dark": "./icons/open-file-dark.svg",
-          "light": "./icons/open-file-light.svg"
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
         }
       },
       {
         "command": "ply.flow-action",
+        "category": "Ply",
         "title": "Ply: Flow Action"
       },
       {
         "command": "ply.submit",
-        "title": "Ply: Submit"
-      },
-      {
-        "command": "ply.submit-item",
+        "category": "Ply",
         "title": "Submit",
         "icon": {
-          "dark": "./icons/submit-dark.svg",
-          "light": "./icons/submit-light.svg"
+          "dark": "./icons/dark/submit.svg",
+          "light": "./icons/light/submit.svg"
         }
       },
       {
         "command": "ply.diff",
-        "title": "Ply: Compare Result Files"
-      },
-      {
-        "command": "ply.diff-item",
+        "category": "Ply",
         "title": "Ply: Compare Result Files",
         "icon": {
-          "dark": "./icons/fdiff-dark.svg",
-          "light": "./icons/fdiff-light.svg"
+          "dark": "./icons/dark/fdiff.svg",
+          "light": "./icons/light/fdiff.svg"
         }
       },
       {
-        "command": "ply.diff.fragment-item",
+        "command": "ply.diff.fragment",
         "title": "Compare Result Fragments",
         "icon": {
-          "dark": "./icons/diff-dark.svg",
-          "light": "./icons/diff-light.svg"
+          "dark": "./icons/dark/diff.svg",
+          "light": "./icons/light/diff.svg"
         }
       },
       {
         "command": "ply.visualize",
-        "title": "Ply: Visualize Results",
+        "category": "Ply",
+        "title": "Visualize Results",
         "icon": {
-          "dark": "./icons/graph-dark.svg",
-          "light": "./icons/graph-light.svg"
+          "dark": "./icons/dark/graph.svg",
+          "light": "./icons/light/graph.svg"
         }
       },
       {
         "command": "ply.import.postman",
-        "title": "Ply: Import from Postman"
-      },
-      {
-        "command": "ply.import.postman-item",
+        "category": "Ply",
         "title": "Import from Postman",
         "icon": {
-          "dark": "./icons/json-dark.svg",
-          "light": "./icons/json-light.svg"
+          "dark": "./icons/dark/json.svg",
+          "light": "./icons/light/json.svg"
         }
       },
       {
         "command": "ply.import.insomnia",
-        "title": "Ply: Import from Insomnia"
-      },
-      {
-        "command": "ply.import.insomnia-item",
+        "category": "Ply",
         "title": "Import from Insomnia",
         "icon": {
-          "dark": "./icons/json-dark.svg",
-          "light": "./icons/json-light.svg"
+          "dark": "./icons/dark/json.svg",
+          "light": "./icons/light/json.svg"
         }
       },
       {
         "command": "ply.new",
-        "title": "Ply: New Item"
+        "category": "Ply",
+        "title": "New Item..."
       },
       {
         "command": "ply.new.request",
-        "title": "New Ply Request"
-      },
-      {
-        "command": "ply.new.case",
-        "title": "New Ply Case"
+        "category": "Ply",
+        "title": "New Request..."
       },
       {
         "command": "ply.new.flow",
-        "title": "New Ply Flow"
+        "category": "Ply",
+        "title": "New Flow..."
+      },
+      {
+        "command": "ply.new.case",
+        "category": "Ply",
+        "title": "New Case..."
       },
       {
         "command": "ply.flow.mode.select",
-        "title": "Ply: Select Mode",
-        "enablement": "resourceExtname == .flow"
+        "category": "Ply",
+        "title": "Select Mode",
+        "enablement": "resourceFilename =~ /.*\\.ply\\.flow/"
       },
       {
         "command": "ply.flow.mode.connect",
-        "title": "Ply: Connect Mode",
-        "enablement": "resourceExtname == .flow"
+        "category": "Ply",
+        "title": "Connect Mode",
+        "enablement": "resourceFilename =~ /.*\\.ply\\.flow/"
       },
       {
         "command": "ply.flow.mode.inspect",
-        "title": "Ply: Inspect Mode",
-        "enablement": "resourceExtname == .flow"
+        "category": "Ply",
+        "title": "Inspect Mode",
+        "enablement": "resourceFilename =~ /.*\\.ply\\.flow/"
+      },
+      {
+        "command": "ply.flow.source-to-side",
+        "title": "Flow YAML source",
+        "enablement": "resourceFilename =~ /.*\\.ply\\.flow/",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "ply.explorer.reload",
+        "category": "Ply Explorer",
+        "title": "Reload tests",
+        "icon": {
+          "dark": "./icons/test-explorer/reload-dark.svg",
+          "light": "./icons/test-explorer/reload-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.reload-collection",
+        "category": "Ply Explorer",
+        "title": "Reload tests"
+      },
+      {
+        "command": "ply.explorer.reloading",
+        "category": "Ply Explorer",
+        "title": "Reloading tests",
+        "icon": {
+          "dark": "./icons/test-explorer/reloading-dark.svg",
+          "light": "./icons/test-explorer/reloading-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.run-all",
+        "category": "Ply Explorer",
+        "title": "Run all tests",
+        "icon": {
+          "dark": "./icons/test-explorer/run-dark.svg",
+          "light": "./icons/test-explorer/run-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.run",
+        "category": "Ply Explorer",
+        "title": "Run tests",
+        "icon": {
+          "dark": "./icons/test-explorer/run-dark.svg",
+          "light": "./icons/test-explorer/run-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.pick-and-run",
+        "category": "Ply Explorer",
+        "title": "Run tests"
+      },
+      {
+        "command": "ply.explorer.rerun",
+        "category": "Ply Explorer",
+        "title": "Repeat the last test run"
+      },
+      {
+        "command": "ply.explorer.run-file",
+        "category": "Ply Explorer",
+        "title": "Run tests in current file"
+      },
+      {
+        "command": "ply.explorer.run-test-at-cursor",
+        "category": "Ply Explorer",
+        "title": "Run the test at the current cursor position"
+      },
+      {
+        "command": "ply.explorer.run-this-file",
+        "category": "Ply Explorer",
+        "title": "Run all tests in this file"
+      },
+      {
+        "command": "ply.explorer.run-this-test",
+        "category": "Ply Explorer",
+        "title": "Run this test"
+      },
+      {
+        "command": "ply.explorer.debug-all",
+        "category": "Ply Explorer",
+        "title": "Debug all tests",
+        "icon": {
+          "dark": "./icons/test-explorer/debug-dark.svg",
+          "light": "./icons/test-explorer/debug-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.debug",
+        "category": "Ply Explorer",
+        "title": "Debug this test",
+        "icon": {
+          "dark": "./icons/test-explorer/debug-dark.svg",
+          "light": "./icons/test-explorer/debug-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.pick-and-debug",
+        "category": "Ply Explorer",
+        "title": "Debug this test"
+      },
+      {
+        "command": "ply.explorer.redebug",
+        "category": "Ply Explorer",
+        "title": "Repeat the last test run in the debugger"
+      },
+      {
+        "command": "ply.explorer.debug-file",
+        "category": "Ply Explorer",
+        "title": "Debug tests in current file"
+      },
+      {
+        "command": "ply.explorer.debug-test-at-cursor",
+        "category": "Ply Explorer",
+        "title": "Debug the test at the current cursor position"
+      },
+      {
+        "command": "ply.explorer.debug-this-test",
+        "category": "Ply Explorer",
+        "title": "Debug this test"
+      },
+      {
+        "command": "ply.explorer.cancel",
+        "category": "Ply Explorer",
+        "title": "Cancel running tests",
+        "icon": "./icons/test-explorer/cancel.svg"
+      },
+      {
+        "command": "ply.explorer.show-log",
+        "category": "Ply Explorer",
+        "title": "Show test log"
+      },
+      {
+        "command": "ply.explorer.show-error",
+        "category": "Ply Explorer",
+        "title": "Show error message"
+      },
+      {
+        "command": "ply.explorer.show-source",
+        "category": "Ply Explorer",
+        "title": "Show source",
+        "icon": {
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.retire",
+        "category": "Ply Explorer",
+        "title": "Retire test states"
+      },
+      {
+        "command": "ply.explorer.reset",
+        "category": "Ply Explorer",
+        "title": "Reset test states"
+      },
+      {
+        "command": "ply.explorer.reveal",
+        "category": "Ply Explorer",
+        "title": "Reveal the given node"
+      },
+      {
+        "command": "ply.explorer.expand",
+        "category": "Ply Explorer",
+        "title": "Expand the top nodes of the test tree",
+        "icon": {
+          "dark": "./icons/test-explorer/expand-all-dark.svg",
+          "light": "./icons/test-explorer/expand-all-light.svg"
+        }
+      },
+      {
+        "command": "ply.explorer.sort-by-label",
+        "category": "Ply Explorer",
+        "title": "Sort by label"
+      },
+      {
+        "command": "ply.explorer.dont-sort",
+        "category": "Ply Explorer",
+        "title": "Sort in natural order"
+      },
+      {
+        "command": "ply.values.reload",
+        "category": "Ply Values",
+        "title": "Reload values",
+        "icon": {
+          "dark": "./icons/test-explorer/reload-dark.svg",
+          "light": "./icons/test-explorer/reload-light.svg"
+        }
+      },
+      {
+        "command": "ply.values.reloading",
+        "category": "Ply Values",
+        "title": "Reloading values",
+        "icon": {
+          "dark": "./icons/test-explorer/reloading-dark.svg",
+          "light": "./icons/test-explorer/reloading-light.svg"
+        }
+      },
+      {
+        "command": "ply.values.open-config",
+        "category": "Ply Values",
+        "title": "Values config",
+        "icon": {
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
+        }
+      },
+      {
+        "command": "ply.values.new",
+        "category": "Ply Values",
+        "title": "New values file",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ply.values.select",
+        "category": "Ply Values",
+        "title": "Select"
+      },
+      {
+        "command": "ply.values.open-file",
+        "category": "Ply Values",
+        "title": "Values file",
+        "icon": {
+          "dark": "./icons/dark/open-file.svg",
+          "light": "./icons/light/open-file.svg"
+        }
       }
     ],
     "keybindings": [
@@ -422,191 +773,484 @@
       "view/title": [
         {
           "command": "ply.new.request",
-          "group": "4_import@5",
-          "when": "view == test-explorer"
-        },
-        {
-          "command": "ply.new.case",
-          "group": "4_import@6",
-          "when": "view == test-explorer"
+          "group": "1_new@1",
+          "when": "view == ply-tests"
         },
         {
           "command": "ply.new.flow",
-          "group": "4_import@7",
-          "when": "view == test-explorer"
+          "group": "1_new@2",
+          "when": "view == ply-tests"
         },
         {
-          "command": "ply.import.postman-item",
+          "command": "ply.new.case",
+          "group": "1_new@3",
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.import.postman",
           "group": "4_import@8",
-          "when": "view == test-explorer"
+          "when": "view == ply-tests"
         },
         {
-          "command": "ply.import.insomnia-item",
+          "command": "ply.import.insomnia",
           "group": "4_import@9",
-          "when": "view == test-explorer"
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.explorer.run-all",
+          "group": "navigation@1",
+          "when": "view == ply-tests && !testsRunning"
+        },
+        {
+          "command": "ply.explorer.cancel",
+          "group": "navigation@2",
+          "when": "view == ply-tests && testsRunning"
+        },
+        {
+          "command": "ply.explorer.reload",
+          "group": "navigation@3",
+          "when": "view == ply-tests && !testsLoading"
+        },
+        {
+          "command": "ply.explorer.reloading",
+          "group": "navigation@4",
+          "when": "view == ply-tests && testsLoading"
+        },
+        {
+          "command": "ply.explorer.expand",
+          "group": "navigation@5",
+          "when": "view == ply-tests && showTestExplorerExpandButton"
+        },
+        {
+          "command": "ply.explorer.retire",
+          "group": "2_state@1",
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.explorer.reset",
+          "group": "2_state@2",
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.explorer.sort-by-label",
+          "group": "3_sort@1",
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.explorer.dont-sort",
+          "group": "3_sort@5",
+          "when": "view == ply-tests"
+        },
+        {
+          "command": "ply.values.reload",
+          "group": "navigation@1",
+          "when": "view == ply-values && !valuesLoading"
+        },
+        {
+          "command": "ply.values.reloading",
+          "group": "navigation@2",
+          "when": "view == ply-values && valuesLoading"
+        },
+        {
+          "command": "ply.values.open-config",
+          "group": "navigation@3",
+          "when": "view == ply-values"
+        },
+        {
+          "command": "ply.values.new",
+          "group": "navigation@4",
+          "when": "view == ply-values"
         }
       ],
       "view/item/context": [
         {
           "command": "ply.new.request",
           "group": "1_plynew@0",
-          "when": "view == test-explorer && viewItem == suite"
+          "when": "view == ply-tests && viewItem == suite"
         },
         {
           "command": "ply.new.case",
           "group": "1_plynew@1",
-          "when": "view == test-explorer && viewItem == suite"
+          "when": "view == ply-tests && viewItem == suite"
         },
         {
           "command": "ply.new.flow",
           "group": "1_plynew@2",
-          "when": "view == test-explorer && viewItem == suite"
+          "when": "view == ply-tests && viewItem == suite"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == suite"
+          "when": "view == ply-tests && viewItem == suite"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == test"
+          "when": "view == ply-tests && viewItem == test"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == suiteWithSource"
+          "when": "view == ply-tests && viewItem == suiteWithSource"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == testWithSource"
+          "when": "view == ply-tests && viewItem == testWithSource"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == debuggableSuite"
+          "when": "view == ply-tests && viewItem == debuggableSuite"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == debuggableTest"
+          "when": "view == ply-tests && viewItem == debuggableTest"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
+          "when": "view == ply-tests && viewItem == debuggableSuiteWithSource"
         },
         {
-          "command": "ply.submit-item",
+          "command": "ply.submit",
           "group": "inline@0",
-          "when": "view == test-explorer && viewItem == debuggableTestWithSource"
+          "when": "view == ply-tests && viewItem == debuggableTestWithSource"
         },
         {
-          "command": "ply.import.postman-item",
+          "command": "ply.import.postman",
           "group": "inline@3",
-          "when": "view == test-explorer && viewItem == collection"
+          "when": "view == ply-tests && viewItem == collection"
         },
         {
-          "command": "ply.import.insomnia-item",
+          "command": "ply.import.insomnia",
           "group": "inline@3",
-          "when": "view == test-explorer && viewItem == collection"
+          "when": "view == ply-tests && viewItem == collection"
         },
         {
-          "command": "ply.diff-item",
+          "command": "ply.diff",
           "group": "inline@4",
-          "when": "view == test-explorer && viewItem == suiteWithSource"
+          "when": "view == ply-tests && viewItem == suiteWithSource"
         },
         {
-          "command": "ply.diff-item",
+          "command": "ply.diff",
           "group": "inline@4",
-          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource"
+          "when": "view == ply-tests && viewItem == debuggableSuiteWithSource"
         },
         {
-          "command": "ply.diff.fragment-item",
+          "command": "ply.diff.fragment",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == test"
+          "when": "view == ply-tests && viewItem == test"
         },
         {
-          "command": "ply.diff.fragment-item",
+          "command": "ply.diff.fragment",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == testWithSource"
+          "when": "view == ply-tests && viewItem == testWithSource"
         },
         {
-          "command": "ply.diff.fragment-item",
+          "command": "ply.diff.fragment",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == debuggableTest"
+          "when": "view == ply-tests && viewItem == debuggableTest"
         },
         {
-          "command": "ply.diff.fragment-item",
+          "command": "ply.diff.fragment",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == debuggableTestWithSource"
+          "when": "view == ply-tests && viewItem == debuggableTestWithSource"
         },
         {
           "command": "ply.visualize",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == suiteWithSource && config.ply.previewEnabled"
+          "when": "view == ply-tests && viewItem == suiteWithSource && config.ply.previewEnabled"
         },
         {
           "command": "ply.visualize",
           "group": "inline@6",
-          "when": "view == test-explorer && viewItem == testWithSource && config.ply.previewEnabled"
+          "when": "view == ply-tests && viewItem == testWithSource && config.ply.previewEnabled"
         },
         {
           "command": "ply.visualize",
           "group": "inline@5",
-          "when": "view == test-explorer && viewItem == debuggableSuiteWithSource && config.ply.previewEnabled"
+          "when": "view == ply-tests && viewItem == debuggableSuiteWithSource && config.ply.previewEnabled"
         },
         {
           "command": "ply.visualize",
           "group": "inline@6",
-          "when": "view == test-explorer && viewItem == debuggableTestWithSource && config.ply.previewEnabled"
+          "when": "view == ply-tests && viewItem == debuggableTestWithSource && config.ply.previewEnabled"
         },
         {
-          "command": "ply.import.postman-item",
+          "command": "ply.import.postman",
           "group": "6_postman",
-          "when": "view == test-explorer && viewItem == collection"
+          "when": "view == ply-tests && viewItem == collection"
         },
         {
-          "command": "ply.import.insomnia-item",
+          "command": "ply.import.insomnia",
           "group": "7_insomnia",
-          "when": "view == test-explorer && viewItem == collection"
+          "when": "view == ply-tests && viewItem == collection"
+        },
+        {
+          "command": "ply.explorer.run",
+          "group": "inline@2",
+          "when": "view == ply-tests && viewItem != error"
+        },
+        {
+          "command": "ply.explorer.debug",
+          "group": "inline@1",
+          "when": "view == ply-tests && viewItem == debuggableSuiteWithSource"
+        },
+        {
+          "command": "ply.explorer.debug",
+          "group": "inline@1",
+          "when": "view == ply-tests && viewItem == debuggableSuite"
+        },
+        {
+          "command": "ply.explorer.debug",
+          "group": "inline@1",
+          "when": "view == ply-tests && viewItem == debuggableTestWithSource"
+        },
+        {
+          "command": "ply.explorer.debug",
+          "group": "inline@1",
+          "when": "view == ply-tests && viewItem == debuggableTest"
+        },
+        {
+          "command": "ply.explorer.reload-collection",
+          "group": "1_reload",
+          "when": "view == ply-tests && viewItem == collection"
+        },
+        {
+          "command": "ply.explorer.reload-collection",
+          "group": "1_reload",
+          "when": "view == ply-tests && viewItem == error"
+        },
+        {
+          "command": "ply.explorer.retire",
+          "group": "5_state@6",
+          "when": "view == ply-tests && viewItem != error"
+        },
+        {
+          "command": "ply.explorer.reset",
+          "group": "5_state@7",
+          "when": "view == ply-tests && viewItem != error"
+        },
+        {
+          "command": "ply.values.open-file",
+          "group": "inline@1",
+          "when": "view == ply-values"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "ply.flow.source-to-side",
+          "when": "resourceFilename =~ /.*\\.ply\\.flow/",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ply.explorer.run-this-file",
+          "group": "a_testexplorer@1",
+          "when": "showTestExplorerEditorContextMenu"
+        },
+        {
+          "command": "ply.explorer.run-this-test",
+          "group": "a_testexplorer@2",
+          "when": "showTestExplorerEditorContextMenu"
+        },
+        {
+          "command": "ply.explorer.debug-this-test",
+          "group": "a_testexplorer@3",
+          "when": "showTestExplorerEditorContextMenu"
         }
       ],
       "commandPalette": [
         {
-          "command": "ply.import.postman-item",
+          "command": "ply.diff",
           "when": "false"
         },
         {
-          "command": "ply.import.insomnia-item",
-          "when": "false"
-        },
-        {
-          "command": "ply.submit-item",
-          "when": "false"
-        },
-        {
-          "command": "ply.diff-item",
-          "when": "false"
-        },
-        {
-          "command": "ply.diff.fragment-item",
+          "command": "ply.diff.fragment",
           "when": "false"
         },
         {
           "command": "ply.visualize",
           "when": "false"
+        },
+        {
+          "command": "ply.explorer.reload",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.reload-collection",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.reloading",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.run-all",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.run",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.pick-and-run",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.rerun",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.run-file",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.run-test-at-cursor",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.run-this-file",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.run-this-test",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.debug-all",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.debug",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.pick-and-debug",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.redebug",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.debug-file",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.debug-test-at-cursor",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.debug-this-test",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.cancel",
+          "when": "plyExplorerVisible"
+        },
+        {
+          "command": "ply.explorer.show-log",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.show-error",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.show-source",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.retire",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.reset",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.reveal",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.expand",
+          "when": "showTestExplorerExpandButton"
+        },
+        {
+          "command": "ply.explorer.sort-by-label",
+          "when": "false"
+        },
+        {
+          "command": "ply.explorer.dont-sort",
+          "when": "false"
+        },
+        {
+          "command": "ply.values.reloading",
+          "when": "false"
         }
       ]
     },
+    "languages": [
+      {
+        "id": "ply-request",
+        "aliases": [
+          "Ply Request"
+        ],
+        "extensions": [
+          ".ply"
+        ],
+        "icon": {
+          "dark": "./icons/dark/request.svg",
+          "light": "./icons/light/request.svg"
+        }
+      },
+      {
+        "id": "ply-test",
+        "aliases": [
+          "Ply Test"
+        ],
+        "extensions": [
+          ".ply.yaml",
+          ".ply.yml"
+        ],
+        "icon": {
+          "dark": "./icons/dark/beaker.svg",
+          "light": "./icons/light/beaker.svg"
+        },
+        "configuration": "./yaml-language-configuration.json"
+      },
+      {
+        "id": "ply-flow",
+        "aliases": [
+          "Ply Flow"
+        ],
+        "extensions": [
+          ".ply.flow"
+        ],
+        "icon": {
+          "dark": "./icons/dark/flow.svg",
+          "light": "./icons/light/flow.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ply-test",
+        "scopeName": "source.yaml",
+        "path": "./syntaxes/yaml.tmLanguage.json"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "ply.flow.diagram",
         "displayName": "Ply Flow Diagram",
         "selector": [
           {
-            "filenamePattern": "*.flow"
+            "filenamePattern": "*.ply.flow"
           }
         ],
         "priority": "default"
@@ -629,6 +1273,7 @@
             "filenamePattern": "*.ply"
           }
         ],
+        "scheme": "ply-request",
         "priority": "default"
       }
     ]

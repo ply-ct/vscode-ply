@@ -47,6 +47,9 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
                 designItems = [{ id: 'configure', label: 'Configure' }, ...designItems];
             }
         }
+        if (type === 'link' && this.flowDiagram.mode === 'select') {
+            designItems = [{ id: 'configure', label: 'Configure' }];
+        }
 
         const superItems = super.getItems(flowElementEvent);
         let items: (flowbee.MenuItem | 'separator')[] = [

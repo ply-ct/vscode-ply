@@ -11,7 +11,7 @@ import {
     TestSuiteEvent,
     TestEvent,
     RetireEvent
-} from 'vscode-test-adapter-api';
+} from './test-adapter/api/index';
 import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
 import { Info, PlyRoots } from './plyRoots';
@@ -19,7 +19,7 @@ import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
 import { PlyCodeLensProvider } from './codeLens';
-import { Values } from './values';
+import { Values } from './values/values';
 
 export class PlyAdapter implements TestAdapter {
     private disposables: { dispose(): void }[] = [];
@@ -75,12 +75,11 @@ export class PlyAdapter implements TestAdapter {
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.retireEmitter);
-        this.config = new PlyConfig(
-            workspaceFolder,
-            () => this.load(),
-            () => this.retireEmitter.fire({}),
-            () => this.diffState.clearState()
-        );
+        this.config = new PlyConfig(workspaceFolder, async () => {
+            this.load();
+            this.retireEmitter.fire({});
+            this.diffState.clearState();
+        });
         this.disposables.push(this.config);
         this.disposables.push(
             vscode.workspace.onDidChangeConfiguration((c) => this.config.onChange(c))
@@ -144,19 +143,17 @@ export class PlyAdapter implements TestAdapter {
             })
         );
 
-        const submitCodeLensProvider = new PlyCodeLensProvider(workspaceFolder, plyRoots);
-        this.disposables.push(
-            vscode.languages.registerCodeLensProvider({ language: 'yaml' }, submitCodeLensProvider)
-        );
+        const codeLensProvider = new PlyCodeLensProvider(workspaceFolder, plyRoots);
         this.disposables.push(
             vscode.languages.registerCodeLensProvider(
-                { language: 'typescript' },
-                submitCodeLensProvider
+                { scheme: '*', pattern: '**/*' },
+                codeLensProvider
             )
         );
     }
 
     async load(): Promise<void> {
+        const before = Date.now();
         this.log.info(`Loading plyees: ${this.workspaceFolder.name}`);
 
         try {
@@ -167,17 +164,14 @@ export class PlyAdapter implements TestAdapter {
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();
 
-            const nativeTesting = vscode.workspace
-                .getConfiguration('testExplorer', this.workspaceFolder.uri)
-                .get('useNativeTesting');
-
-            this.plyRoots.build(requests, cases, flows, !nativeTesting);
+            this.plyRoots.build(requests, cases, flows);
             console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
             console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
             console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
 
             // tests should be sorted in file order (user can override if they want)
-            await vscode.commands.executeCommand('test-explorer.dont-sort');
+            await vscode.commands.executeCommand('ply.explorer.dont-sort');
+            this.log.info(`Loaded plyees in: ${Date.now() - before} ms`);
 
             this.testsEmitter.fire(<TestLoadFinishedEvent>{
                 type: 'finished',
@@ -301,7 +295,7 @@ export class PlyAdapter implements TestAdapter {
     }
 
     /**
-     * Check if save needed, and open file (for custom editors) in case run from Test Explorer.
+     * Check if save needed, and open file (for custom editors) in case run from Ply Explorer.
      */
     private async checkAndProceed(
         testIds: string[],
@@ -329,7 +323,7 @@ export class PlyAdapter implements TestAdapter {
     }
 
     /**
-     * False value for 'proceed' indicates flow run came from Test Explorer, so trigger exec through editor
+     * False value for 'proceed' indicates flow run came from Ply Explorer, so trigger exec through editor
      * and then return immediately since run is triggered separately.
      * Note: only opens standalone requests and flows.
      */
@@ -370,9 +364,9 @@ export class PlyAdapter implements TestAdapter {
             }
         } else if (
             editable.type === 'test' &&
-            editable.file?.startsWith('ply-dummy:/') &&
+            editable.file &&
             uri.fragment &&
-            this.config.testExplorerUseRequestEditor
+            this.config.plyExplorerUseRequestEditor
         ) {
             await vscode.commands.executeCommand('ply.open-request', {
                 uri: uri.with({ scheme: 'ply-request' })
@@ -492,25 +486,18 @@ export class PlyAdapter implements TestAdapter {
             document.uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
         ) {
             console.debug(`saved: ${document.uri}`);
-            if (PlyConfig.isPlyConfig(document.uri.fsPath)) {
-                this.config.clearPlyOptions();
-                this.load();
-                this.retireEmitter.fire({});
-                this.diffState.clearState();
-            } else {
-                if (document.languageId === 'yaml') {
-                    // expected results
-                    const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
-                    if (affectedSuiteId) {
-                        const testIds = this.plyRoots
-                            .getTestInfosForSuite(affectedSuiteId)
-                            .map((ti) => ti.id);
-                        this.retireEmitter.fire({ tests: testIds });
-                        this.diffState.clearDiffs(testIds);
-                    }
-                } else if (document.languageId === 'json') {
-                    // TODO check if values changed and fire retire event & remove diff state
+            if (document.languageId === 'yaml') {
+                // expected results
+                const affectedSuiteId = this.plyRoots.getSuiteIdForExpectedResult(document.uri);
+                if (affectedSuiteId) {
+                    const testIds = this.plyRoots
+                        .getTestInfosForSuite(affectedSuiteId)
+                        .map((ti) => ti.id);
+                    this.retireEmitter.fire({ tests: testIds });
+                    this.diffState.clearDiffs(testIds);
                 }
+            } else if (document.languageId === 'json') {
+                // TODO check if values changed and fire retire event & remove diff state
             }
         }
     }

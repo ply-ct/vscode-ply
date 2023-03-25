@@ -6,10 +6,11 @@
         :options="options"
         :file="filename"
         :result="result"
-        @updateRequest="onUpdate"
-        @updateSource="onUpdateSource"
-        @updateMarkers="onUpdateMarkers"
-        @requestAction="onAction"
+        @update-request="onUpdate"
+        @update-source="onUpdateSource"
+        @update-markers="onUpdateMarkers"
+        @request-action="onAction"
+        @open-file="onOpenFile"
       />
     </pane>
     <pane v-if="options.runnable" :is-right="true">
@@ -19,8 +20,8 @@
         :name="request.name"
         :response="response"
         :options="options"
-        @updateMarkers="onUpdateMarkers"
-        @cancelRequest="onCancel"
+        @update-markers="onUpdateMarkers"
+        @cancel-request="onCancel"
       />
     </pane>
   </split>
@@ -36,6 +37,7 @@ import Pane from './components/Pane.vue';
 import Request from './components/Request.vue';
 import Response from './components/Response.vue';
 import { Request as Req, Response as Resp, Result, DUMMY_URL } from './model/request';
+import { values } from './util/values';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -166,6 +168,10 @@ export default defineComponent({
           this.response = this.blankResponse();
           this.setMessage(this.result.message ? `Error: ${this.result.message}` : '');
         }
+      } else if (message.type === 'values') {
+        values.setObjects(message.objects, message.env);
+        // TODO: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
+        values.trusted = false; // message.trusted;
       }
     },
     onUpdate(updatedRequest: Req) {
@@ -193,6 +199,9 @@ export default defineComponent({
         resource,
         markers
       });
+    },
+    onOpenFile(file: string) {
+      vscode.postMessage({ type: 'open-file', file });
     },
     onAction(action: string, requestName: string) {
       if (action === 'run' || action === 'submit') {

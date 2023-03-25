@@ -55,7 +55,7 @@ export class VizTable {
                 { type: 'text', label: 'Response ms' }
             ],
             JSON.stringify(rows),
-            true
+            { readonly: true }
         );
         table.onTableAction((actionEvent) => {
             this._onTableAction.emit({

@@ -27,8 +27,8 @@
     <endpoint
       :options="options"
       :request="request"
-      @updateRequest="onUpdate"
-      @submitRequest="onSubmit"
+      @update-request="onUpdate"
+      @submit-request="onSubmit"
     />
     <el-tabs tab-position="top">
       <el-tab-pane label="Body">
@@ -39,14 +39,15 @@
           :language="bodyLanguage"
           :options="bodyOptions"
           :readonly="options.readonly || !canHaveBody"
-          @updateSource="onUpdateBody"
-          @updateMarkers="onUpdateMarkers"
+          @update-source="onUpdateBody"
+          @update-markers="onUpdateMarkers"
+          @open-file="onOpenFile"
         />
         <div v-if="isFormUrlEncoded" class="form-data">
           <table-comp
             :value="formParams"
             :readonly="options.readonly"
-            @updateValue="onUpdateFormParams"
+            @update-value="onUpdateFormParams"
           />
         </div>
       </el-tab-pane>
@@ -54,14 +55,15 @@
         <table-comp
           :value="request.headers"
           :readonly="options.readonly"
-          @updateValue="onUpdateHeaders"
+          @update-value="onUpdateHeaders"
         />
       </el-tab-pane>
       <el-tab-pane label="Query">
         <table-comp
           :value="queryParams"
           :readonly="options.readonly"
-          @updateValue="onUpdateQuery"
+          :single-line="true"
+          @update-value="onUpdateQuery"
         />
       </el-tab-pane>
       <el-tab-pane label="Source">
@@ -71,8 +73,9 @@
           language="yaml"
           :options="options"
           :readonly="options.readonly"
-          @updateSource="onUpdateSource"
-          @updateMarkers="onUpdateMarkers"
+          @update-source="onUpdateSource"
+          @update-markers="onUpdateMarkers"
+          @open-file="onOpenFile"
         />
       </el-tab-pane>
     </el-tabs>
@@ -109,7 +112,14 @@ export default defineComponent({
       default: null
     }
   },
-  emits: ['renameRequest', 'updateRequest', 'updateSource', 'updateMarkers', 'requestAction'],
+  emits: [
+    'renameRequest',
+    'updateRequest',
+    'updateSource',
+    'updateMarkers',
+    'openFile',
+    'requestAction'
+  ],
   data() {
     return {
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
@@ -118,7 +128,7 @@ export default defineComponent({
   },
   computed: {
     canHaveBody() {
-      return this.request.method !== 'GET' && this.request.method !== 'DELETE';
+      return this.request.method !== 'GET'; // && this.request.method !== 'DELETE';
     },
     bodyLanguage() {
       return getLanguage(this.request, 'json');
@@ -275,6 +285,9 @@ export default defineComponent({
     },
     onSubmit(requestName: string) {
       this.onAction('submit', requestName);
+    },
+    onOpenFile(file: string) {
+      this.$emit('openFile', file);
     },
     onAction(action: string, requestName: string) {
       this.$emit('requestAction', action, requestName);
