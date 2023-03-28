@@ -135,11 +135,13 @@ export class AdapterHelper {
                 return (info.file && info.description?.endsWith('.ply')) || false;
             });
             for (const dotPly of dotPlys) {
-                const uri = vscode.Uri.parse(dotPly.file!).with({ scheme: 'file' });
+                const dotPlyUri = vscode.Uri.file(dotPly.file!);
                 const text = new TextDecoder('utf-8').decode(
-                    await vscode.workspace.fs.readFile(uri.with({ fragment: undefined }))
+                    await vscode.workspace.fs.readFile(dotPlyUri.with({ fragment: undefined }))
                 );
-                const obj = text.startsWith('{') ? JSON.parse(text) : loadYaml(uri.fsPath, text);
+                const obj = text.startsWith('{')
+                    ? JSON.parse(text)
+                    : loadYaml(dotPlyUri.fsPath, text);
                 const name = Object.keys(obj)[0];
                 const request = { ...obj[name], name };
                 ret.push({
@@ -149,7 +151,7 @@ export class AdapterHelper {
                     icon: 'request.svg',
                     link: {
                         label: dotPly.description!,
-                        url: uri.with({ scheme: 'ply-request' }).toString()
+                        url: dotPlyUri.with({ scheme: 'ply-request' }).toString()
                     },
                     request
                 });
