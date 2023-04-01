@@ -339,7 +339,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 );
             } else {
                 adapter.onceValues(async (e) => {
-                    // TODO: Need to send message (or is this just an edge case during extension development)?
+                    updateValues();
                     disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
                             updateValues(updateEvent.resultUri)

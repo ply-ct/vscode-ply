@@ -6,6 +6,7 @@
         :options="options"
         :file="filename"
         :result="result"
+        :values="values"
         @update-request="onUpdate"
         @update-source="onUpdateSource"
         @update-markers="onUpdateMarkers"
@@ -37,7 +38,7 @@ import Pane from './components/Pane.vue';
 import Request from './components/Request.vue';
 import Response from './components/Response.vue';
 import { Request as Req, Response as Resp, Result, DUMMY_URL } from './model/request';
-import { values } from './util/values';
+import { Values } from './model/values';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -53,7 +54,8 @@ export default defineComponent({
       response: null,
       file: '',
       message: '',
-      result: null
+      result: null,
+      values: { env: {}, objects: {} }
     } as any as {
       options: any;
       requestName: string;
@@ -62,6 +64,7 @@ export default defineComponent({
       file: string;
       message: string;
       result: Result;
+      values: Values;
     };
   },
   mounted: function () {
@@ -169,9 +172,9 @@ export default defineComponent({
           this.setMessage(this.result.message ? `Error: ${this.result.message}` : '');
         }
       } else if (message.type === 'values') {
-        values.setObjects(message.objects, message.env);
-        // TODO: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
-        values.trusted = false; // message.trusted;
+        // TODO: trusted hardcoded due to:
+        // Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
+        this.values = { env: message.env, objects: message.objects, trusted: false };
       }
     },
     onUpdate(updatedRequest: Req) {

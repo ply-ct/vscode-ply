@@ -5,9 +5,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 import * as flowbee from 'flowbee';
-import { decorator } from '../util/decorate';
+import { Decorator } from '../util/decorate';
+import { Values } from '../model/values';
 
 export default defineComponent({
   name: 'Table',
@@ -23,11 +24,18 @@ export default defineComponent({
     singleLine: {
       type: Boolean,
       default: false
+    },
+    values: {
+      type: Object as PropType<Values>,
+      required: true
     }
   },
   emits: ['updateValue'],
   watch: {
     value() {
+      this.initTable();
+    },
+    values() {
       this.initTable();
     }
   },
@@ -51,7 +59,7 @@ export default defineComponent({
         { readonly: this.readonly, singleLine: this.singleLine }
       );
 
-      table.addDecorator(decorator);
+      table.setDecorator((text: string) => new Decorator(this.values).decorate(text));
 
       this.syncTheme();
       this.$el.style.display = 'flex';

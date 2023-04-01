@@ -97,6 +97,9 @@ a:hover {
   white-space: nowrap;
   overflow-x: clip;
 }
+.url-input {
+  inline-size: 1px; // allows cursor move to right when overflow
+}
 
 .action-btn {
   display: block;

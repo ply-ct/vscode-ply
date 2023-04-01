@@ -27,6 +27,7 @@
     <endpoint
       :options="options"
       :request="request"
+      :values="values"
       @update-request="onUpdate"
       @submit-request="onSubmit"
     />
@@ -39,6 +40,7 @@
           :language="bodyLanguage"
           :options="bodyOptions"
           :readonly="options.readonly || !canHaveBody"
+          :values="values"
           @update-source="onUpdateBody"
           @update-markers="onUpdateMarkers"
           @open-file="onOpenFile"
@@ -47,6 +49,7 @@
           <table-comp
             :value="formParams"
             :readonly="options.readonly"
+            :values="values"
             @update-value="onUpdateFormParams"
           />
         </div>
@@ -55,6 +58,7 @@
         <table-comp
           :value="request.headers"
           :readonly="options.readonly"
+          :values="values"
           @update-value="onUpdateHeaders"
         />
       </el-tab-pane>
@@ -63,6 +67,7 @@
           :value="queryParams"
           :readonly="options.readonly"
           :single-line="true"
+          :values="values"
           @update-value="onUpdateQuery"
         />
       </el-tab-pane>
@@ -73,6 +78,7 @@
           language="yaml"
           :options="options"
           :readonly="options.readonly"
+          :values="values"
           @update-source="onUpdateSource"
           @update-markers="onUpdateMarkers"
           @open-file="onOpenFile"
@@ -90,6 +96,7 @@ import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
+import { Values } from '../model/values';
 
 export default defineComponent({
   name: 'Request',
@@ -110,6 +117,10 @@ export default defineComponent({
     result: {
       type: Object as PropType<Result>,
       default: null
+    },
+    values: {
+      type: Object as PropType<Values>,
+      required: true
     }
   },
   emits: [

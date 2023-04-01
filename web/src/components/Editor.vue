@@ -5,8 +5,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import * as monaco from 'monaco-editor';
+import { ValuesAccess } from 'flowbee';
 import * as time from '../util/time';
-import { values } from '../util/values';
 import {
   initialize,
   getEditor,
@@ -41,6 +41,10 @@ export default defineComponent({
     options: {
       type: Object,
       required: true
+    },
+    values: {
+      type: Object,
+      default: { env: {}, objects: {} }
     }
   },
   emits: ['updateSource', 'updateMarkers', 'openFile'],
@@ -48,6 +52,7 @@ export default defineComponent({
     return {} as any as {
       editor?: monaco.editor.IStandaloneCodeEditor;
       resizeObserver?: ResizeObserver;
+      valuesAccess?: ValuesAccess;
     };
   },
   watch: {
@@ -68,6 +73,9 @@ export default defineComponent({
       if (model) {
         monaco.editor.setModelLanguage(model, newLanguage);
       }
+    },
+    values(newValues) {
+      this.valuesAccess = new ValuesAccess(newValues.objects, newValues.env);
     }
   },
   mounted: function () {
@@ -154,8 +162,11 @@ export default defineComponent({
                 !expression.text.startsWith('${~') &&
                 !expression.text.startsWith('${@')
               ) {
-                const location = values.access.getLocation(expression.text, values.trusted);
-                const value = values.access.evaluate(expression.text, values.trusted);
+                const location = this.valuesAccess?.getLocation(
+                  expression.text,
+                  this.values.trusted
+                );
+                const value = this.valuesAccess?.evaluate(expression.text, this.values.trusted);
                 if (location && value) {
                   const args = { path: location.path, expression: expression.text };
                   let label = args.path.replace(/\\/g, '/');
