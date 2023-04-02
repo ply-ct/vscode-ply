@@ -30,6 +30,7 @@
       :values="values"
       @update-request="onUpdate"
       @submit-request="onSubmit"
+      @open-file="onOpenFile"
     />
     <el-tabs tab-position="top">
       <el-tab-pane label="Body">
@@ -51,6 +52,7 @@
             :readonly="options.readonly"
             :values="values"
             @update-value="onUpdateFormParams"
+            @open-file="onOpenFile"
           />
         </div>
       </el-tab-pane>
@@ -60,6 +62,7 @@
           :readonly="options.readonly"
           :values="values"
           @update-value="onUpdateHeaders"
+          @open-file="onOpenFile"
         />
       </el-tab-pane>
       <el-tab-pane label="Query">
@@ -69,6 +72,7 @@
           :single-line="true"
           :values="values"
           @update-value="onUpdateQuery"
+          @open-file="onOpenFile"
         />
       </el-tab-pane>
       <el-tab-pane label="Source">

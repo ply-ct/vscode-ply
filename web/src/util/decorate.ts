@@ -1,9 +1,23 @@
-import { Decoration, HoverLine, findExpressions, ValuesAccess } from 'flowbee';
+import {
+    Decoration,
+    HoverLine,
+    HoverAction,
+    findExpressions,
+    ValuesAccess,
+    TypedEvent,
+    Listener,
+    Disposable
+} from 'flowbee';
 import { Values } from '../model/values';
 
 export class Decorator {
     private valuesAccess: ValuesAccess;
     private trusted: boolean;
+
+    private _onHoverAction = new TypedEvent<HoverAction>();
+    onHoverAction(listener: Listener<HoverAction>): Disposable {
+        return this._onHoverAction.on(listener);
+    }
 
     constructor(values: Values) {
         this.valuesAccess = new ValuesAccess(values.objects, values.env);
@@ -28,7 +42,10 @@ export class Decorator {
                         hoverLines.push({ label: 'Value:', value });
                         hoverLines.push({
                             label: 'From:',
-                            link: { label: loc, action: 'open values file' }
+                            link: {
+                                label: loc,
+                                action: { name: 'openFile', args: { path: location.path } }
+                            }
                         });
                     } else {
                         hoverLines.push({ label: 'Not found: ', value: expr.text });
@@ -38,7 +55,8 @@ export class Decorator {
                         range: { line: i, start: expr.start, end: expr.end },
                         className: 'expression',
                         hover: {
-                            lines: hoverLines
+                            lines: hoverLines,
+                            onAction: (action) => this._onHoverAction.emit(action)
                         }
                     });
                 }

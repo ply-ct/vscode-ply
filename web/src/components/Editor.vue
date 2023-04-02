@@ -44,7 +44,7 @@ export default defineComponent({
     },
     values: {
       type: Object,
-      default: { env: {}, objects: {} }
+      default: null
     }
   },
   emits: ['updateSource', 'updateMarkers', 'openFile'],
@@ -75,7 +75,11 @@ export default defineComponent({
       }
     },
     values(newValues) {
-      this.valuesAccess = new ValuesAccess(newValues.objects, newValues.env);
+      if (newValues) {
+        this.valuesAccess = new ValuesAccess(newValues.objects, newValues.env);
+      } else {
+        this.valuesAccess = undefined;
+      }
     }
   },
   mounted: function () {
@@ -159,6 +163,7 @@ export default defineComponent({
               // TODO refs
               if (
                 expression &&
+                this.values &&
                 !expression.text.startsWith('${~') &&
                 !expression.text.startsWith('${@')
               ) {

@@ -47,7 +47,7 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['updateRequest', 'submitRequest'],
+  emits: ['updateRequest', 'submitRequest', 'openFile'],
   data() {
     return {
       methods: [
@@ -94,7 +94,13 @@ export default defineComponent({
       this.urlInput.innerHTML = '';
       decorate(this.urlInput, this.request.url, [
         (text: string) => {
-          const decs = new Decorator(this.values).decorate(text);
+          const decorator = new Decorator(this.values);
+          decorator.onHoverAction((action) => {
+            if (action.name === 'openFile') {
+              this.$emit('openFile', action.args!.path);
+            }
+          });
+          const decs = decorator.decorate(text);
           decs.forEach((dec) => {
             if (dec.hover?.lines) {
               if (dec.hover.lines.length > 1) {

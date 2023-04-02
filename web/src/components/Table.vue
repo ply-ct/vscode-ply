@@ -27,10 +27,10 @@ export default defineComponent({
     },
     values: {
       type: Object as PropType<Values>,
-      required: true
+      default: null
     }
   },
-  emits: ['updateValue'],
+  emits: ['updateValue', 'openFile'],
   watch: {
     value() {
       this.initTable();
@@ -59,7 +59,15 @@ export default defineComponent({
         { readonly: this.readonly, singleLine: this.singleLine }
       );
 
-      table.setDecorator((text: string) => new Decorator(this.values).decorate(text));
+      if (this.values) {
+        const decorator = new Decorator(this.values);
+        decorator.onHoverAction((action) => {
+          if (action.name === 'openFile') {
+            this.$emit('openFile', action.args!.path);
+          }
+        });
+        table.setDecorator((text: string) => decorator.decorate(text));
+      }
 
       this.syncTheme();
       this.$el.style.display = 'flex';
