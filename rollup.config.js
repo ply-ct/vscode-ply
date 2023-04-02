@@ -2,6 +2,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import typescript from 'rollup-plugin-typescript2';
+import terser from '@rollup/plugin-terser';
 
 export default [
     {
@@ -37,7 +38,8 @@ export default [
             }),
             json({
                 compact: true
-            })
+            }),
+            terser()
         ]
     },
     {
@@ -53,7 +55,8 @@ export default [
             commonjs(),
             typescript({
                 tsconfigOverride: { compilerOptions: { module: 'es2015' } }
-            })
+            }),
+            terser()
         ]
     },
     {
@@ -69,7 +72,8 @@ export default [
             commonjs(),
             typescript({
                 tsconfigOverride: { compilerOptions: { module: 'es2015' } }
-            })
+            }),
+            terser()
         ]
     }
 ];
