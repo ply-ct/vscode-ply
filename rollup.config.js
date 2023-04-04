@@ -38,8 +38,9 @@ export default [
             }),
             json({
                 compact: true
-            }),
-            terser()
+            })
+            // TODO: terser messes up callingCaseInfo
+            // terser()
         ]
     },
     {
