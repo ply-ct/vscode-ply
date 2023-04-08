@@ -1,3 +1,4 @@
+import * as process from 'process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -59,10 +60,16 @@ export class PlyItem {
             }
         }
 
-        let loc = dir;
-        if (type === 'flow') loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply.flow`);
-        else if (type === 'case') loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply.ts`);
-        else loc = vscode.Uri.file(`${dir?.fsPath}/Untitled.ply`);
+        const p = `${dir?.fsPath}/Untitled`;
+        const isWin = process.platform.startsWith('win');
+        let loc;
+        if (type === 'flow') {
+            loc = vscode.Uri.file(isWin ? p : `${p}.ply.flow`);
+        } else if (type === 'case') {
+            loc = vscode.Uri.file(isWin ? p : `${p}.ply.ts`);
+        } else {
+            loc = vscode.Uri.file(isWin ? p : `${p}.ply`);
+        }
         const uri = await vscode.window.showSaveDialog({
             defaultUri: loc,
             filters: this.getFilters(type)
