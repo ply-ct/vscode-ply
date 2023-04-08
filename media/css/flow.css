@@ -152,10 +152,6 @@ body {
   height: 100%;
   overflow: auto;
 }
-.flow-diagram > canvas {
-  height: 100%;
-  width: 100%;
-}
 .toolbox-container {
   min-width: 150px;
   display: flex;

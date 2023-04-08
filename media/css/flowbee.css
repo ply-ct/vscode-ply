@@ -1145,10 +1145,12 @@
     margin-right: 4px;
     font-size: 12px; }
   .flowbee-tooltip-light .tooltip-value {
+    font-size: 12.5px;
     padding: 1px 3px;
     font-family: Menlo, Monaco, "Courier New", monospace; }
   .flowbee-tooltip-light .tooltip-link {
-    cursor: pointer; }
+    cursor: pointer;
+    font-size: 12.5px; }
   .flowbee-tooltip-light .tooltip-line {
     border: 1px solid #dddddd; }
   .flowbee-tooltip-light .tooltip-value {
@@ -1174,10 +1176,12 @@
     margin-right: 4px;
     font-size: 12px; }
   .flowbee-tooltip-dark .tooltip-value {
+    font-size: 12.5px;
     padding: 1px 3px;
     font-family: Menlo, Monaco, "Courier New", monospace; }
   .flowbee-tooltip-dark .tooltip-link {
-    cursor: pointer; }
+    cursor: pointer;
+    font-size: 12.5px; }
   .flowbee-tooltip-dark .tooltip-line {
     border-bottom: 1px solid #353536; }
   .flowbee-tooltip-dark .tooltip-value {
