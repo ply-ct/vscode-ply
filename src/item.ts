@@ -41,10 +41,14 @@ export class PlyItem {
         if (type === 'request') {
             return { 'Ply Request': ['ply', 'ply.yaml', 'ply.yml'] };
         } else if (type === 'case') {
-            return { 'Ply Case': ['ply.ts'] };
+            return { 'Ply Case': this.isWin ? ['ts'] : ['ply.ts'] };
         } else if (type === 'flow') {
-            return { 'Ply Flow': ['ply.flow'] };
+            return { 'Ply Flow': this.isWin ? ['flow'] : ['ply.flow'] };
         }
+    }
+
+    private get isWin(): boolean {
+        return process.platform.startsWith('win');
     }
 
     async newItem(type: ply.TestType, ...args: any[]) {
@@ -61,14 +65,14 @@ export class PlyItem {
         }
 
         const p = `${dir?.fsPath}/Untitled`;
-        const isWin = process.platform.startsWith('win');
+        console.log('P: ' + p);
         let loc;
         if (type === 'flow') {
-            loc = vscode.Uri.file(isWin ? p : `${p}.ply.flow`);
+            loc = vscode.Uri.file(`${p}.ply.flow`);
         } else if (type === 'case') {
-            loc = vscode.Uri.file(isWin ? p : `${p}.ply.ts`);
+            loc = vscode.Uri.file(`${p}.ply.ts`);
         } else {
-            loc = vscode.Uri.file(isWin ? p : `${p}.ply`);
+            loc = vscode.Uri.file(this.isWin ? p : `${p}.ply`);
         }
         const uri = await vscode.window.showSaveDialog({
             defaultUri: loc,
