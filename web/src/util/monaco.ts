@@ -132,9 +132,11 @@ export const filterMarkers = (
 
     if (expressionMarkers.length) {
         newMarkers = newMarkers.filter((marker) => {
-            if ((isJsonMarker(marker) && marker.code === '0') || marker.code === '514') {
-                // End of file expected, Expected comma
-                return false;
+            if (isJsonMarker(marker)) {
+                if (marker.code === '0' || marker.code === '514') {
+                    // End of file expected, Expected comma
+                    return false;
+                }
             }
             return true;
         });
