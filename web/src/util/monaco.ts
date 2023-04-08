@@ -134,13 +134,7 @@ export const filterMarkers = (
         newMarkers = newMarkers.filter((marker) => {
             if ((isJsonMarker(marker) && marker.code === '0') || marker.code === '514') {
                 // End of file expected, Expected comma
-                if (
-                    expressionMarkers.find((exprMarker) => {
-                        return marker.startLineNumber - exprMarker.startLineNumber === 1;
-                    })
-                ) {
-                    return false;
-                }
+                return false;
             }
             return true;
         });
