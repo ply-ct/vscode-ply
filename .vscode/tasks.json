@@ -3,11 +3,12 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "esbuild",
-      "problemMatcher": "$tsc-watch",
+      "script": "esbuild-watch",
+      "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "presentation": {
-        "reveal": "never"
+        "reveal": "never",
+        "group": "watchers"
       },
       "group": {
         "kind": "build",

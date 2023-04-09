@@ -7,7 +7,8 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "preLaunchTask": "npm: esbuild"
+      "outFiles": ["${workspaceFolder}/dist/extension.js"],
+      "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Ply worker",
