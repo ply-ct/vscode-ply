@@ -87,10 +87,13 @@ export default defineComponent({
   },
 
   methods: {
-    onUrlFocus() {
-      this.urlInput.style.overflowX = 'hidden';
-    },
     decorate() {
+      if (document.activeElement === this.urlInput) {
+        // don't try to decorate while editing
+        this.urlInput.addEventListener('blur', () => this.decorate(), { once: true });
+        return;
+      }
+
       this.urlInput.innerHTML = '';
       decorate(this.urlInput, this.request.url, [
         (text: string) => {
