@@ -279,10 +279,10 @@ export class PlyRoots {
         };
         this.requestsRoot = new PlyRoot(uri, 'requests', 'Requests');
         this.roots.push(this.requestsRoot);
-        this.casesRoot = new PlyRoot(uri, 'cases', 'Cases', true);
-        this.roots.push(this.casesRoot);
         this.flowsRoot = new PlyRoot(uri, 'flows', 'Flows', true);
         this.roots.push(this.flowsRoot);
+        this.casesRoot = new PlyRoot(uri, 'cases', 'Cases', true);
+        this.roots.push(this.casesRoot);
     }
 
     build(
@@ -320,34 +320,6 @@ export class PlyRoots {
             }
         }
         this.requestsRoot.build(requestUris);
-
-        // cases
-        const caseSuiteUris = Array.from(caseSuites.keys());
-        const caseUris: [Uri, number][] = [];
-        for (const caseSuiteUri of caseSuiteUris) {
-            const suite = caseSuites.get(caseSuiteUri);
-            if (suite) {
-                const suiteId = this.casesRoot.formSuiteId(caseSuiteUri);
-                this.suitesByTestOrSuiteId.set(suiteId, suite);
-                this.suiteIdsByExpectedResultUri.set(
-                    Uri.file(suite.runtime.results.expected.location.absolute).toString(),
-                    suiteId
-                );
-                this.suiteIdsByActualResultUri.set(
-                    Uri.file(suite.runtime.results.actual.location.absolute).toString(),
-                    suiteId
-                );
-                for (const plyCase of suite) {
-                    const testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
-                    this.testsById.set(testId, plyCase);
-                    this.suitesByTestOrSuiteId.set(testId, suite);
-                    caseUris.push([Uri.parse(testId), plyCase.start || 0]);
-                }
-            }
-        }
-        this.casesRoot.build(caseUris, undefined, (suiteId) => {
-            return this.suitesByTestOrSuiteId.get(suiteId)!.name;
-        });
 
         // flows
         const flowSuiteUris = Array.from(flowSuites.keys());
@@ -388,6 +360,34 @@ export class PlyRoots {
                 (test.subflow ? `${test.subflow.name} → ` : '') +
                 test.step.name.replace(/\r?\n/g, ' ')
             );
+        });
+
+        // cases
+        const caseSuiteUris = Array.from(caseSuites.keys());
+        const caseUris: [Uri, number][] = [];
+        for (const caseSuiteUri of caseSuiteUris) {
+            const suite = caseSuites.get(caseSuiteUri);
+            if (suite) {
+                const suiteId = this.casesRoot.formSuiteId(caseSuiteUri);
+                this.suitesByTestOrSuiteId.set(suiteId, suite);
+                this.suiteIdsByExpectedResultUri.set(
+                    Uri.file(suite.runtime.results.expected.location.absolute).toString(),
+                    suiteId
+                );
+                this.suiteIdsByActualResultUri.set(
+                    Uri.file(suite.runtime.results.actual.location.absolute).toString(),
+                    suiteId
+                );
+                for (const plyCase of suite) {
+                    const testId = caseSuiteUri.toString(true) + '#' + plyCase.name;
+                    this.testsById.set(testId, plyCase);
+                    this.suitesByTestOrSuiteId.set(testId, suite);
+                    caseUris.push([Uri.parse(testId), plyCase.start || 0]);
+                }
+            }
+        }
+        this.casesRoot.build(caseUris, undefined, (suiteId) => {
+            return this.suitesByTestOrSuiteId.get(suiteId)!.name;
         });
 
         this.rootSuite.children = this.roots.map((root) => root.baseSuite);

@@ -207,10 +207,10 @@
           "scope": "resource"
         },
         "ply.requireTsNode": {
-          "description": "TODO",
+          "description": "Require ts-node registration (for flows with typescript and trusted evaluations)",
           "type": "boolean",
           "default": false,
-          "scope": "resource"
+          "scope": "window"
         },
         "ply.enableDiffEditorCodeLens": {
           "descripton": "How to handle when vscode setting 'diffEditor.codeLens' is not enabled for a workspace folder that contains ply tests",
@@ -222,6 +222,12 @@
           ],
           "default": "Prompt",
           "scope": "window"
+        },
+        "ply.jsoncValuesFiles": {
+          "description": "Auto-set file associations to 'jsonc' for ply Values files",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
         },
         "ply.websocketPort": {
           "description": "WebSocket port for Ply flow live updates (0 to disable).\nModify in **Workspace** settings to avoid conflicts.",

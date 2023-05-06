@@ -20,6 +20,7 @@ import { ResultFragmentFs } from './result/result-fs';
 import { VizEditor } from './edit/viz';
 import { PlyExplorerDecorationProvider } from './decorations';
 import { PlyValuesTree } from './values/values-tree';
+import { PlyConfig } from './config';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
@@ -391,13 +392,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // plyconfig.json supports comments
-    const fileAssociationsConfig = vscode.workspace.getConfiguration('files');
-    let fileAssociations: any = fileAssociationsConfig?.get('associations');
-    if (!fileAssociations) fileAssociations = {};
-    if (!fileAssociations['plyconfig.json']) {
-        fileAssociations['plyconfig.json'] = 'jsonc';
-        fileAssociationsConfig.update('associations', fileAssociations);
-    }
+    await PlyConfig.setFileAssociations({ 'plyconfig.json': 'jsonc' });
 }
 
 export function deactivate() {}

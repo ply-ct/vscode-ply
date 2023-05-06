@@ -24,7 +24,7 @@ export class Decorator {
         this.trusted = values.trusted || false;
     }
 
-    decorate(text: string): Decoration[] {
+    decorate(text: string, theme: 'light' | 'dark'): Decoration[] {
         const lines = text.split(/\r?\n/);
         return lines.reduce((decs, line, i) => {
             for (const expr of findExpressions(line)) {
@@ -44,7 +44,8 @@ export class Decorator {
                             label: 'From:',
                             link: {
                                 label: loc,
-                                action: { name: 'openFile', args: { path: location.path } }
+                                action: { name: 'openFile', args: { path: location.path } },
+                                title: 'Open values file'
                             }
                         });
                     } else {
@@ -55,6 +56,7 @@ export class Decorator {
                         range: { line: i, start: expr.start, end: expr.end },
                         className: 'expression',
                         hover: {
+                            theme,
                             lines: hoverLines,
                             onAction: (action) => this._onHoverAction.emit(action)
                         }

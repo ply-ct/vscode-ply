@@ -40,13 +40,33 @@ export class Values implements Disposable {
     ) {
         this.config = new PlyConfig(workspaceFolder, async () => {
             this._values = undefined;
-            this.watchResultFiles();
-            this.watchValuesFiles();
+            this.init();
             this._onValuesUpdate.emit({});
         });
 
+        this.init();
+    }
+
+    private async init() {
         this.watchResultFiles();
         this.watchValuesFiles();
+        if (this.config.jsoncValuesFiles) {
+            const existing = PlyConfig.getFileAssociations();
+            let needsUpdate = false;
+            const assocs = Object.keys(this.config.plyOptions.valuesFiles || {}).reduce(
+                (obj, vf) => {
+                    // **/test/values/localhost.json
+                    const file = `**/${vscode.workspace.asRelativePath(vf)}`;
+                    if (vf.endsWith('.json') && !existing?.[file]) {
+                        obj[file] = 'jsonc';
+                        if (existing?.[file] !== obj[file]) needsUpdate = true;
+                    }
+                    return obj;
+                },
+                {} as { [key: string]: string }
+            );
+            if (needsUpdate) await PlyConfig.setFileAssociations(assocs);
+        }
     }
 
     /**
@@ -99,7 +119,7 @@ export class Values implements Disposable {
             if (existsSync(valuesFile)) {
                 const contents = await fs.readFile(valuesFile, { encoding: 'utf-8' });
                 try {
-                    valuesObjects[valuesFile] = JSON.parse(contents);
+                    valuesObjects[valuesFile] = ply.parseJsonc(valuesFile, contents);
                 } catch (err: unknown) {
                     console.error(`Cannot parse values file: ${location} (${err})`);
                 }

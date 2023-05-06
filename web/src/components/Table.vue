@@ -66,7 +66,7 @@ export default defineComponent({
             this.$emit('openFile', action.args!.path);
           }
         });
-        table.setDecorator((text: string) => decorator.decorate(text));
+        table.setDecorator((text: string) => decorator.decorate(text, this.getTheme()));
       }
 
       this.syncTheme();
@@ -114,7 +114,7 @@ export default defineComponent({
     syncTheme() {
       this.$el.className = `flowbee-configurator-${this.getTheme()} table-container`;
     },
-    getTheme(): string {
+    getTheme(): 'light' | 'dark' {
       return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
     }
   }

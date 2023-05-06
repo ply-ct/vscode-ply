@@ -1,6 +1,7 @@
-import { ExtensionContext } from 'vscode';
+import { ExtensionContext, ThemeColor, ThemeIcon } from 'vscode';
+import { StateIconType } from './tree/state';
 
-export type IconPath = string | { dark: string; light: string };
+export type IconPath = string | { dark: string; light: string; themeIcon?: ThemeIcon };
 
 export class IconPaths {
     pendingCategory: IconPath;
@@ -85,13 +86,27 @@ export class IconPaths {
             dark: context.asAbsolutePath('icons/test-explorer/pending-autorun-dark.svg'),
             light: context.asAbsolutePath('icons/test-explorer/pending-autorun-light.svg')
         };
-        this.scheduled = context.asAbsolutePath('icons/test-explorer/scheduled.svg');
-        this.running = context.asAbsolutePath('icons/test-explorer/running.svg');
+        this.scheduled = {
+            dark: context.asAbsolutePath('icons/test-explorer/scheduled.svg'),
+            light: context.asAbsolutePath('icons/test-explorer/scheduled.svg'),
+            themeIcon: new ThemeIcon('watch')
+        };
+        this.running = {
+            dark: context.asAbsolutePath('icons/test-explorer/running-dark.svg'),
+            light: context.asAbsolutePath('icons/test-explorer/running-light.svg'),
+            themeIcon: new ThemeIcon('loading~spin')
+        };
         this.runningFailed = context.asAbsolutePath('icons/test-explorer/running-failed.svg');
-        this.passed = context.asAbsolutePath('icons/test-explorer/passed.svg');
-        this.failed = context.asAbsolutePath('icons/test-explorer/failed.svg');
-        this.passedFaint = context.asAbsolutePath('icons/test-explorer/passed-faint.svg');
-        this.failedFaint = context.asAbsolutePath('icons/test-explorer/failed-faint.svg');
+        this.passed = this.passedFaint = {
+            dark: context.asAbsolutePath('icons/test-explorer/passed-dark.svg'),
+            light: context.asAbsolutePath('icons/test-explorer/passed-light.svg'),
+            themeIcon: new ThemeIcon('pass', new ThemeColor('testing.iconPassed'))
+        };
+        this.failed = this.failedFaint = {
+            dark: context.asAbsolutePath('icons/test-explorer/failed-dark.svg'),
+            light: context.asAbsolutePath('icons/test-explorer/failed-light.svg'),
+            themeIcon: new ThemeIcon('error', new ThemeColor('testing.iconFailed'))
+        };
         this.passedAutorun = {
             dark: context.asAbsolutePath('icons/test-explorer/passed-autorun-dark.svg'),
             light: context.asAbsolutePath('icons/test-explorer/passed-autorun-light.svg')
@@ -110,7 +125,15 @@ export class IconPaths {
         };
         this.skipped = context.asAbsolutePath('icons/test-explorer/skipped.svg');
         this.duplicate = context.asAbsolutePath('icons/test-explorer/duplicate.svg');
-        this.errored = context.asAbsolutePath('icons/test-explorer/errored.svg');
-        this.erroredFaint = context.asAbsolutePath('icons/test-explorer/errored-faint.svg');
+        this.errored = this.erroredFaint = {
+            dark: context.asAbsolutePath('icons/test-explorer/errored-dark.svg'),
+            light: context.asAbsolutePath('icons/test-explorer/errored-light.svg'),
+            themeIcon: new ThemeIcon('error', new ThemeColor('testing.iconErrored'))
+        };
+    }
+
+    get(key: StateIconType): IconPath | ThemeIcon {
+        const iconPath: IconPath = this[key];
+        return (iconPath as { themeIcon: ThemeIcon }).themeIcon || iconPath;
     }
 }

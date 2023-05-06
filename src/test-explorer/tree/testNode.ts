@@ -226,7 +226,9 @@ export class TestNode implements TreeNode {
 
         const treeItem = new vscode.TreeItem(this.info.label, vscode.TreeItemCollapsibleState.None);
         treeItem.id = this.uniqueId;
-        treeItem.iconPath = this.collection.explorer.iconPaths[stateIcon(this.state, this.info.id)];
+        treeItem.iconPath = this.collection.explorer.iconPaths.get(
+            stateIcon(this.state, this.info.id)
+        );
         treeItem.contextValue =
             this.collection.adapter.debug && this.info.debuggable !== false
                 ? this.fileUri

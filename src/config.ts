@@ -18,12 +18,31 @@ export enum Setting {
     openRequestsAndFlowsWhenRun = 'openRequestsAndFlowsWhenRun',
     plyExplorerUseRequestEditor = 'plyExplorerUseRequestEditor',
     saveBeforeRun = 'saveBeforeRun',
-    websocketPort = 'websocketPort'
+    websocketPort = 'websocketPort',
+    jsoncValuesFiles = 'jsoncValuesFiles'
 }
 
 export class PlyConfig {
     private _plyOptions: ply.PlyOptions | undefined;
     private configFileWatcher?: vscode.FileSystemWatcher;
+
+    static getFileAssociations(): { [key: string]: string } | undefined {
+        const fileAssociationsConfig = vscode.workspace.getConfiguration('files');
+        return fileAssociationsConfig?.get<{ [key: string]: string } | undefined>('associations');
+    }
+
+    /**
+     * Updates file associations only if newAssocs means changes
+     */
+    static async setFileAssociations(newAssocs: { [key: string]: string }) {
+        const existingAssocs = PlyConfig.getFileAssociations();
+        const fileAssociations = existingAssocs ? { ...existingAssocs, ...newAssocs } : newAssocs;
+        if (JSON.stringify(fileAssociations) !== JSON.stringify(existingAssocs)) {
+            // update if necessary
+            const fileAssociationsConfig = vscode.workspace.getConfiguration('files');
+            await fileAssociationsConfig.update('associations', fileAssociations);
+        }
+    }
 
     constructor(
         private readonly workspaceFolder: vscode.WorkspaceFolder,
@@ -122,6 +141,10 @@ export class PlyConfig {
 
     get requireTsNode(): boolean {
         return this.getConfiguration().get(Setting.requireTsNode, false);
+    }
+
+    get jsoncValuesFiles(): boolean {
+        return this.getConfiguration().get(Setting.jsoncValuesFiles, true);
     }
 
     get plyExplorerUseRequestEditor(): boolean {

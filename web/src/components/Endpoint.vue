@@ -103,7 +103,10 @@ export default defineComponent({
               this.$emit('openFile', action.args!.path);
             }
           });
-          const decs = decorator.decorate(text);
+          const decs = decorator.decorate(
+            text,
+            document.body.className.endsWith('vscode-light') ? 'light' : 'dark'
+          );
           decs.forEach((dec) => {
             if (dec.hover?.lines) {
               if (dec.hover.lines.length > 1) {
