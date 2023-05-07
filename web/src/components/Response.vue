@@ -14,8 +14,11 @@
       <span class="response-info-item">
         {{ responseSize }}
       </span>
-      <span class="response-request-dt">
-        {{ requestDt }}
+      <span class="response-further">
+        <div>{{ requestDt }}</div>
+        <el-button v-if="response.body" type="primary" link size="small" @click="onSave"
+          >Save</el-button
+        >
       </span>
     </div>
     <div v-if="response.loading" class="response-loading">
@@ -75,7 +78,7 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['updateMarkers', 'cancelRequest'],
+  emits: ['updateMarkers', 'saveResponse', 'cancelRequest'],
   data() {
     return {
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs'
@@ -146,6 +149,9 @@ export default defineComponent({
   methods: {
     onUpdateMarkers(resource: string, markers: any) {
       this.$emit('updateMarkers', resource, markers);
+    },
+    onSave() {
+      this.$emit('saveResponse', this.name);
     },
     cancel() {
       this.$emit('cancelRequest', this.name);

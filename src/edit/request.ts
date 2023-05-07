@@ -4,11 +4,12 @@ import * as vscode from 'vscode';
 import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
-import { Response, Flow, Location } from '@ply-ct/ply';
+import { Response, Flow, Location, util } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
 import { RequestMerge } from '../request/request';
 import { FlowMerge } from '../request/flow';
 import { TestResult } from '../result/result';
+import { filtersFromContentType } from '../util/files';
 
 export interface RequestActionEvent {
     uri: vscode.Uri;
@@ -223,6 +224,30 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                                 false,
                                 true
                             );
+                        }
+                    } else if (message.action === 'save') {
+                        const resp = this.getResponse(document.uri);
+                        if (resp?.body) {
+                            let body = resp.body;
+                            if (util.isBinary(resp.headers, adapter.config.plyOptions)) {
+                                body = util.base64ToUintArray(body);
+                            }
+                            const saveOptions: vscode.SaveDialogOptions = {
+                                filters: filtersFromContentType(resp.headers['content-type'])
+                            };
+                            const workspaceFolderUri = vscode.workspace.getWorkspaceFolder(
+                                document.uri
+                            )?.uri;
+                            if (workspaceFolderUri) {
+                                saveOptions.defaultUri = workspaceFolderUri.with({
+                                    path: `${workspaceFolderUri.path}/${message.target}`
+                                });
+                            }
+                            const fileUri = await vscode.window.showSaveDialog(saveOptions);
+                            if (fileUri) {
+                                await fs.promises.writeFile(fileUri.fsPath, body);
+                                await vscode.commands.executeCommand('vscode.open', fileUri);
+                            }
                         }
                     } else if (message.action === 'cancel') {
                         requestCanceled = true;

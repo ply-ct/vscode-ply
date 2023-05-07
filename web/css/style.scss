@@ -168,10 +168,13 @@ a:hover {
 .status a:focus {
   outline: none;
 }
-.response-request-dt {
+.response-further {
   float: right;
   margin-right: 10px;
-  margin-top: 10px;
+}
+.response-further .el-button {
+  margin: 0;
+  padding: 0;
 }
 
 .response-loading {

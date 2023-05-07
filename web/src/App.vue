@@ -22,6 +22,7 @@
         :response="response"
         :options="options"
         @update-markers="onUpdateMarkers"
+        @save-response="onSaveResponse"
         @cancel-request="onCancel"
       />
     </pane>
@@ -201,6 +202,13 @@ export default defineComponent({
         type: 'markers',
         resource,
         markers
+      });
+    },
+    onSaveResponse(requestName: string) {
+      vscode.postMessage({
+        type: 'action',
+        action: 'save',
+        target: requestName
       });
     },
     onOpenFile(file: string) {

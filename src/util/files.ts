@@ -2,6 +2,7 @@ import { EOL } from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as mime from 'mime-types';
 
 /**
  * split a string into an array of lines, ignoring escaped
@@ -22,6 +23,13 @@ export const forwardSlashes = (path: string): string => {
  */
 export const fixEols = (path: string): string => {
     return path.replace(/\r/g, '');
+};
+
+export const filtersFromContentType = (contentType: string): { [name: string]: string[] } => {
+    const filters: { [name: string]: string[] } = {};
+    const ext = mime.extension(contentType);
+    if (ext) filters[contentType] = [ext];
+    return filters;
 };
 
 export interface CreateFileOptions {
