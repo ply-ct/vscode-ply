@@ -63,7 +63,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.29.3",
     "escape-string-regexp": "^4.0.0",
-    "flowbee": "^1.0.6",
+    "flowbee": "^1.0.9",
     "js-yaml": "^4.1.0",
     "mime-types": "^2.1.35",
     "semver": "^7.3.8",

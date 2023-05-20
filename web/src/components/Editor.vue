@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 import * as monaco from 'monaco-editor';
 import { ValuesAccess } from 'flowbee';
 import * as time from '../util/time';
@@ -15,7 +15,8 @@ import {
   filterMarkers,
   expressionLanguages,
   registeredHoverLanguages
-} from '../util/monaco.js';
+} from '../util/monaco';
+import { Values } from '../model/values';
 
 initialize();
 
@@ -43,7 +44,7 @@ export default defineComponent({
       required: true
     },
     values: {
-      type: Object,
+      type: Object as PropType<Values>,
       default: null
     }
   },
@@ -171,7 +172,10 @@ export default defineComponent({
                   expression.text,
                   this.values.trusted
                 );
-                const value = this.valuesAccess?.evaluate(expression.text, this.values.trusted);
+                const value = this.valuesAccess?.evaluate(
+                  expression.text,
+                  this.values.trusted || false
+                );
                 if (location && value) {
                   const args = { path: location.path, expression: expression.text };
                   let label = args.path.replace(/\\/g, '/');
