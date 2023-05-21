@@ -26,16 +26,16 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { decorate, Decoration, undecorate } from 'flowbee';
-import { Request } from '../model/request';
-import { Decorator } from '../util/decorate';
+import { decorate, Request } from 'flowbee';
 import { Values } from '../model/values';
+import { Options } from '../model/options';
+import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Endpoint',
   props: {
     options: {
-      type: Object,
+      type: Object as PropType<Options>,
       required: true
     },
     request: {

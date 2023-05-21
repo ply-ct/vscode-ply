@@ -21,15 +21,16 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
+import { Request } from 'flowbee';
+import { Options } from '../model/options';
 import Icon from './Icon.vue';
-import { Request } from '../model/request';
 
 export default defineComponent({
   name: 'Actions',
   components: { Icon },
   props: {
     options: {
-      type: Object,
+      type: Object as PropType<Options>,
       required: true
     },
     request: {

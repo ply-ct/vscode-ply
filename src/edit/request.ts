@@ -24,6 +24,7 @@ export interface RequestEditorOptions {
     hovers?: boolean;
     readonly: boolean;
     runnable: boolean;
+    dummyUrl: string;
 }
 
 export class RequestEditor implements vscode.CustomTextEditorProvider {
@@ -124,8 +125,14 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 webviewPanel.webview.postMessage({
                     type: 'values',
                     objects: await adapter.values.getValuesObjects(),
+                    refVals: await adapter.values.getResultValues(
+                        this.adapterHelper.getId(document.uri)
+                    ),
                     env: { ...process.env, ...adapter.config.env },
-                    trusted: vscode.workspace.isTrusted
+                    options: {
+                        trusted: vscode.workspace.isTrusted,
+                        refHolder: '__ply_results'
+                    }
                 });
             }
         };
@@ -140,7 +147,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                             base: baseUri.toString(),
                             indent: adapter.config.plyOptions.prettyIndent,
                             readonly: false,
-                            runnable: true
+                            runnable: true,
+                            dummyUrl: 'https://ply-ct.org/movies'
                         })
                     );
                     updateResponse(this.getResponse(document.uri));

@@ -30,6 +30,7 @@
 </template>
 
 <script lang="ts">
+import { Request as Req, Response as Resp, Result } from 'flowbee';
 import { defineComponent } from 'vue';
 import { URI } from 'vscode-uri';
 import * as yaml from './util/yaml';
@@ -38,8 +39,8 @@ import Split from './components/Split.vue';
 import Pane from './components/Pane.vue';
 import Request from './components/Request.vue';
 import Response from './components/Response.vue';
-import { Request as Req, Response as Resp, Result, DUMMY_URL } from './model/request';
 import { Values } from './model/values';
+import { Options } from './model/options';
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -58,7 +59,7 @@ export default defineComponent({
       result: null,
       values: { env: {}, objects: {} }
     } as any as {
-      options: any;
+      options: Options;
       requestName: string;
       request: Req;
       response: Resp;
@@ -117,6 +118,7 @@ export default defineComponent({
           this.options = {
             ...message.options,
             iconBase: `${message.options.base}/img/icons/${theme}`,
+            dummyUrl: message.options.dummyUrl,
             theme
           };
         }
@@ -129,7 +131,7 @@ export default defineComponent({
               .pop()
               .replace(/\.[^/.]+$/, '');
             this.request = {
-              url: DUMMY_URL,
+              url: this.options.dummyUrl,
               name: this.requestName,
               method: 'GET',
               headers: {},
@@ -175,7 +177,12 @@ export default defineComponent({
       } else if (message.type === 'values') {
         // TODO: trusted hardcoded due to:
         // Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
-        this.values = { env: message.env, objects: message.objects, trusted: false };
+        this.values = {
+          env: message.env || {},
+          objects: message.objects || {},
+          refVals: message.refVals,
+          options: { ...message.options, trusted: false }
+        };
       }
     },
     onUpdate(updatedRequest: Req) {
@@ -250,7 +257,7 @@ export default defineComponent({
     toYaml() {
       try {
         const { name, source: _source, ...bare } = this.request as any;
-        return yaml.dump({ [name]: bare }, this.options.indent);
+        return yaml.dump({ [name]: bare }, this.options.indent || 2);
       } catch (err: unknown) {
         console.error(err);
         vscode.postMessage({

@@ -55,8 +55,9 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
+import { Response } from 'flowbee';
 import { getReasonPhrase } from 'http-status-codes';
-import { Response } from '../model/request';
+import { Options } from '../model/options';
 import { getLanguage } from '../util/content';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
@@ -74,7 +75,7 @@ export default defineComponent({
       required: true
     },
     options: {
-      type: Object,
+      type: Object as PropType<Options>,
       required: true
     }
   },

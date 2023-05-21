@@ -90,28 +90,31 @@
       </el-tab-pane>
     </el-tabs>
   </div>
+  <values-comp title="Request Values" :icon-base="options.iconBase" />
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Request, Result } from '../model/request';
+import { Request, Result } from 'flowbee';
 import { getContentType, getLanguage } from '../util/content';
 import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
+import ValuesComp from './Values.vue';
 import { Values } from '../model/values';
+import { Options } from '../model/options';
 
 export default defineComponent({
   name: 'Request',
-  components: { Actions, Endpoint, Editor, TableComp },
+  components: { Actions, Endpoint, Editor, TableComp, ValuesComp },
   props: {
     request: {
       type: Object as PropType<Request>,
       required: true
     },
     options: {
-      type: Object,
+      type: Object as PropType<Options>,
       required: true
     },
     file: {

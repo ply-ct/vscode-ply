@@ -7,8 +7,8 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import * as flowbee from 'flowbee';
-import { Decorator } from '../util/decorate';
 import { Values } from '../model/values';
+import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Table',

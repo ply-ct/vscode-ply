@@ -6,6 +6,8 @@
 import { defineComponent, PropType } from 'vue';
 import * as monaco from 'monaco-editor';
 import { ValuesAccess } from 'flowbee';
+import { Values } from '../model/values';
+import { Options } from '../model/options';
 import * as time from '../util/time';
 import {
   initialize,
@@ -16,7 +18,6 @@ import {
   expressionLanguages,
   registeredHoverLanguages
 } from '../util/monaco';
-import { Values } from '../model/values';
 
 initialize();
 
@@ -40,7 +41,7 @@ export default defineComponent({
       default: false
     },
     options: {
-      type: Object,
+      type: Object as PropType<Options>,
       required: true
     },
     values: {
@@ -50,7 +51,7 @@ export default defineComponent({
   },
   emits: ['updateSource', 'updateMarkers', 'openFile'],
   data() {
-    return {} as any as {
+    return {} as {
       editor?: monaco.editor.IStandaloneCodeEditor;
       resizeObserver?: ResizeObserver;
       valuesAccess?: ValuesAccess;
@@ -75,9 +76,14 @@ export default defineComponent({
         monaco.editor.setModelLanguage(model, newLanguage);
       }
     },
-    values(newValues) {
-      if (newValues) {
-        this.valuesAccess = new ValuesAccess(newValues.objects, newValues.env);
+    values() {
+      if (this.values) {
+        this.valuesAccess = new ValuesAccess(
+          this.values.objects || {},
+          this.values.env || {},
+          this.values.options,
+          this.values.refVals
+        );
       } else {
         this.valuesAccess = undefined;
       }
@@ -161,21 +167,9 @@ export default defineComponent({
                   expr.range.startColumn <= position.column &&
                   expr.range.endColumn >= position.column
               );
-              // TODO refs
-              if (
-                expression &&
-                this.values &&
-                !expression.text.startsWith('${~') &&
-                !expression.text.startsWith('${@')
-              ) {
-                const location = this.valuesAccess?.getLocation(
-                  expression.text,
-                  this.values.trusted
-                );
-                const value = this.valuesAccess?.evaluate(
-                  expression.text,
-                  this.values.trusted || false
-                );
+              if (expression && this.values) {
+                const location = this.valuesAccess?.getLocation(expression.text);
+                const value = this.valuesAccess?.evaluate(expression.text);
                 if (location && value) {
                   const args = { path: location.path, expression: expression.text };
                   let label = args.path.replace(/\\/g, '/');
