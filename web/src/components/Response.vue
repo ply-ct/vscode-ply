@@ -55,8 +55,8 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Response } from 'flowbee';
 import { getReasonPhrase } from 'http-status-codes';
+import { Response } from '../model/request';
 import { Options } from '../model/options';
 import { getLanguage } from '../util/content';
 import Editor from './Editor.vue';
@@ -141,10 +141,8 @@ export default defineComponent({
       return null;
     },
     bodyOptions() {
-      return {
-        ...this.options,
-        lineNumbers: this.options.lineNumbers && this.response.body
-      };
+      const lineNumbers: boolean = !!this.options.lineNumbers && !!this.response.body;
+      return { ...this.options, lineNumbers };
     }
   },
   methods: {

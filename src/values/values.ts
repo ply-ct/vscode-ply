@@ -1,9 +1,17 @@
-import { existsSync, promises as fs } from 'fs';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { TypedEvent as Event, Listener, Disposable, ValuesAccess } from 'flowbee';
+import {
+    TypedEvent as Event,
+    Listener,
+    Disposable,
+    PlyAccess,
+    Values as PlyValues,
+    ValuesHolder,
+    EvalOptions
+} from '@ply-ct/ply-api';
 import { PlyRoots } from '../plyRoots';
 import { PlyConfig } from '../config';
+import { FileSystemAccess } from '../util/file-system';
 
 /**
  * No resultUri means a values file change (potentially)
@@ -113,21 +121,35 @@ export class Values implements Disposable {
         );
     }
 
-    async getValuesObjects(): Promise<{ [path: string]: object }> {
-        const valuesObjects: { [path: string]: object } = {};
-        for (const valuesFile of this.enabledValuesFiles) {
-            if (existsSync(valuesFile)) {
-                const contents = await fs.readFile(valuesFile, { encoding: 'utf-8' });
-                try {
-                    valuesObjects[valuesFile] = ply.parseJsonc(valuesFile, contents);
-                } catch (err: unknown) {
-                    console.error(`Cannot parse values file: ${location} (${err})`);
+    async getValuesHolders(suiteId: string): Promise<ValuesHolder[]> {
+        const filesAccess = new FileSystemAccess(this.workspaceFolder.uri.fsPath);
+        const plyAccess = new PlyAccess(filesAccess, {
+            plyOptions: this.config.plyOptions,
+            logger: console
+        });
+        let valuesHolders = await plyAccess.getFileValuesHolders();
+        const suite = this.plyRoots.getSuite(suiteId);
+        if (suite) {
+            if (suite.type === 'flow') {
+                valuesHolders = [...valuesHolders, plyAccess.getFlowValues((suite as any).plyFlow)];
+            }
+            if (suite.runtime.results.actual.exists) {
+                const path = suite.runtime.results.actual.toString();
+                const yaml = suite.runtime.results.getActualYaml();
+                if (suite.type === 'request') {
+                    valuesHolders = [
+                        ...valuesHolders,
+                        plyAccess.getRequestRefValues({ path, contents: yaml.text })
+                    ];
+                } else if (suite.type === 'flow') {
+                    valuesHolders = [
+                        ...valuesHolders,
+                        plyAccess.getFlowRefValues({ path, contents: yaml.text })
+                    ];
                 }
-            } else {
-                console.error(`Values file does not exist: ${valuesFile}`);
             }
         }
-        return valuesObjects;
+        return valuesHolders;
     }
 
     /**
@@ -156,17 +178,18 @@ export class Values implements Disposable {
     }
 
     /**
+     * TODO: Delete this once flow editor uses getValuesObjects()/getRefValues() like request editor.
      * Includes request and response object values
      */
     async getResultValues(suiteId: string): Promise<object> {
         const suite = this.plyRoots.getSuite(suiteId);
         if (!suite) {
-            return JSON.parse(JSON.stringify(await this.getValues())); // clone
+            return JSON.parse(JSON.stringify(await this.getValues(suiteId))); // clone
         }
         const resultUri = vscode.Uri.file(suite.runtime.results.actual.toString());
         let values: any = this.resultValues.get(resultUri.toString());
         if (!values) {
-            values = JSON.parse(JSON.stringify(await this.getValues())); // clone
+            values = JSON.parse(JSON.stringify(await this.getValues(suiteId))); // clone
             if (suite.type === 'flow') {
                 const plyFlow = (suite as any).plyFlow as ply.Flow;
                 if (plyFlow?.flow?.attributes?.values) {
@@ -230,10 +253,20 @@ export class Values implements Disposable {
         return { request, response };
     }
 
-    async getValues(): Promise<object | void> {
+    getEvalOptions(): EvalOptions {
+        return {
+            env: { ...process.env, ...this.config.env },
+            trusted: vscode.workspace.isTrusted,
+            refHolder: '__ply_results'
+        };
+    }
+
+    async getValues(suiteId: string): Promise<object | void> {
         if (!this._values) {
-            const env = { ...process.env, ...this.config.env };
-            this._values = new ValuesAccess(await this.getValuesObjects(), env).values;
+            this._values = new PlyValues(
+                await this.getValuesHolders(suiteId),
+                this.getEvalOptions()
+            ).getValues();
         }
         return this._values;
     }

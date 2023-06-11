@@ -1,8 +1,6 @@
-import { ValueOptions } from 'flowbee';
+import { EvalOptions, ValuesHolder } from '@ply-ct/ply-api';
 
 export interface Values {
-    env: { [key: string]: string };
-    objects: { [path: string]: object };
-    refVals?: object;
-    options?: ValueOptions;
+    valuesHolders: ValuesHolder[];
+    evalOptions: EvalOptions;
 }

@@ -30,9 +30,9 @@
 </template>
 
 <script lang="ts">
-import { Request as Req, Response as Resp, Result } from 'flowbee';
 import { defineComponent } from 'vue';
 import { URI } from 'vscode-uri';
+import { Request as Req, Response as Resp, Result } from './model/request';
 import * as yaml from './util/yaml';
 import * as time from './util/time';
 import Split from './components/Split.vue';
@@ -57,7 +57,7 @@ export default defineComponent({
       file: '',
       message: '',
       result: null,
-      values: { env: {}, objects: {} }
+      values: { valuesHolders: [], evalOptions: {} }
     } as any as {
       options: Options;
       requestName: string;
@@ -177,12 +177,7 @@ export default defineComponent({
       } else if (message.type === 'values') {
         // TODO: trusted hardcoded due to:
         // Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
-        this.values = {
-          env: message.env || {},
-          objects: message.objects || {},
-          refVals: message.refVals,
-          options: { ...message.options, trusted: false }
-        };
+        this.values = { valuesHolders: [], evalOptions: {} };
       }
     },
     onUpdate(updatedRequest: Req) {

@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "3.0.0-beta44",
+  "version": "3.0.0-beta45",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -59,6 +59,7 @@
   "dependencies": {
     "@kurkle/color": "^0.3.2",
     "@ply-ct/ply": "^3.2.4",
+    "@ply-ct/ply-api": "^1.0.0",
     "chart.js": "^4.2.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.29.3",
@@ -66,6 +67,7 @@
     "flowbee": "^1.0.9",
     "js-yaml": "^4.1.0",
     "mime-types": "^2.1.35",
+    "minimatch": "^7.0.1",
     "semver": "^7.3.8",
     "stacktracey": "^2.1.8",
     "vscode-uri": "^3.0.7",
@@ -91,6 +93,7 @@
     "cross-env": "^7.0.3",
     "esbuild": "^0.17.8",
     "eslint": "^8.34.0",
+    "@types/minimatch": "^5.1.2",
     "mocha": "^10.2.0",
     "rollup": "^2.79.1",
     "rollup-plugin-typescript2": "^0.34.1",

@@ -13,3 +13,7 @@ Values:
           label: Name
         - type: text
           label: Value
+        - type: checkbox
+          label: Required
+        - type: text
+          label: Required If

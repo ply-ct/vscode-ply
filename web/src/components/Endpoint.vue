@@ -26,7 +26,8 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { decorate, Request } from 'flowbee';
+import { decorate } from 'flowbee';
+import { Request } from '../model/request';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 import { Decorator } from '../util/decorate';
