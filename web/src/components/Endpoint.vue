@@ -14,6 +14,7 @@
           class="el-input__inner url-input"
           :contenteditable="contentEditable"
           spellcheck="false"
+          @keypress="onUrlKeyPress"
           @input="update('url', $event)"
           @focus="urlInput.style.overflowX = 'hidden'"
           @blur="urlInput.style.overflowX = ''"
@@ -133,6 +134,11 @@ export default defineComponent({
           return decs;
         }
       ]);
+    },
+    onUrlKeyPress(event: KeyboardEvent) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+      }
     },
     update(field: string, valueOrEvent: string | Event) {
       let value = valueOrEvent;
