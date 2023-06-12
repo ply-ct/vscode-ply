@@ -5,7 +5,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import * as monaco from 'monaco-editor';
-import { Values as ValuesAccess } from '@ply-ct/ply-api';
+import { Values as ValuesAccess } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 import * as time from '../util/time';

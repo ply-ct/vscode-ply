@@ -5,9 +5,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { ValuesPopup, UserValues, ExpressionValue, ValuesOptions } from 'flowbee';
-import { PlyRequest, Flow, Values as ValuesAccess, expressions } from '@ply-ct/ply-api';
-import { Decorator } from '../util/decorate';
+import { Values as ValuesAccess, ExpressionHolder, expressions } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
+import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Values',
@@ -21,7 +21,7 @@ export default defineComponent({
       required: true
     },
     item: {
-      type: Object as PropType<PlyRequest | Flow>,
+      type: Object as PropType<ExpressionHolder>,
       required: true
     },
     values: {

@@ -5,13 +5,11 @@ import {
     Listener,
     Disposable,
     PlyAccess,
-    Values as PlyValues,
-    ValuesHolder,
-    EvalOptions
+    FileSystemAccess
 } from '@ply-ct/ply-api';
+import { Values as PlyValues, ValuesHolder, EvalOptions } from '@ply-ct/ply-values';
 import { PlyRoots } from '../plyRoots';
 import { PlyConfig } from '../config';
-import { FileSystemAccess } from '../util/file-system';
 
 /**
  * No resultUri means a values file change (potentially)

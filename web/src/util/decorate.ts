@@ -1,4 +1,4 @@
-import { Values as ValuesAccess, findExpressions, isRegex } from '@ply-ct/ply-api';
+import { Values as ValuesAccess, findExpressions, isRegex } from '@ply-ct/ply-values';
 import { Decoration, HoverLine, HoverAction, TypedEvent, Listener, Disposable } from 'flowbee';
 import { Values } from '../model/values';
 

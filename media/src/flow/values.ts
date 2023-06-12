@@ -1,3 +1,4 @@
+import { resolve } from '@ply-ct/ply-values';
 import * as flowbee from 'flowbee/dist/nostyles';
 
 export class Values {
@@ -164,7 +165,7 @@ export class Values {
                 for (const expression of expressions) {
                     if (inclRefs || !expression.startsWith('${@')) {
                         const trusted = false; // TODO
-                        const res = flowbee.resolve(expression, this.defaults, trusted);
+                        const res = resolve(expression, this.defaults, trusted);
                         needed[expression] = res === expression ? '' : res || '';
                     }
                 }
@@ -245,7 +246,7 @@ export class Values {
         for (const key of Object.keys(vals)) {
             const expr = `\${${key}}`;
             const trusted = false; // TODO
-            const res = flowbee.resolve(expr, this.defaults, trusted);
+            const res = resolve(expr, this.defaults, trusted);
             if (expr.startsWith('${__ply_') || '' + res !== vals[key]) {
                 consol[key] = vals[key];
             }

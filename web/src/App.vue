@@ -177,7 +177,10 @@ export default defineComponent({
       } else if (message.type === 'values') {
         // TODO: trusted hardcoded due to:
         // Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
-        this.values = { valuesHolders: [], evalOptions: {} };
+        this.values = {
+          valuesHolders: message.holders,
+          evalOptions: { ...message.options, trusted: false }
+        };
       }
     },
     onUpdate(updatedRequest: Req) {
