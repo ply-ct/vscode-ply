@@ -127,6 +127,14 @@ export class AdapterHelper {
         return id;
     }
 
+    getSuiteId(uri: vscode.Uri): string {
+        let suiteUri = uri;
+        if (uri.scheme === 'ply-request') {
+            suiteUri = uri.with({ scheme: 'file', fragment: '', query: '' });
+        }
+        return (uri.path.endsWith('.flow') ? 'flows|' : 'requests|') + suiteUri.toString(true);
+    }
+
     async getRequestDescriptors(uri: vscode.Uri): Promise<(Descriptor & { request: Request })[]> {
         const ret: (Descriptor & { request: Request })[] = [];
         const adapter = this.getAdapter(uri);

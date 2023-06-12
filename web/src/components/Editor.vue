@@ -5,7 +5,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import * as monaco from 'monaco-editor';
-import { ValuesAccess } from 'flowbee';
+import { Values as ValuesAccess } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 import * as time from '../util/time';
@@ -78,12 +78,7 @@ export default defineComponent({
     },
     values() {
       if (this.values) {
-        this.valuesAccess = new ValuesAccess(
-          this.values.objects || {},
-          this.values.env || {},
-          this.values.options,
-          this.values.refVals
-        );
+        this.valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
       } else {
         this.valuesAccess = undefined;
       }
@@ -168,29 +163,31 @@ export default defineComponent({
                   expr.range.endColumn >= position.column
               );
               if (expression && this.values) {
-                const location = this.valuesAccess?.getLocation(expression.text);
-                const value = this.valuesAccess?.evaluate(expression.text);
-                if (location && value) {
-                  const args = { path: location.path, expression: expression.text };
-                  let label = args.path.replace(/\\/g, '/');
-                  const lastSlash = label.lastIndexOf('/');
-                  if (lastSlash >= 0 && lastSlash < label.length - 1) {
-                    label = label.substring(lastSlash + 1);
-                  }
-                  return {
+                const value = this.valuesAccess?.getValue(expression.text);
+                if (value) {
+                  const hover: monaco.languages.Hover = {
                     contents: [
                       {
                         supportHtml: true,
-                        value: `Value: \`${value}\``
-                      },
-                      {
-                        isTrusted: true,
-                        value: `From: [${label}](command:${commandId}?${encodeURIComponent(
-                          JSON.stringify(args)
-                        )} "Open values file")`
+                        value: `Value: \`${value.value}\``
                       }
                     ]
                   };
+                  if (value.location) {
+                    const args = { path: value.location.path, expression: expression.text };
+                    let label = args.path.replace(/\\/g, '/');
+                    const lastSlash = label.lastIndexOf('/');
+                    if (lastSlash >= 0 && lastSlash < label.length - 1) {
+                      label = label.substring(lastSlash + 1);
+                    }
+                    hover.contents.push({
+                      isTrusted: true,
+                      value: `From: [${label}](command:${commandId}?${encodeURIComponent(
+                        JSON.stringify(args)
+                      )} "Open values file")`
+                    });
+                  }
+                  return hover;
                 } else {
                   return { contents: [{ value: 'Not found: `' + expression.text + '`' }] };
                 }

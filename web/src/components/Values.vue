@@ -4,9 +4,10 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import * as flowbee from 'flowbee';
-import { Decorator } from '../util/decorate';
+import { ValuesPopup, UserValues, ExpressionValue, ValuesOptions } from 'flowbee';
+import { Values as ValuesAccess, ExpressionHolder, expressions } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
+import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Values',
@@ -20,7 +21,7 @@ export default defineComponent({
       required: true
     },
     item: {
-      type: Object as PropType<flowbee.Request | flowbee.Flow>,
+      type: Object as PropType<ExpressionHolder>,
       required: true
     },
     values: {
@@ -36,7 +37,7 @@ export default defineComponent({
   data() {
     // TODO resizeObserver (see Editor)
     return {
-      popup: new flowbee.ValuesPopup()
+      popup: new ValuesPopup()
     };
     // return {} as {
     //   valuesPopup?: monaco.editor.IStandaloneCodeEditor;
@@ -63,14 +64,9 @@ export default defineComponent({
       this.syncTheme();
       this.popup.render(this.getUserValues(), this.getOptions());
     },
-    getUserValues(): flowbee.UserValues {
-      const valuesAccess = new flowbee.ValuesAccess(
-        this.values.objects,
-        this.values.env,
-        this.values.options,
-        this.values.refVals
-      );
-      const values: flowbee.ExpressionValue[] = flowbee.expressions(this.item).map((expr) => {
+    getUserValues(): UserValues {
+      const valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
+      const values: ExpressionValue[] = expressions(this.item).map((expr) => {
         return {
           expression: expr
         };
@@ -78,7 +74,7 @@ export default defineComponent({
 
       return { values, overrides: {} };
     },
-    getOptions(): flowbee.ValuesOptions {
+    getOptions(): ValuesOptions {
       return {
         title: this.title,
         theme: this.getTheme(),

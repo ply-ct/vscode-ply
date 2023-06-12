@@ -2,6 +2,7 @@
   <div class="actions">
     <div v-if="options.runnable">
       <icon :base="options.iconBase" file="run.svg" title="Run Test" @click="onAction" />
+      <icon :base="options.iconBase" file="values.svg" title="Request Values" @click="onAction" />
       <icon
         :base="options.iconBase"
         file="expected.svg"
@@ -21,7 +22,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Request } from 'flowbee';
+import { Request } from '../model/request';
 import { Options } from '../model/options';
 import Icon from './Icon.vue';
 

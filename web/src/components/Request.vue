@@ -90,24 +90,23 @@
       </el-tab-pane>
     </el-tabs>
   </div>
-  <values-comp title="Request Values" :icon-base="options.iconBase" />
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Request, Result } from 'flowbee';
+import { Request, Result } from '../model/request';
 import { getContentType, getLanguage } from '../util/content';
 import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-import ValuesComp from './Values.vue';
+// import ValuesComp from './Values.vue';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 
 export default defineComponent({
   name: 'Request',
-  components: { Actions, Endpoint, Editor, TableComp, ValuesComp },
+  components: { Actions, Endpoint, Editor, TableComp },
   props: {
     request: {
       type: Object as PropType<Request>,
@@ -308,7 +307,11 @@ export default defineComponent({
       this.$emit('openFile', file);
     },
     onAction(action: string, requestName: string) {
-      this.$emit('requestAction', action, requestName);
+      if (action === 'values') {
+        console.log('VALUES');
+      } else {
+        this.$emit('requestAction', action, requestName);
+      }
     }
   }
 });

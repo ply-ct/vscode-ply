@@ -10,6 +10,7 @@ import { RequestMerge } from '../request/request';
 import { FlowMerge } from '../request/flow';
 import { TestResult } from '../result/result';
 import { filtersFromContentType } from '../util/files';
+import { ValuesUpdateEvent } from '../values/values';
 
 export interface RequestActionEvent {
     uri: vscode.Uri;
@@ -122,17 +123,11 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     }
                 }
                 // post new values
+                const suiteId = this.adapterHelper.getSuiteId(document.uri);
                 webviewPanel.webview.postMessage({
                     type: 'values',
-                    objects: await adapter.values.getValuesObjects(),
-                    refVals: await adapter.values.getResultValues(
-                        this.adapterHelper.getId(document.uri)
-                    ),
-                    env: { ...process.env, ...adapter.config.env },
-                    options: {
-                        trusted: vscode.workspace.isTrusted,
-                        refHolder: '__ply_results'
-                    }
+                    holders: await adapter.values.getValuesHolders(suiteId),
+                    options: adapter.values.getEvalOptions()
                 });
             }
         };
@@ -366,7 +361,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             if (adapter.values) {
                 updateValues();
                 disposables.push(
-                    adapter.values.onValuesUpdate((updateEvent) =>
+                    adapter.values.onValuesUpdate((updateEvent: ValuesUpdateEvent) =>
                         updateValues(updateEvent.resultUri)
                     )
                 );
@@ -374,7 +369,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 adapter.onceValues(async (e) => {
                     updateValues();
                     disposables.push(
-                        e.values.onValuesUpdate((updateEvent) =>
+                        e.values.onValuesUpdate((updateEvent: ValuesUpdateEvent) =>
                             updateValues(updateEvent.resultUri)
                         )
                     );
@@ -413,12 +408,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
      */
     getResponse(uri: vscode.Uri): (Response & { source: string }) | undefined {
         const adapter = this.adapterHelper.getAdapter(uri);
-        let suiteUri = uri;
-        if (uri.scheme === 'ply-request') {
-            suiteUri = uri.with({ scheme: 'file', fragment: '', query: '' });
-        }
-        const suiteId =
-            (uri.path.endsWith('.flow') ? 'flows|' : 'requests|') + suiteUri.toString(true);
+        const suiteId = this.adapterHelper.getSuiteId(uri);
         const suite = adapter.plyRoots.getSuite(suiteId);
         if (suite) {
             if (uri.fragment && uri.query.startsWith('runNumber=')) {

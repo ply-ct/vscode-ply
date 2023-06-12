@@ -1,13 +1,5 @@
-import {
-    Decoration,
-    HoverLine,
-    HoverAction,
-    findExpressions,
-    ValuesAccess,
-    TypedEvent,
-    Listener,
-    Disposable
-} from 'flowbee';
+import { Values as ValuesAccess, findExpressions, isRegex } from '@ply-ct/ply-values';
+import { Decoration, HoverLine, HoverAction, TypedEvent, Listener, Disposable } from 'flowbee';
 import { Values } from '../model/values';
 
 export class Decorator {
@@ -19,12 +11,7 @@ export class Decorator {
     }
 
     constructor(values: Values) {
-        this.valuesAccess = new ValuesAccess(
-            values.objects,
-            values.env,
-            values.options,
-            values.refVals
-        );
+        this.valuesAccess = new ValuesAccess(values.valuesHolders, values.evalOptions);
     }
 
     decorate(text: string, theme: 'light' | 'dark'): Decoration[] {
@@ -32,22 +19,27 @@ export class Decorator {
         return lines.reduce((decs, line, i) => {
             for (const expr of findExpressions(line)) {
                 // TODO refs and late-arriving values
-                if (!expr.text.startsWith('${~') && !expr.text.startsWith('${@')) {
-                    const location = this.valuesAccess.getLocation(expr.text);
-                    const value = this.valuesAccess.evaluate(expr.text);
+                if (!isRegex(expr.text)) {
+                    const locatedValue = this.valuesAccess.getValue(expr.text);
                     const hoverLines: HoverLine[] = [];
-                    if (location && value) {
-                        let loc = location.path.replace(/\\/g, '/');
+
+                    if (locatedValue) {
+                        hoverLines.push({ label: 'Value:', value: locatedValue.value });
+                    }
+                    if (locatedValue?.location) {
+                        let loc = locatedValue.location.path.replace(/\\/g, '/');
                         const lastSlash = loc.lastIndexOf('/');
                         if (lastSlash >= 0 && lastSlash < loc.length - 1) {
                             loc = loc.substring(lastSlash + 1);
                         }
-                        hoverLines.push({ label: 'Value:', value });
                         hoverLines.push({
                             label: 'From:',
                             link: {
                                 label: loc,
-                                action: { name: 'openFile', args: { path: location.path } },
+                                action: {
+                                    name: 'openFile',
+                                    args: { path: locatedValue.location.path }
+                                },
                                 title: 'Open values file'
                             }
                         });
