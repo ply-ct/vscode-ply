@@ -129,7 +129,10 @@ export class Values implements Disposable {
         const suite = this.plyRoots.getSuite(suiteId);
         if (suite) {
             if (suite.type === 'flow') {
-                valuesHolders = [...valuesHolders, plyAccess.getFlowValues((suite as any).plyFlow)];
+                valuesHolders = [
+                    ...valuesHolders,
+                    plyAccess.getFlowValues((suite as any).plyFlow.flow)
+                ];
             }
             if (suite.runtime.results.actual.exists) {
                 const path = suite.runtime.results.actual.toString();
