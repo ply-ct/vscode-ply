@@ -50,14 +50,8 @@ export default defineComponent({
   },
   emits: ['updateValues', 'openFile', 'close'],
   data() {
-    // const split = document.getElementById('split') as HTMLDivElement;
-    // console.log('SPLIT: ' + split);
-    const popup = new ValuesPopup(undefined, this.iconBase);
-    popup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
-    popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
-    // TODO resizeObserver (see Editor)
     return {
-      popup
+      popup: null as ValuesPopup | null
     };
     // return {} as {
     //   valuesPopup?: monaco.editor.IStandaloneCodeEditor;
@@ -69,7 +63,7 @@ export default defineComponent({
     open() {
       if (this.open) {
         this.openPopup();
-        this.popup.setDecorator((text: string) => {
+        this.popup!.setDecorator((text: string) => {
           if (text && isExpression(text)) {
             return [
               { range: { line: 0, start: 0, end: text.length - 1 }, className: 'expression' }
@@ -93,14 +87,22 @@ export default defineComponent({
   },
   methods: {
     isOpen() {
-      return this.popup.isOpen;
+      return this.popup?.isOpen;
     },
     openPopup() {
       this.syncTheme();
+
+      if (!this.popup) {
+        const split = document.getElementById('split') as HTMLDivElement;
+        this.popup = new ValuesPopup(split, this.iconBase);
+        this.popup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+        this.popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
+      }
+
       this.popup.render(this.getUserValues(), this.getOptions());
     },
     closePopup() {
-      this.popup.close();
+      this.popup?.close();
     },
     getUserValues(): UserValues {
       const valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
