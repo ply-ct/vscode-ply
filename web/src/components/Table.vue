@@ -39,13 +39,13 @@ export default defineComponent({
       this.initTable();
     }
   },
-  mounted: function () {
-    this.$nextTick(function () {
+  mounted() {
+    this.$nextTick(() => {
       this.initTable();
     });
     window.addEventListener('message', this.handleMessage);
   },
-  unmounted: function () {
+  unmounted() {
     window.removeEventListener('message', this.handleMessage);
   },
   methods: {

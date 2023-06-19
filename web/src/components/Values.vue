@@ -4,8 +4,19 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { ValuesPopup, UserValues, ExpressionValue, ValuesOptions } from 'flowbee';
-import { Values as ValuesAccess, ExpressionHolder, expressions } from '@ply-ct/ply-values';
+import {
+  ValuesPopup,
+  UserValues,
+  ExpressionValue,
+  ValuesOptions,
+  ValuesActionEvent
+} from 'flowbee';
+import {
+  Values as ValuesAccess,
+  ExpressionHolder,
+  expressions,
+  isExpression
+} from '@ply-ct/ply-values';
 import { Values } from '../model/values';
 import { Decorator } from '../util/decorate';
 
@@ -24,6 +35,10 @@ export default defineComponent({
       type: Object as PropType<ExpressionHolder>,
       required: true
     },
+    open: {
+      type: Boolean,
+      default: false
+    },
     values: {
       type: Object as PropType<Values>,
       default: { env: {}, objects: {} }
@@ -33,11 +48,16 @@ export default defineComponent({
       default: {}
     }
   },
-  emits: ['updateValues', 'openFile'],
+  emits: ['updateValues', 'openFile', 'close'],
   data() {
+    // const split = document.getElementById('split') as HTMLDivElement;
+    // console.log('SPLIT: ' + split);
+    const popup = new ValuesPopup(undefined, this.iconBase);
+    popup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+    popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
     // TODO resizeObserver (see Editor)
     return {
-      popup: new ValuesPopup()
+      popup
     };
     // return {} as {
     //   valuesPopup?: monaco.editor.IStandaloneCodeEditor;
@@ -46,29 +66,50 @@ export default defineComponent({
     // };
   },
   watch: {
-    values() {
-      this.updatePopup();
+    open() {
+      if (this.open) {
+        this.openPopup();
+        this.popup.setDecorator((text: string) => {
+          if (text && isExpression(text)) {
+            return [
+              { range: { line: 0, start: 0, end: text.length - 1 }, className: 'expression' }
+            ];
+          }
+          return [];
+        });
+      } else {
+        this.closePopup();
+      }
     }
   },
-  mounted: function () {
-    this.$nextTick(function () {
-      this.updatePopup();
-    });
+  created() {
+    this.popup;
+  },
+  mounted() {
     window.addEventListener('message', this.handleMessage);
   },
-  unmounted: function () {
+  unmounted() {
     window.removeEventListener('message', this.handleMessage);
   },
   methods: {
-    updatePopup() {
+    isOpen() {
+      return this.popup.isOpen;
+    },
+    openPopup() {
       this.syncTheme();
       this.popup.render(this.getUserValues(), this.getOptions());
+    },
+    closePopup() {
+      this.popup.close();
     },
     getUserValues(): UserValues {
       const valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
       const values: ExpressionValue[] = expressions(this.item).map((expr) => {
+        const locatedValue = valuesAccess.getValue(expr);
         return {
-          expression: expr
+          expression: expr,
+          value: locatedValue?.value,
+          location: locatedValue?.location?.path
         };
       });
 
@@ -78,7 +119,6 @@ export default defineComponent({
       return {
         title: this.title,
         theme: this.getTheme(),
-        iconBase: this.iconBase,
         help: {
           link: 'https://ply-ct.org/ply/topics/values',
           title: 'Values help',
@@ -96,6 +136,11 @@ export default defineComponent({
     },
     getTheme(): 'light' | 'dark' {
       return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
+    },
+    onValuesAction(valuesAction: ValuesActionEvent) {
+      if (valuesAction.action === 'close') {
+        this.$emit('close');
+      }
     }
   }
 });

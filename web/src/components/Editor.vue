@@ -84,9 +84,9 @@ export default defineComponent({
       }
     }
   },
-  mounted: function () {
+  mounted() {
     time.logtime('Monaco editor mounted');
-    this.$nextTick(function () {
+    this.$nextTick(() => {
       this.initMonaco();
       this.resizeObserver = new ResizeObserver(() => {
         this.editor!.layout();
@@ -95,7 +95,7 @@ export default defineComponent({
     });
     window.addEventListener('message', this.handleMessage);
   },
-  unmounted: function () {
+  unmounted() {
     if (this.resizeObserver) {
       this.resizeObserver.unobserve(this.$el);
       this.resizeObserver.disconnect();
@@ -175,14 +175,11 @@ export default defineComponent({
                   };
                   if (value.location) {
                     const args = { path: value.location.path, expression: expression.text };
-                    let label = args.path.replace(/\\/g, '/');
-                    const lastSlash = label.lastIndexOf('/');
-                    if (lastSlash >= 0 && lastSlash < label.length - 1) {
-                      label = label.substring(lastSlash + 1);
-                    }
                     hover.contents.push({
                       isTrusted: true,
-                      value: `From: [${label}](command:${commandId}?${encodeURIComponent(
+                      value: `From: [${
+                        value.location.path
+                      }](command:${commandId}?${encodeURIComponent(
                         JSON.stringify(args)
                       )} "Open values file")`
                     });

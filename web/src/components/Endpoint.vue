@@ -84,7 +84,7 @@ export default defineComponent({
       this.decorate();
     }
   },
-  mounted: function () {
+  mounted() {
     this.decorate();
   },
 

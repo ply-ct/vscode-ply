@@ -69,15 +69,15 @@ export default defineComponent({
       values: Values;
     };
   },
-  mounted: function () {
+  mounted() {
     time.logtime('App mounted()');
-    this.$nextTick(function () {
+    this.$nextTick(() => {
       window.addEventListener('message', this.handleMessage);
       time.logtime('Webview sends: ready');
       vscode.postMessage({ type: 'ready' });
     });
   },
-  unmounted: function () {
+  unmounted() {
     window.removeEventListener('message', this.handleMessage);
   },
   computed: {
@@ -139,7 +139,7 @@ export default defineComponent({
             };
             this.request.source = this.toYaml();
             this.update();
-            this.$nextTick(function () {
+            this.$nextTick(() => {
               this.focusRequestName();
             });
           }

@@ -1,5 +1,5 @@
 <template>
-  <div class="split">
+  <div id="split" class="split">
     <slot></slot>
   </div>
 </template>
@@ -15,8 +15,8 @@ export default defineComponent({
       isSplitterDrag: boolean | undefined;
     };
   },
-  mounted: function () {
-    this.$nextTick(function () {
+  mounted() {
+    this.$nextTick(() => {
       this.initSplitter();
     });
   },

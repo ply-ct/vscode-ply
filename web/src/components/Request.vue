@@ -90,6 +90,15 @@
       </el-tab-pane>
     </el-tabs>
   </div>
+  <values-comp
+    title="Request Values"
+    :icon-base="options.iconBase"
+    :item="request"
+    :open="valuesOpen"
+    :values="values"
+    @open-file="onOpenFile"
+    @close="onValuesClose"
+  />
 </template>
 
 <script lang="ts">
@@ -100,13 +109,13 @@ import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-// import ValuesComp from './Values.vue';
+import ValuesComp from './Values.vue';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 
 export default defineComponent({
   name: 'Request',
-  components: { Actions, Endpoint, Editor, TableComp },
+  components: { Actions, Endpoint, Editor, TableComp, ValuesComp },
   props: {
     request: {
       type: Object as PropType<Request>,
@@ -140,7 +149,8 @@ export default defineComponent({
   data() {
     return {
       theme: document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs',
-      rename: this.request.name
+      rename: this.request.name,
+      valuesOpen: false
     };
   },
   computed: {
@@ -308,10 +318,13 @@ export default defineComponent({
     },
     onAction(action: string, requestName: string) {
       if (action === 'values') {
-        console.log('VALUES');
+        this.valuesOpen = !this.valuesOpen;
       } else {
         this.$emit('requestAction', action, requestName);
       }
+    },
+    onValuesClose() {
+      this.valuesOpen = false;
     }
   }
 });

@@ -150,6 +150,11 @@ export class Values implements Disposable {
                 }
             }
         }
+        valuesHolders.forEach((vh) => {
+            if (vh.location) {
+                vh.location.path = vscode.workspace.asRelativePath(vh.location.path, false);
+            }
+        });
         return valuesHolders;
     }
 

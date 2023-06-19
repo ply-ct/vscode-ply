@@ -15,6 +15,7 @@ export class Decorator {
     }
 
     decorate(text: string, theme: 'light' | 'dark'): Decoration[] {
+        if (!text) return [];
         const lines = text.split(/\r?\n/);
         return lines.reduce((decs, line, i) => {
             for (const expr of findExpressions(line)) {
@@ -27,15 +28,10 @@ export class Decorator {
                         hoverLines.push({ label: 'Value:', value: locatedValue.value });
                     }
                     if (locatedValue?.location) {
-                        let loc = locatedValue.location.path.replace(/\\/g, '/');
-                        const lastSlash = loc.lastIndexOf('/');
-                        if (lastSlash >= 0 && lastSlash < loc.length - 1) {
-                            loc = loc.substring(lastSlash + 1);
-                        }
                         hoverLines.push({
                             label: 'From:',
                             link: {
-                                label: loc,
+                                label: locatedValue.location.path,
                                 action: {
                                     name: 'openFile',
                                     args: { path: locatedValue.location.path }

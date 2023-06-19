@@ -187,7 +187,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 } else if (message.type === 'markers' && Array.isArray(message.markers)) {
                     this.showProblems(problems, document.uri, message.resource, message.markers);
                 } else if (message.type === 'open-file') {
-                    vscode.commands.executeCommand('vscode.open', vscode.Uri.file(message.file));
+                    const file = path.join(adapter.workspaceFolder.uri.fsPath, message.file);
+                    vscode.commands.executeCommand('vscode.open', vscode.Uri.file(file));
                 } else if (message.type === 'action') {
                     if (message.action === 'run' || message.action === 'submit') {
                         requestCanceled = false;
