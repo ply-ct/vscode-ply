@@ -27,7 +27,7 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
     ): Promise<vscode.FileDecoration | null> {
         if (uri.scheme === 'ply-explorer' && uri.fragment) {
             if (uri.path.endsWith('.ply')) {
-                const file = uri.path.substring(7);
+                const file = this.fileFromUri(uri);
                 if (existsSync(file)) {
                     try {
                         const yaml = await fs.readFile(file, { encoding: 'utf-8' });
@@ -41,7 +41,7 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
                     }
                 }
             } else if (uri.path.endsWith('.yaml') || uri.path.endsWith('.yml')) {
-                const file = uri.path.substring(7);
+                const file = this.fileFromUri(uri);
                 if (existsSync(file)) {
                     try {
                         const yaml = await fs.readFile(file, { encoding: 'utf-8' });
@@ -57,7 +57,7 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
                     }
                 }
             } else if (uri.path.endsWith('.flow')) {
-                const file = uri.path.substring(7);
+                const file = this.fileFromUri(uri);
                 if (existsSync(file)) {
                     try {
                         const yaml = await fs.readFile(file, { encoding: 'utf-8' });
@@ -90,9 +90,23 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
     }
 
     /**
+     * Ply explorer uri to file path
+     */
+    private fileFromUri(uri: vscode.Uri): string {
+        if (uri.scheme === 'ply-explorer' && uri.path.startsWith('file://')) {
+            let file = uri.path.substring(7);
+            if (process.platform.startsWith('win') && file.startsWith('/')) {
+                file = file.substring(1);
+            }
+            return file;
+        }
+        return uri.fsPath;
+    }
+
+    /**
      * TODO: why ends with _1
      */
-    idFromFragment(fragment: string): string {
+    private idFromFragment(fragment: string): string {
         if (fragment.length > 2 && fragment.charAt(fragment.length - 2) === '_') {
             return fragment.substring(0, fragment.length - 2);
         }
