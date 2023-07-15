@@ -238,6 +238,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 );
                 context.subscriptions.push(diffHandler);
                 diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
+
                 adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
                 testAdapters.set(workspaceFolder.uri.toString(), adapter);
                 adapter.onceValues(

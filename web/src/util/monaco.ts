@@ -102,7 +102,7 @@ export const getExpressions = (model?: monaco.editor.ITextModel | null): Express
     return [];
 };
 
-export const expressionLanguages = ['json', 'yaml'];
+export const expressionLanguages = ['json', 'yaml', 'xml'];
 export const registeredHoverLanguages: string[] = [];
 
 export const filterMarkers = (
