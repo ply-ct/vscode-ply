@@ -33,9 +33,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const log = new Log('ply', undefined, 'Ply Invoker');
     context.subscriptions.push(log);
 
-    // context.subscriptions.push(
-    //     vscode.window.registerFileDecorationProvider(new PlyExplorerDecorationProvider())
-    // );
+    context.subscriptions.push(
+        vscode.window.registerFileDecorationProvider(new PlyExplorerDecorationProvider())
+    );
 
     // result diffs decorator
     const decorator = new ResultDecorator(context.asAbsolutePath('.'));
