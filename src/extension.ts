@@ -21,6 +21,7 @@ import { VizEditor } from './edit/viz';
 import { PlyExplorerDecorationProvider } from './decorations';
 import { PlyValuesTree } from './values/values-tree';
 import { PlyConfig } from './config';
+import { ExpectedResultsDecorator } from './result/expected';
 
 export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
@@ -240,6 +241,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
 
                 adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
+
+                context.subscriptions.push(
+                    new ExpectedResultsDecorator(workspaceFolder, adapter.config)
+                );
+
                 testAdapters.set(workspaceFolder.uri.toString(), adapter);
                 adapter.onceValues(
                     (valuesEvent) => new PlyValuesTree(context, valuesEvent.values, log)

@@ -79,8 +79,8 @@ export class DiffHandler {
     private disposables: { dispose(): void }[] = [];
     // TODO: remove from resultPairs on diff editor close
     private resultPairs: ResultPair[] = [];
-    private timer: NodeJS.Timer | undefined = undefined;
-    private activeEditor: vscode.TextEditor | undefined = undefined;
+    private timer?: NodeJS.Timer;
+    private activeEditor?: vscode.TextEditor;
 
     constructor(
         readonly workspaceFolder: vscode.WorkspaceFolder,

@@ -3,23 +3,6 @@ import * as vscode from 'vscode';
 import * as jsYaml from 'js-yaml';
 import { PlyRequest, Flow, Step } from '@ply-ct/ply-api';
 
-export const Colors = {
-    matchBackground: new vscode.ThemeColor('editor.background'),
-    matchBorder: new vscode.ThemeColor('editorLineNumber.foreground')
-};
-
-// text decorations for diff editor
-export const Decorations = {
-    matchHighlight: vscode.window.createTextEditorDecorationType({
-        isWholeLine: false, // false actually overrides diff color
-        backgroundColor: Colors.matchBackground,
-        opacity: '1.0',
-        borderColor: Colors.matchBorder,
-        borderWidth: '1px',
-        borderStyle: 'solid'
-    })
-};
-
 export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvider {
     async provideFileDecoration(
         uri: vscode.Uri,
