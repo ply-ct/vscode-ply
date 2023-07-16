@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { PlyRoots, Info } from '../plyRoots';
 import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
+import { PlyAdapter } from '../adapter';
+import { ValuesHolder } from '@ply-ct/ply-values';
+import { Info } from '../plyRoots';
 
 /**
  * Write-through cached diff state.
@@ -83,8 +85,7 @@ export class DiffHandler {
     private activeEditor?: vscode.TextEditor;
 
     constructor(
-        readonly workspaceFolder: vscode.WorkspaceFolder,
-        readonly plyRoots: PlyRoots,
+        readonly adapter: PlyAdapter,
         private readonly diffState: DiffState,
         private readonly decorator: ResultDecorator,
         private readonly retire: (testIds: string[]) => void
@@ -99,7 +100,7 @@ export class DiffHandler {
                     }
                     if (
                         uri.scheme === 'file' &&
-                        uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
+                        uri.fsPath.startsWith(this.adapter.workspaceFolder.uri.fsPath)
                     ) {
                         this.activeEditor = editor;
                     }
@@ -115,12 +116,14 @@ export class DiffHandler {
                 const uri = event.document.uri;
                 if (
                     uri.scheme === 'file' &&
-                    uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)
+                    uri.fsPath.startsWith(this.adapter.workspaceFolder.uri.fsPath)
                 ) {
-                    const suiteId = this.plyRoots.getSuiteIdForExpectedResult(uri);
+                    const suiteId = this.adapter.plyRoots.getSuiteIdForExpectedResult(uri);
                     if (suiteId) {
                         const testIds =
-                            this.plyRoots.getSuiteInfo(suiteId)?.children.map((c) => c.id) || [];
+                            this.adapter.plyRoots
+                                .getSuiteInfo(suiteId)
+                                ?.children.map((c) => c.id) || [];
                         // expected: only update decorations the first time (if diff state changed)
                         if (this.diffState.clearDiffs(testIds)) {
                             this.retire(testIds);
@@ -128,7 +131,7 @@ export class DiffHandler {
                                 this.checkUpdateDiffDecorations(this.activeEditor);
                             }
                         }
-                    } else if (this.plyRoots.getSuiteIdForActualResult(uri)) {
+                    } else if (this.adapter.plyRoots.getSuiteIdForActualResult(uri)) {
                         // actual: update decorations regardless sinces it's probably due to rerun
                         if (this.activeEditor) {
                             this.checkUpdateDiffDecorations(this.activeEditor);
@@ -144,11 +147,11 @@ export class DiffHandler {
      * @param info test or suite info
      */
     async doDiff(info: Info) {
-        const suite = this.plyRoots.getSuite(info.id);
+        const suite = this.adapter.plyRoots.getSuite(info.id);
         if (!suite) {
             throw new Error(`Ply suite not found for id: ${info.id}`);
         }
-        const test = info.type === 'test' ? this.plyRoots.getTest(info.id) : undefined;
+        const test = info.type === 'test' ? this.adapter.plyRoots.getTest(info.id) : undefined;
 
         const expected = suite.runtime.results.expected;
         if (!(await expected.exists)) {
@@ -215,7 +218,12 @@ export class DiffHandler {
                 actualResult
             };
             this.resultPairs.push(pair);
-            this.updateDiffDecorations(pair, expectedEditor, actualEditor);
+            this.updateDiffDecorations(
+                pair,
+                expectedEditor,
+                actualEditor,
+                await this.adapter.values?.getValuesHolders(info.id)
+            );
         }
     }
 
@@ -225,7 +233,8 @@ export class DiffHandler {
     async updateDiffDecorations(
         resultPair: ResultPair,
         expectedEditor: vscode.TextEditor,
-        actualEditor: vscode.TextEditor
+        actualEditor: vscode.TextEditor,
+        valuesHolders?: ValuesHolder[]
     ) {
         const diffState = this.diffState.state || {};
         await this.checkEnableDiffEditorCodeLens();
@@ -245,7 +254,7 @@ export class DiffHandler {
                 });
             }
         } else {
-            const testInfos = this.plyRoots.getTestInfosForSuite(resultPair.infoId);
+            const testInfos = this.adapter.plyRoots.getTestInfosForSuite(resultPair.infoId);
             for (const actualTest of await resultPair.actualResult.includedTestNames()) {
                 let testInfo = testInfos.find((ti) => ti.label === actualTest);
                 if (!testInfo) {
@@ -276,13 +285,19 @@ export class DiffHandler {
             }
         }
 
-        this.decorator.applyDecorations(expectedEditor, actualEditor, resultDiffs);
+        this.decorator.applyDecorations(
+            this.adapter.workspaceFolder,
+            expectedEditor,
+            actualEditor,
+            resultDiffs,
+            valuesHolders
+        );
     }
 
     async checkEnableDiffEditorCodeLens() {
         const diffEdSettings = vscode.workspace.getConfiguration(
             'diffEditor',
-            this.workspaceFolder.uri
+            this.adapter.workspaceFolder.uri
         );
         if (!diffEdSettings.get('codeLens')) {
             const plySettings = vscode.workspace.getConfiguration('ply');

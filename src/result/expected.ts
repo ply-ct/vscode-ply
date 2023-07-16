@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { findExpressions } from '@ply-ct/ply-values';
-import { PlyConfig } from '../config';
+import { Values, ValuesHolder, findExpressions } from '@ply-ct/ply-values';
+import { PlyAdapter } from '../adapter';
 import { Result } from './result';
 
 export class ExpectedResultsDecorator {
@@ -17,7 +17,7 @@ export class ExpectedResultsDecorator {
             }
         });
 
-    constructor(readonly workspaceFolder: vscode.WorkspaceFolder, private config: PlyConfig) {
+    constructor(readonly workspaceFolder: vscode.WorkspaceFolder, private adapter: PlyAdapter) {
         this.disposables.push(
             vscode.window.onDidChangeActiveTextEditor((editor) => {
                 this.activeEditor = undefined;
@@ -49,25 +49,69 @@ export class ExpectedResultsDecorator {
         }
     }
 
-    private updateDecorations() {
-        this.activeEditor?.setDecorations(
-            ExpectedResultsDecorator.decoratorType,
-            ExpectedResultsDecorator.getExpressionDecOptions(this.activeEditor.document)
-        );
+    private async updateDecorations() {
+        if (this.activeEditor) {
+            const suiteId = this.adapter.plyRoots.getSuiteIdForExpectedResult(
+                this.activeEditor.document.uri
+            );
+            const valuesHolders = suiteId
+                ? await this.adapter.values?.getValuesHolders(suiteId)
+                : undefined;
+            this.activeEditor.setDecorations(
+                ExpectedResultsDecorator.decoratorType,
+                ExpectedResultsDecorator.getExpressionDecOptions(
+                    this.adapter.workspaceFolder,
+                    this.activeEditor.document,
+                    valuesHolders
+                )
+            );
+        }
     }
 
-    static getExpressionDecOptions(doc?: vscode.TextDocument): vscode.DecorationOptions[] {
+    static getExpressionDecOptions(
+        workspaceFolder: vscode.WorkspaceFolder,
+        doc?: vscode.TextDocument,
+        valuesHolders: ValuesHolder[] = []
+    ): vscode.DecorationOptions[] {
         // TODO hover
         const decOptions: vscode.DecorationOptions[] = [];
         if (doc) {
+            const valuesAccess = new Values(valuesHolders, {
+                trusted: vscode.workspace.isTrusted,
+                refHolder: '__ply_results',
+                env: process.env,
+                logger: console
+            });
             for (let i = 0; i < doc.lineCount; i++) {
                 const line = doc.lineAt(i);
                 for (const expression of findExpressions(line.text)) {
+                    const mds: vscode.MarkdownString[] = [];
+
+                    const value = valuesAccess.getValue(expression.text);
+                    if (value?.value) {
+                        mds.push(new vscode.MarkdownString(`Value: \`${value.value}\``));
+                        if (value.location) {
+                            const fileUri = `${workspaceFolder.uri.fsPath}/${value.location.path}`;
+                            mds.push(
+                                new vscode.MarkdownString(
+                                    `From: [${value.location.path}](${fileUri})`
+                                )
+                            );
+                        }
+                    } else {
+                        mds.push(new vscode.MarkdownString('Not found: `' + expression.text + '`'));
+                    }
+
                     decOptions.push({
                         range: new vscode.Range(
                             new vscode.Position(i, expression.start),
                             new vscode.Position(i, expression.end + 1)
-                        )
+                        ),
+                        hoverMessage: mds.map((md: vscode.MarkdownString) => {
+                            md.isTrusted = vscode.workspace.isTrusted;
+                            md.supportHtml = true;
+                            return md;
+                        })
                     });
                 }
             }
@@ -80,7 +124,7 @@ export class ExpectedResultsDecorator {
             (uri.scheme === Result.URI_SCHEME || uri.scheme === 'file') &&
             (uri.path.endsWith('.yaml') || uri.path.endsWith('.yml'))
         ) {
-            return uri.path.startsWith(this.config.plyOptions.expectedLocation);
+            return uri.path.startsWith(this.adapter.config.plyOptions.expectedLocation);
         }
         return false;
     }

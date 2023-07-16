@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { DiffComputer } from '../vscode/diffComputer';
 import { ExpectedResultsDecorator } from './expected';
+import { ValuesHolder } from '@ply-ct/ply-values';
 
 export type ResultDiffs = {
     testId: string;
@@ -169,9 +170,11 @@ export class ResultDecorator {
      * @param resultDiffs
      */
     applyDecorations(
+        workspaceFolder: vscode.WorkspaceFolder,
         expectedEditor: vscode.TextEditor,
         actualEditor: vscode.TextEditor,
-        resultDiffs: ResultDiffs[]
+        resultDiffs: ResultDiffs[],
+        valuesHolders?: ValuesHolder[]
     ) {
         const ignoredDecorations = new Decorations();
         const legitDecorations = new Decorations();
@@ -287,7 +290,11 @@ export class ResultDecorator {
         actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.actual);
         expectedEditor.setDecorations(this.legitDiffDecorator, legitDecorations.expected);
         actualEditor.setDecorations(this.legitDiffDecorator, legitDecorations.actual);
-        const exprDecs = ExpectedResultsDecorator.getExpressionDecOptions(expectedEditor.document);
+        const exprDecs = ExpectedResultsDecorator.getExpressionDecOptions(
+            workspaceFolder,
+            expectedEditor.document,
+            valuesHolders
+        );
         expectedEditor.setDecorations(ExpectedResultsDecorator.decoratorType, exprDecs);
     }
 }

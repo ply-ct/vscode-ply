@@ -228,23 +228,19 @@ export async function activate(context: vscode.ExtensionContext) {
                 const plyRoots = new PlyRoots(workspaceFolder.uri);
                 context.subscriptions.push(plyRoots);
                 const diffState = new DiffState(workspaceFolder, context.workspaceState);
-                let adapter: PlyAdapter | undefined = undefined;
-                const retire = (testIds: string[]) => adapter?.retireIds(testIds);
-                const diffHandler = new DiffHandler(
+                const adapter = new PlyAdapter(
                     workspaceFolder,
                     plyRoots,
                     diffState,
-                    decorator,
-                    retire
+                    outputChannel,
+                    log
                 );
+                const retire = (testIds: string[]) => adapter.retireIds(testIds);
+                const diffHandler = new DiffHandler(adapter, diffState, decorator, retire);
                 context.subscriptions.push(diffHandler);
                 diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
 
-                adapter = new PlyAdapter(workspaceFolder, plyRoots, diffState, outputChannel, log);
-
-                context.subscriptions.push(
-                    new ExpectedResultsDecorator(workspaceFolder, adapter.config)
-                );
+                context.subscriptions.push(new ExpectedResultsDecorator(workspaceFolder, adapter));
 
                 testAdapters.set(workspaceFolder.uri.toString(), adapter);
                 adapter.onceValues(
@@ -304,7 +300,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         `No diff handler found for workspace folder: ${item.workspaceFolder.uri}`
                     );
                 }
-                const info = diffHandler.plyRoots.findInfo(item.id);
+                const info = diffHandler.adapter.plyRoots.findInfo(item.id);
                 if (info) {
                     await diffHandler.doDiff(info);
                 } else {
@@ -331,12 +327,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (workspaceFolder) {
                         const diffHandler = diffHandlers.get(workspaceFolder.uri.toString());
                         if (diffHandler) {
-                            let suiteId = diffHandler.plyRoots.getSuiteIdForExpectedResult(fileUri);
+                            let suiteId =
+                                diffHandler.adapter.plyRoots.getSuiteIdForExpectedResult(fileUri);
                             if (!suiteId) {
-                                suiteId = diffHandler.plyRoots.getSuiteIdForActualResult(fileUri);
+                                suiteId =
+                                    diffHandler.adapter.plyRoots.getSuiteIdForActualResult(fileUri);
                             }
                             if (suiteId) {
-                                const info = diffHandler.plyRoots.findInfo(suiteId);
+                                const info = diffHandler.adapter.plyRoots.findInfo(suiteId);
                                 if (info) {
                                     await diffHandler.doDiff(info);
                                 }
