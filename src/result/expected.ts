@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as process from 'process';
-import { Values as ValuesAccess, ValuesHolder, findExpressions } from '@ply-ct/ply-values';
+import { Values as ValuesAccess, ValuesHolder, findExpressions, isRegex } from '@ply-ct/ply-values';
 import { PlyAdapter } from '../adapter';
 import { Result } from './result';
 
@@ -62,9 +62,12 @@ export class ExpectedResultsDecorator {
 
     private async updateDecorations() {
         if (this.activeEditor) {
-            const suiteId = this.adapter.plyRoots.getSuiteIdForExpectedResult(
-                this.activeEditor.document.uri
-            );
+            const uri = this.activeEditor.document.uri.with({
+                scheme: 'file',
+                fragment: '',
+                query: ''
+            });
+            const suiteId = this.adapter.plyRoots.getSuiteIdForExpectedResult(uri);
             const valuesHolders = suiteId
                 ? await this.adapter.values?.getValuesHolders(suiteId)
                 : undefined;
@@ -98,19 +101,23 @@ export class ExpectedResultsDecorator {
                 for (const expression of findExpressions(line.text)) {
                     const mds: vscode.MarkdownString[] = [];
 
-                    const value = valuesAccess?.getValue(expression.text);
-                    if (value?.value) {
-                        mds.push(new vscode.MarkdownString(`Value: \`${value.value}\``));
-                        if (value.location) {
-                            const fileUri = `${workspaceFolder.uri}/${value.location.path}`;
+                    if (!isRegex(expression.text)) {
+                        const value = valuesAccess?.getValue(expression.text);
+                        if (value?.value) {
+                            mds.push(new vscode.MarkdownString(`Value: \`${value.value}\``));
+                            if (value.location) {
+                                const fileUri = `${workspaceFolder.uri}/${value.location.path}`;
+                                mds.push(
+                                    new vscode.MarkdownString(
+                                        `From: [${value.location.path}](${fileUri})`
+                                    )
+                                );
+                            }
+                        } else {
                             mds.push(
-                                new vscode.MarkdownString(
-                                    `From: [${value.location.path}](${fileUri})`
-                                )
+                                new vscode.MarkdownString('Not found: `' + expression.text + '`')
                             );
                         }
-                    } else {
-                        mds.push(new vscode.MarkdownString('Not found: `' + expression.text + '`'));
                     }
 
                     decOptions.push({

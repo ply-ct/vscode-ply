@@ -290,7 +290,9 @@ export class ResultDecorator {
         actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.actual);
         expectedEditor.setDecorations(this.legitDiffDecorator, legitDecorations.expected);
         actualEditor.setDecorations(this.legitDiffDecorator, legitDecorations.actual);
-        this.applyExpressionDecorators(workspaceFolder, expectedEditor, valuesHolders);
+        if (valuesHolders) {
+            this.applyExpressionDecorators(workspaceFolder, expectedEditor, valuesHolders);
+        }
     }
 
     applyExpressionDecorators(
