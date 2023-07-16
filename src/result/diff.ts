@@ -371,6 +371,29 @@ export class DiffHandler {
         }
     }
 
+    static async closeAllDiffEditors() {
+        for (const tabGroup of vscode.window.tabGroups.all) {
+            for (const tab of tabGroup.tabs) {
+                if (
+                    tab.label.indexOf('(EXPECTED) ') === 0 &&
+                    tab.label.indexOf('↔ (ACTUAL) ') > 0 &&
+                    tab.input
+                ) {
+                    const tabInput = tab.input as { modified?: vscode.Uri; original?: vscode.Uri };
+                    if (
+                        (tabInput.modified?.path?.endsWith('.yaml') ||
+                            tabInput.modified?.path?.endsWith('.yml')) &&
+                        (tabInput.original?.path?.endsWith('.yaml') ||
+                            tabInput.original?.path?.endsWith('.yml'))
+                    ) {
+                        console.log(`Closing diff tab: ${tab.label}`);
+                        await vscode.window.tabGroups.close(tab);
+                    }
+                }
+            }
+        }
+    }
+
     dispose() {
         this.resultPairs = [];
         this.activeEditor = undefined;

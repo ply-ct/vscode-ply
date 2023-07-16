@@ -290,6 +290,14 @@ export class ResultDecorator {
         actualEditor.setDecorations(this.ignoredDiffDecorator, ignoredDecorations.actual);
         expectedEditor.setDecorations(this.legitDiffDecorator, legitDecorations.expected);
         actualEditor.setDecorations(this.legitDiffDecorator, legitDecorations.actual);
+        this.applyExpressionDecorators(workspaceFolder, expectedEditor, valuesHolders);
+    }
+
+    applyExpressionDecorators(
+        workspaceFolder: vscode.WorkspaceFolder,
+        expectedEditor: vscode.TextEditor,
+        valuesHolders?: ValuesHolder[]
+    ) {
         const exprDecs = ExpectedResultsDecorator.getExpressionDecOptions(
             workspaceFolder,
             expectedEditor.document,

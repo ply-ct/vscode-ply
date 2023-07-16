@@ -27,6 +27,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const before = Date.now();
     console.log('vscode-ply activating...');
 
+    // DiffHandler.closeAllDiffEditors();
+
     const testHub: TestHub = plyExplorerActivate(context);
 
     const outputChannel = vscode.window.createOutputChannel('Ply');
@@ -399,5 +401,3 @@ export async function activate(context: vscode.ExtensionContext) {
     // plyconfig.json supports comments
     await PlyConfig.setFileAssociations({ 'plyconfig.json': 'jsonc' });
 }
-
-export function deactivate() {}
