@@ -44,7 +44,8 @@
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:../out/worker/bundle.js --external:stacktracey --format=cjs --platform=node --main-fields=module,main",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "build-bundles": "rollup -c && cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css ",
+    "build-bundles": "rollup -c && npm run copy-css",
+    "copy-css": "cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css || copy node_modules\\flowbee\\dist\\css\\style.css media\\css\\flowbee.css",
     "watch-bundles": "rollup --watch -c",
     "build-web": "npm --prefix web run build",
     "compile": "tsc",
@@ -59,7 +60,7 @@
   "dependencies": {
     "@kurkle/color": "^0.3.2",
     "@ply-ct/ply": "^3.2.6",
-    "@ply-ct/ply-api": "1.3.1",
+    "@ply-ct/ply-api": "1.3.2",
     "@ply-ct/ply-values": "^0.3.1",
     "chart.js": "^4.2.1",
     "chartjs-adapter-date-fns": "^3.0.0",

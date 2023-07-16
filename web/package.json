@@ -2,11 +2,12 @@
   "name": "ply-web",
   "version": "0.3.1",
   "scripts": {
-    "build": "npm run fonts && npm run styles && rollup -c && npm run monaco-workers",
+    "build": "npm run fonts && npm run copy-styles && rollup -c && npm run monaco-workers",
     "esbuild": "node es-build.js",
     "watch": "cross-env VSCODE_PLY_WEB_WATCH='css/style.scss' rollup --watch -c",
-    "fonts": "npx mkdirp out/fonts && cp node_modules/@vscode/codicons/dist/codicon.ttf out",
-    "styles": "cp node_modules/flowbee/dist/css/style.css out/flowbee.css",
+    "fonts": "npx mkdirp out/fonts && npm run copy-fonts",
+    "copy-fonts": "cp node_modules/@vscode/codicons/dist/codicon.ttf out || copy node_modules\\@vscode\\codicons\\dist\\codicon.ttf out",
+    "copy-styles": "cp node_modules/flowbee/dist/css/style.css out/flowbee.css || copy node_modules\\flowbee\\dist\\css\\style.css out\\flowbee.css",
     "editor-worker": "parcel build node_modules/monaco-editor/esm/vs/editor/editor.worker.js --dist-dir out/workers",
     "json-worker": "parcel build node_modules/monaco-editor/esm/vs/language/json/json.worker.js --dist-dir out/workers",
     "yaml-worker": "parcel build node_modules/monaco-yaml/lib/esm/yaml.worker.js --dist-dir out/workers",
@@ -24,6 +25,7 @@
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.36.1",
     "monaco-yaml": "^3.2.1",
+    "vscode-ply": "file:..",
     "vscode-uri": "^3.0.7",
     "vue": "^3.3.4"
   },

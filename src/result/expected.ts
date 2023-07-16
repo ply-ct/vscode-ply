@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as process from 'process';
 import { Values as ValuesAccess, ValuesHolder, findExpressions } from '@ply-ct/ply-values';
 import { PlyAdapter } from '../adapter';
 import { Result } from './result';
@@ -101,7 +102,7 @@ export class ExpectedResultsDecorator {
                     if (value?.value) {
                         mds.push(new vscode.MarkdownString(`Value: \`${value.value}\``));
                         if (value.location) {
-                            const fileUri = `${workspaceFolder.uri.fsPath}/${value.location.path}`;
+                            const fileUri = `${workspaceFolder.uri}/${value.location.path}`;
                             mds.push(
                                 new vscode.MarkdownString(
                                     `From: [${value.location.path}](${fileUri})`
@@ -134,7 +135,11 @@ export class ExpectedResultsDecorator {
             (uri.scheme === Result.URI_SCHEME || uri.scheme === 'file') &&
             (uri.path.endsWith('.yaml') || uri.path.endsWith('.yml'))
         ) {
-            return uri.path.startsWith(this.adapter.config.plyOptions.expectedLocation);
+            let path = decodeURIComponent(uri.path);
+            if (process.platform.startsWith('win') && path.startsWith('/')) {
+                path = path.substring(1);
+            }
+            return path.startsWith(this.adapter.config.plyOptions.expectedLocation);
         }
         return false;
     }
