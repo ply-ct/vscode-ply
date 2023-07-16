@@ -123,6 +123,7 @@ export class Values implements Disposable {
         const filesAccess = new FileSystemAccess(this.workspaceFolder.uri.fsPath);
         const plyAccess = new PlyAccess(filesAccess, {
             plyOptions: this.config.plyOptions,
+            valuesOptions: this.getEvalOptions(),
             logger: console
         });
         let valuesHolders = await plyAccess.getFileValuesHolders();

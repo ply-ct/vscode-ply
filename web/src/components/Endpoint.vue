@@ -111,20 +111,34 @@ export default defineComponent({
           );
           decs.forEach((dec) => {
             if (dec.hover?.lines) {
+              let left = (dec.range.end - dec.range.start) * 7.5;
+              dec.hover.location = {
+                top: '-32px',
+                left: `${left}px`
+              };
               if (dec.hover.lines.length > 1) {
-                let left = (dec.range.end - dec.range.start) * 7.5;
-                dec.hover.location = {
-                  top: '-32px',
-                  left: `${left}px`
-                };
-                const iRect = this.urlInput.getBoundingClientRect();
                 dec.onHover = (element: HTMLElement, tooltip: HTMLElement) => {
+                  const iRect = this.urlInput.getBoundingClientRect();
                   tooltip.style.visibility = 'hidden';
                   const eRect = element.getBoundingClientRect();
                   const ttRect = tooltip.getBoundingClientRect();
                   const roomOnRight = iRect.right - eRect.right;
                   if (ttRect.width > roomOnRight) {
-                    tooltip.style.left = `${left - eRect.width - ttRect.width + 3}px`;
+                    const roomOnLeft = eRect.left - iRect.left;
+                    if (roomOnLeft > roomOnRight) {
+                      tooltip.style.left = `${left - eRect.width - ttRect.width + 3}px`;
+                      if (ttRect.width > roomOnLeft) {
+                        // no room -- encroach on expr text
+                        tooltip.style.left = `${
+                          left - eRect.width - ttRect.width + 3 + eRect.width / 3
+                        }px`;
+                      }
+                    } else {
+                      // no room -- encroach on expr text
+                      tooltip.style.left = `${left - eRect.width / 3}px`;
+                    }
+                  } else {
+                    tooltip.style.left = `${(dec.range.end - dec.range.start) * 7.5}px`;
                   }
                   tooltip.style.visibility = 'visible';
                 };

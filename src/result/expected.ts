@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Values, ValuesHolder, findExpressions } from '@ply-ct/ply-values';
+import { Values as ValuesAccess, ValuesHolder, findExpressions } from '@ply-ct/ply-values';
 import { PlyAdapter } from '../adapter';
 import { Result } from './result';
 
@@ -27,6 +27,16 @@ export class ExpectedResultsDecorator {
                 }
             })
         );
+        adapter.onLoad(() => {
+            this.activeEditor = vscode.window.activeTextEditor;
+            this.triggerUpdateDecorations();
+        });
+        if (!adapter.values) {
+            adapter.onceValues(() => {
+                this.activeEditor = vscode.window.activeTextEditor;
+                this.triggerUpdateDecorations();
+            });
+        }
 
         this.disposables.push(
             vscode.workspace.onDidChangeTextDocument((event) => {
@@ -76,7 +86,7 @@ export class ExpectedResultsDecorator {
         // TODO hover
         const decOptions: vscode.DecorationOptions[] = [];
         if (doc) {
-            const valuesAccess = new Values(valuesHolders, {
+            const valuesAccess = new ValuesAccess(valuesHolders, {
                 trusted: vscode.workspace.isTrusted,
                 refHolder: '__ply_results',
                 env: process.env,
@@ -87,7 +97,7 @@ export class ExpectedResultsDecorator {
                 for (const expression of findExpressions(line.text)) {
                     const mds: vscode.MarkdownString[] = [];
 
-                    const value = valuesAccess.getValue(expression.text);
+                    const value = valuesAccess?.getValue(expression.text);
                     if (value?.value) {
                         mds.push(new vscode.MarkdownString(`Value: \`${value.value}\``));
                         if (value.location) {
