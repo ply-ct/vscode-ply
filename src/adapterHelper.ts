@@ -52,7 +52,6 @@ export class AdapterHelper {
     async run(
         uri: vscode.Uri,
         target?: string,
-        values: object = {},
         runOptions?: RunOptions,
         debug = false,
         noAutoOpen = false
@@ -67,7 +66,7 @@ export class AdapterHelper {
             }
             console.debug(`run: ${id}`);
             const adapter = this.getAdapter(fileUri);
-            await adapter?.run([id], values, { ...runOptions, proceed: true, noAutoOpen });
+            await adapter?.run([id], { ...runOptions, proceed: true, noAutoOpen });
         } catch (err: unknown) {
             console.error(err);
             vscode.window.showErrorMessage(`${err}`);

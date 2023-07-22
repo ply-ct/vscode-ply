@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { Listener, Disposable } from 'flowbee';
 import { AdapterHelper } from '../adapterHelper';
 import { Web } from './web';
-import { Response, Flow, Location, util } from '@ply-ct/ply';
+import { Response, Flow, Location, util, RunOptions } from '@ply-ct/ply';
 import { Marker, Problems } from './problems';
 import { RequestMerge } from '../request/request';
 import { FlowMerge } from '../request/flow';
@@ -127,7 +127,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 webviewPanel.webview.postMessage({
                     type: 'values',
                     holders: await adapter.values.getValuesHolders(suiteId),
-                    options: adapter.values.getEvalOptions()
+                    options: adapter.values.getEvalOptions(),
+                    overrides: this.getOverrideValues(document.uri) || {}
                 });
             }
         };
@@ -189,6 +190,8 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 } else if (message.type === 'open-file') {
                     const file = path.join(adapter.workspaceFolder.uri.fsPath, message.file);
                     vscode.commands.executeCommand('vscode.open', vscode.Uri.file(file));
+                } else if (message.type === 'save-values') {
+                    this.setOverrideValues(document.uri, message.overrides || {});
                 } else if (message.type === 'action') {
                     if (message.action === 'run' || message.action === 'submit') {
                         requestCanceled = false;
@@ -216,14 +219,16 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                                 }
                             }
 
-                            const runOptions =
-                                message.action === 'submit'
-                                    ? { submit: true, responseBodySortedKeys: false }
-                                    : undefined;
+                            const runOptions: RunOptions & { responseBodySortedKeys?: boolean } = {
+                                values: this.getOverrideValues(document.uri)
+                            };
+                            if (message.action === 'submit') {
+                                runOptions.submit = true;
+                                runOptions.responseBodySortedKeys = false;
+                            }
                             this.adapterHelper.run(
                                 document.uri,
                                 message.target,
-                                {},
                                 runOptions,
                                 false,
                                 true
@@ -469,6 +474,17 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 }
             }
         }
+    }
+
+    private getOverrideValues(docUri: vscode.Uri): { [expr: string]: string } | undefined {
+        return this.context.workspaceState.get(`${docUri}/ply-user-values`);
+    }
+
+    private setOverrideValues(docUri: vscode.Uri, overrides: { [expr: string]: string }) {
+        this.context.workspaceState.update(
+            `${docUri}/ply-user-values`,
+            Object.keys(overrides).length ? overrides : undefined
+        );
     }
 
     private async updateFileDoc(

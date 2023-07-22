@@ -213,7 +213,6 @@ export class PlyAdapter implements TestAdapter {
 
     async run(
         testIds: string[],
-        values = {},
         runOptions?: ply.RunOptions & { proceed?: boolean; noAutoOpen?: boolean }
     ): Promise<void> {
         if (!(await this.checkAndProceed(testIds, runOptions))) {
@@ -233,7 +232,7 @@ export class PlyAdapter implements TestAdapter {
                 this.testStatesEmitter
             );
             this.runner.onFlow((evt) => this._onFlow.emit(evt));
-            await this.runner.runTests(testIds, values, false, runOptions);
+            await this.runner.runTests(testIds, false, runOptions);
         } catch (err: unknown) {
             console.error(err);
             this.log.error(`${err}`);
@@ -243,7 +242,6 @@ export class PlyAdapter implements TestAdapter {
 
     async debug(
         testIds: string[],
-        values = {},
         runOptions?: ply.RunOptions & { proceed?: boolean }
     ): Promise<void> {
         if (!(await this.checkAndProceed(testIds, runOptions))) {
@@ -264,7 +262,7 @@ export class PlyAdapter implements TestAdapter {
             this.testStatesEmitter
         );
         this.runner.onFlow((evt) => this._onFlow.emit(evt));
-        const testRunPromise = this.runner.runTests(testIds, values, true, runOptions);
+        const testRunPromise = this.runner.runTests(testIds, true, runOptions);
 
         this.log.info('Starting debug session');
         let debugSession: any;

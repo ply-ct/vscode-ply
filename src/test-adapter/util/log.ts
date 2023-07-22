@@ -93,7 +93,7 @@ export class Log {
         this.targets = [];
     }
 
-    private log(logLevel: string, msg: any[]) {
+    log(logLevel: string, msg: any[]) {
         if (this.targets.length > 0) {
             const dateString = new Date().toISOString().replace('T', ' ').replace('Z', '');
 

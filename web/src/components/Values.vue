@@ -18,7 +18,6 @@ import {
   isExpression
 } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
-import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Values',
@@ -48,10 +47,11 @@ export default defineComponent({
       default: {}
     }
   },
-  emits: ['updateValues', 'openFile', 'close'],
+  emits: ['updateValues', 'openFile', 'save', 'close'],
   data() {
     return {
-      popup: null as ValuesPopup | null
+      popup: null as ValuesPopup | null,
+      userOverrides: this.overrides
     };
     // return {} as {
     //   valuesPopup?: monaco.editor.IStandaloneCodeEditor;
@@ -62,6 +62,7 @@ export default defineComponent({
   watch: {
     open() {
       if (this.open) {
+        this.userOverrides = this.values.overrides;
         this.openPopup();
         this.popup!.setDecorator((text: string) => {
           if (text && isExpression(text)) {
@@ -73,6 +74,12 @@ export default defineComponent({
         });
       } else {
         this.closePopup();
+      }
+    },
+    values() {
+      if (this.values.overrides) {
+        this.userOverrides = this.values.overrides;
+        this.popup?.setValues(this.getUserValues());
       }
     }
   },
@@ -99,6 +106,7 @@ export default defineComponent({
         this.popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
       }
 
+      console.log('openPopup: ' + JSON.stringify(this.values.overrides));
       this.popup.render(this.getUserValues(), this.getOptions());
     },
     closePopup() {
@@ -115,7 +123,7 @@ export default defineComponent({
         };
       });
 
-      return { values, overrides: {} };
+      return { values, overrides: this.userOverrides };
     },
     getOptions(): ValuesOptions {
       return {
@@ -125,7 +133,21 @@ export default defineComponent({
           link: 'https://ply-ct.org/ply/topics/values',
           title: 'Values help',
           icon: 'help.svg'
-        }
+        },
+        actions: [
+          {
+            name: 'save',
+            label: 'Save'
+          },
+          {
+            name: 'clear',
+            label: 'Clear'
+          },
+          {
+            name: 'close',
+            label: 'Cancel'
+          }
+        ]
       };
     },
     handleMessage(event: MessageEvent) {
@@ -140,6 +162,17 @@ export default defineComponent({
       return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
     },
     onValuesAction(valuesAction: ValuesActionEvent) {
+      if (valuesAction.action === 'save') {
+        this.userOverrides = this.popup?.getValues()?.overrides || {};
+        // parse avoids: Failed to execute 'postMessage': [object Object] could not be cloned
+        this.$emit('save', JSON.parse(JSON.stringify(this.userOverrides)));
+        this.popup?.close();
+        this.$emit('close');
+      } else if (valuesAction.action === 'clear') {
+        this.userOverrides = {};
+        this.popup?.clear();
+        this.$emit('save', {});
+      }
       if (valuesAction.action === 'close') {
         this.$emit('close');
       }

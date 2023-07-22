@@ -266,7 +266,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     );
                 }
                 if (adapter.plyRoots.find((i) => i.id === item.id)) {
-                    await adapter.run([item.id], {}, { submit: true });
+                    await adapter.run([item.id], { submit: true });
                 } else {
                     throw new Error(`Ply test info not found for id: ${item.id} (not a ply test?)`);
                 }

@@ -1,7 +1,7 @@
 <template>
   <split v-if="request">
     <pane>
-      <request
+      <req
         :request="request"
         :options="options"
         :file="filename"
@@ -10,13 +10,14 @@
         @update-request="onUpdate"
         @update-source="onUpdateSource"
         @update-markers="onUpdateMarkers"
-        @request-action="onAction"
         @open-file="onOpenFile"
+        @save-values="onSaveValues"
+        @request-action="onAction"
       />
     </pane>
     <pane v-if="options.runnable" :is-right="true">
       <div v-if="message" class="error">{{ message }}</div>
-      <response
+      <resp
         v-if="!message"
         :name="request.name"
         :response="response"
@@ -32,13 +33,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { URI } from 'vscode-uri';
-import { Request as Req, Response as Resp, Result } from './model/request';
+import { Request, Response, Result } from './model/request';
 import * as yaml from './util/yaml';
 import * as time from './util/time';
 import Split from './components/Split.vue';
 import Pane from './components/Pane.vue';
-import Request from './components/Request.vue';
-import Response from './components/Response.vue';
+import Req from './components/Request.vue';
+import Resp from './components/Response.vue';
 import { Values } from './model/values';
 import { Options } from './model/options';
 
@@ -47,7 +48,7 @@ const vscode = acquireVsCodeApi();
 
 export default defineComponent({
   name: 'App',
-  components: { Split, Pane, Request, Response },
+  components: { Split, Pane, Req, Resp },
   data() {
     return {
       options: {},
@@ -61,8 +62,8 @@ export default defineComponent({
     } as any as {
       options: Options;
       requestName: string;
-      request: Req;
-      response: Resp;
+      request: Request;
+      response: Response;
       file: string;
       message: string;
       result: Result;
@@ -92,7 +93,7 @@ export default defineComponent({
     }
   },
   methods: {
-    blankResponse(): Resp {
+    blankResponse(): Response {
       return {
         status: { code: 0, message: '' },
         headers: {},
@@ -179,11 +180,12 @@ export default defineComponent({
         // Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src
         this.values = {
           valuesHolders: message.holders,
-          evalOptions: { ...message.options, trusted: false }
+          evalOptions: { ...message.options, trusted: false },
+          overrides: message.overrides
         };
       }
     },
-    onUpdate(updatedRequest: Req) {
+    onUpdate(updatedRequest: Request) {
       this.request = updatedRequest;
       this.request.source = this.toYaml();
       this.update();
@@ -218,6 +220,9 @@ export default defineComponent({
     },
     onOpenFile(file: string) {
       vscode.postMessage({ type: 'open-file', file });
+    },
+    onSaveValues(overrides: { [expr: string]: string }) {
+      vscode.postMessage({ type: 'save-values', overrides });
     },
     onAction(action: string, requestName: string) {
       if (action === 'run' || action === 'submit') {

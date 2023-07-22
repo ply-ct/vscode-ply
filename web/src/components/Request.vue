@@ -90,14 +90,15 @@
       </el-tab-pane>
     </el-tabs>
   </div>
-  <values-comp
+  <vals
     title="Request Values"
     :icon-base="options.iconBase"
     :item="request"
     :open="valuesOpen"
     :values="values"
     @open-file="onOpenFile"
-    @close="onValuesClose"
+    @save="onSaveValues"
+    @close="onCloseValues"
   />
 </template>
 
@@ -109,13 +110,13 @@ import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
-import ValuesComp from './Values.vue';
+import Vals from './Values.vue';
 import { Values } from '../model/values';
 import { Options } from '../model/options';
 
 export default defineComponent({
   name: 'Request',
-  components: { Actions, Endpoint, Editor, TableComp, ValuesComp },
+  components: { Actions, Endpoint, Editor, TableComp, Vals },
   props: {
     request: {
       type: Object as PropType<Request>,
@@ -144,7 +145,8 @@ export default defineComponent({
     'updateSource',
     'updateMarkers',
     'openFile',
-    'requestAction'
+    'requestAction',
+    'saveValues'
   ],
   data() {
     return {
@@ -316,15 +318,18 @@ export default defineComponent({
     onOpenFile(file: string) {
       this.$emit('openFile', file);
     },
+    onSaveValues(overrides: { [expr: string]: string }) {
+      this.$emit('saveValues', overrides);
+    },
+    onCloseValues() {
+      this.valuesOpen = false;
+    },
     onAction(action: string, requestName: string) {
       if (action === 'values') {
         this.valuesOpen = !this.valuesOpen;
       } else {
         this.$emit('requestAction', action, requestName);
       }
-    },
-    onValuesClose() {
-      this.valuesOpen = false;
     }
   }
 });

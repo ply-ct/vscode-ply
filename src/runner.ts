@@ -44,12 +44,7 @@ export class PlyRunner {
         >
     ) {}
 
-    async runTests(
-        testIds: string[],
-        runValues: { [key: string]: string },
-        debug = false,
-        runOptions?: ply.RunOptions
-    ): Promise<void> {
+    async runTests(testIds: string[], debug = false, runOptions?: ply.RunOptions): Promise<void> {
         this.testRunId++;
         const testRunId = `${this.testRunId}`;
 
@@ -78,7 +73,6 @@ export class PlyRunner {
             if (this.config.requireTsNode) {
                 runOptions.requireTsNode = true;
             }
-            runOptions.values = runValues;
 
             this.fire(<TestRunStartedEvent>{ type: 'started', tests: testIds, testRunId });
 
