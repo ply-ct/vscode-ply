@@ -45,6 +45,7 @@ class DialogProvider implements flowbee.DialogProvider {
 
 let oldFlow: flowbee.Disposable;
 let requests: (flowbee.Descriptor & { request: Request })[] = [];
+let valuesPopup: flowbee.ValuesPopup | undefined;
 
 interface Config {
     customDescriptors?: flowbee.Descriptor[];
@@ -61,7 +62,6 @@ export class Flow implements flowbee.Disposable {
     private requestsToolbox?: flowbee.Toolbox;
     private disposables: flowbee.Disposable[] = [];
     static configurator?: flowbee.Configurator;
-    private valuesPopup?: flowbee.ValuesPopup;
     values: Values = {
         valuesHolders: [],
         evalOptions: {
@@ -474,7 +474,8 @@ export class Flow implements flowbee.Disposable {
         flowElement: flowbee.FlowElement,
         instances?: flowbee.FlowElementInstance[],
         doOpen = false,
-        position?: { left: number; top: number; width: number; height: number }
+        position?: { left: number; top: number; width: number; height: number },
+        tab?: string
     ) {
         if (Flow.configurator && (doOpen || Flow.configurator?.isOpen)) {
             const template = await templates.getConfigTemplate(
@@ -538,14 +539,20 @@ export class Flow implements flowbee.Disposable {
                 }
             });
         }
+        if (tab) Flow.configurator?.setTab(tab);
     }
 
-    openConfigurator() {
-        if (Flow.configurator && !Flow.configurator.isOpen) {
+    openConfigurator(tab?: string) {
+        if (valuesPopup?.isOpen) {
+            valuesPopup.close();
+        }
+        if (Flow.configurator) {
             this.updateConfigurator(
                 this.flowDiagram.flow,
                 this.flowDiagram.instance ? [this.flowDiagram.instance] : [],
-                true
+                !Flow.configurator.isOpen,
+                undefined,
+                tab
             );
         }
     }
@@ -670,16 +677,22 @@ export class Flow implements flowbee.Disposable {
             readState()?.setToolboxOpen(e.options?.state === 'open');
         } else if (flowAction === 'configurator') {
             if (e.options?.state === 'open') {
-                readState()?.openConfigurator();
+                if (e.options.mode) {
+                    updateState({ mode: e.options.mode });
+                    this.switchMode(e.options.mode);
+                    readState(e.options.mode === 'inspect')?.openConfigurator(e.options.tab);
+                } else {
+                    readState()?.openConfigurator(e.options.tab);
+                }
             } else {
                 readState()?.closeConfigurator();
             }
         } else if (flowAction === 'values') {
-            if (!this.valuesPopup) {
+            if (!valuesPopup) {
                 const container = document.getElementById('flow-container') as HTMLDivElement;
-                this.valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
-                this.valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
-                this.valuesPopup.onOpenValues((openValuesEvent) => {
+                valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
+                valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+                valuesPopup.onOpenValues((openValuesEvent) => {
                     vscode.postMessage({
                         type: 'edit',
                         element: 'file',
@@ -687,7 +700,7 @@ export class Flow implements flowbee.Disposable {
                     });
                 });
             }
-            this.valuesPopup.render(this.getUserValues(), getValuesOptions());
+            valuesPopup.render(this.getUserValues(), getValuesOptions());
         } else {
             if (flowAction === 'run') {
                 this.closeConfigurator();
@@ -730,15 +743,15 @@ export class Flow implements flowbee.Disposable {
 
     onValuesAction(valuesAction: flowbee.ValuesActionEvent) {
         if (valuesAction.action === 'save') {
-            this.userOverrides = this.valuesPopup?.getValues()?.overrides || {};
+            this.userOverrides = valuesPopup?.getValues()?.overrides || {};
             vscode.postMessage({ type: 'save-values', overrides: this.userOverrides });
-            this.valuesPopup?.close();
+            valuesPopup?.close();
         } else if (valuesAction.action === 'clear') {
             this.userOverrides = {};
-            this.valuesPopup?.clear();
+            valuesPopup?.clear();
             vscode.postMessage({ type: 'save-values', overrides: {} });
         } else if (valuesAction.action === 'close') {
-            this.valuesPopup?.close();
+            valuesPopup?.close();
         }
     }
 
@@ -859,7 +872,9 @@ window.addEventListener('message', async (event) => {
         };
         updateState({ values });
     } else if (message.type === 'action') {
-        readState()?.onFlowAction({
+        readState(
+            message.options.mode !== 'select' && message.options.mode !== 'connect'
+        )?.onFlowAction({
             action: message.action,
             target: message.target,
             options: message.options

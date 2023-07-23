@@ -339,7 +339,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         });
                         const filepath = files.pathInWorkspaceFolder(wsFolder!, fileUri);
                         if (filepath) {
-                            await vscode.commands.executeCommand('vscode.open', fileUri);
+                            if (fileUri.toString() === document.uri.toString()) {
+                                // flow being edited -- open configurator on flow (from values link)
+                                webviewPanel.webview.postMessage({
+                                    type: 'action',
+                                    action: 'configurator',
+                                    options: { state: 'open', mode: 'select', tab: 'Values' }
+                                });
+                            } else {
+                                await vscode.commands.executeCommand('vscode.open', fileUri);
+                            }
                         }
                     } else if (message.element === 'request') {
                         let uri: vscode.Uri;
