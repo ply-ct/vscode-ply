@@ -5,7 +5,7 @@
     <!-- style-src 'unsafe-inline' required for embedded svg styles -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src ${cspSource} 'self' blob: data:; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src ${cspSource} ${wsSource};"
+      content="default-src 'none'; img-src ${cspSource} 'self' blob: data:; style-src ${cspSource} 'unsafe-inline'; script-src ${trustedEval} 'nonce-${nonce}'; connect-src ${cspSource} ${wsSource};"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="${webBase}/css/flowbee.css" rel="stylesheet" />
@@ -208,7 +208,6 @@
         </div>
       </div>
     </div>
-    <div id="flow-values" class="flow-values"></div>
 
     <script nonce="${nonce}" src="${webBase}/out/flow.js"></script>
   </body>

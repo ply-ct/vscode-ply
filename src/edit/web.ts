@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 
 export class Web {
     private static htmls = new Map<string, string>();
@@ -25,6 +26,12 @@ export class Web {
         // csp source and nonce
         html = html.replace(/\${cspSource}/g, this.cspSource);
         html = html.replace(/\${nonce}/g, this.getNonce());
+
+        if (vscode.workspace.isTrusted) {
+            html = html.replace(/\${trustedEval}/g, `'unsafe-eval'`);
+        } else {
+            html = html.replace(/\${trustedEval}/g, '');
+        }
 
         return html;
     }

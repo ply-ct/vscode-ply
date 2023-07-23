@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as findUp from 'find-up';
 import { WebSocketServer } from 'ws';
 import * as flowbee from 'flowbee';
-import { PLY_CONFIGS, loadYaml } from '@ply-ct/ply';
+import { PLY_CONFIGS, RunOptions, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapterHelper';
@@ -49,27 +49,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         this.websocketPort = vscode.workspace
             .getConfiguration('ply')
             .get(Setting.websocketPort, 9351);
-        // clear obsolete stored values
-        const storedVals = this.context.workspaceState.get('ply-user-values') || ({} as any);
-        if (storedVals) {
-            let update = false;
-            for (const testPath of Object.keys(storedVals)) {
-                let file = testPath;
-                const hash = file.lastIndexOf('#');
-                if (hash !== -1) {
-                    file = testPath.substring(0, hash);
-                } else if (file.endsWith('.values')) {
-                    file = file.substring(0, file.length - 7);
-                }
-                if (!fs.existsSync(file)) {
-                    delete storedVals[testPath];
-                    update = true;
-                }
-            }
-            if (update) {
-                this.context.workspaceState.update('ply-user-values', storedVals);
-            }
-        }
     }
 
     private bindWebsocket() {
@@ -235,13 +214,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     });
                 } else if (message.type === 'run' || message.type === 'debug') {
                     const debug = message.type === 'debug';
-                    this.adapterHelper.run(
-                        document.uri,
-                        message.target,
-                        message.values,
-                        message.options,
-                        debug
-                    );
+                    const runOptions: RunOptions = {
+                        ...(message.options || {}),
+                        values: this.getOverrideValues(document.uri)
+                    };
+                    this.adapterHelper.run(document.uri, message.target, runOptions, debug);
                 } else if (message.type === 'stop') {
                     this.adapterHelper.getAdapter(document.uri)?.cancel();
                     let instance;
@@ -388,16 +365,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     }
                 } else if (message.type === 'configurator') {
                     await vscode.commands.executeCommand('workbench.action.closePanel');
-                } else if (message.type === 'values') {
-                    // store values
-                    const storedVals =
-                        this.context.workspaceState.get('ply-user-values') || ({} as any);
-                    if (message.storeVals) {
-                        storedVals[message.key] = message.storeVals;
-                    } else {
-                        delete storedVals[message.key];
-                    }
-                    this.context.workspaceState.update('ply-user-values', storedVals);
+                } else if (message.type === 'save-values') {
+                    this.setOverrideValues(document.uri, message.overrides || {});
                 } else if (message.type === 'valuesFiles') {
                     let configPath = findUp.sync(PLY_CONFIGS, {
                         cwd: path.dirname(document.fileName)
@@ -546,7 +515,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             const onValuesUpdate = async (resultUri?: vscode.Uri) => {
                 const adapter = this.adapterHelper.getAdapter(document.uri);
                 if (adapter?.values) {
-                    const suite = adapter.plyRoots.getSuite(this.adapterHelper.getId(document.uri));
+                    const suiteId = this.adapterHelper.getId(document.uri);
+                    const suite = adapter.plyRoots.getSuite(suiteId);
                     if (suite) {
                         const actualPath = suite.runtime.results.actual.toString();
                         if (!resultUri || actualPath === resultUri.fsPath.replace(/\\/g, '/')) {
@@ -554,11 +524,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 type: 'values',
                                 base: baseUri.toString(),
                                 flowPath: document.uri.fsPath,
-                                values: await adapter.values.getResultValues(
-                                    this.adapterHelper.getId(document.uri)
-                                ),
-                                storeVals: this.context.workspaceState.get('ply-user-values'),
-                                files: adapter.values.enabledValuesFiles
+                                holders: await adapter.values.getValuesHolders(suiteId),
+                                options: adapter.values.getEvalOptions(),
+                                overrides: this.getOverrideValues(document.uri) || {}
                             });
                         }
                     }
@@ -585,11 +553,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     type: 'values',
                     base: baseUri.toString(),
                     flowPath: document.uri.fsPath,
-                    values: await adapter.values.getResultValues(
+                    holders: await adapter.values.getValuesHolders(
                         this.adapterHelper.getId(document.uri)
                     ),
-                    storeVals: this.context.workspaceState.get('ply-user-values'),
-                    files: adapter.values.enabledValuesFiles
+                    options: adapter.values.getEvalOptions(),
+                    overrides: this.getOverrideValues(document.uri) || {}
                 });
             } else {
                 adapter.onceValues(async (e) => {
@@ -597,11 +565,11 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         type: 'values',
                         base: baseUri.toString(),
                         flowPath: document.uri.fsPath,
-                        values: await e.values.getResultValues(
+                        holders: await adapter.values!.getValuesHolders(
                             this.adapterHelper.getId(document.uri)
                         ),
-                        storeVals: this.context.workspaceState.get('ply-user-values'),
-                        files: e.values.enabledValuesFiles
+                        options: adapter.values!.getEvalOptions(),
+                        overrides: this.getOverrideValues(document.uri) || {}
                     });
                     disposables.push(
                         e.values.onValuesUpdate((updateEvent) =>
@@ -701,5 +669,16 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
         if (res === runFlow) {
             this.adapterHelper.run(uri);
         }
+    }
+
+    private getOverrideValues(docUri: vscode.Uri): { [expr: string]: string } | undefined {
+        return this.context.workspaceState.get(`${docUri}/ply-user-values`);
+    }
+
+    private setOverrideValues(docUri: vscode.Uri, overrides: { [expr: string]: string }) {
+        this.context.workspaceState.update(
+            `${docUri}/ply-user-values`,
+            Object.keys(overrides).length ? overrides : undefined
+        );
     }
 }

@@ -1,6 +1,4 @@
-<template>
-  <div class="flowbee-values" />
-</template>
+<template></template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
@@ -83,9 +81,6 @@ export default defineComponent({
       }
     }
   },
-  created() {
-    this.popup;
-  },
   mounted() {
     window.addEventListener('message', this.handleMessage);
   },
@@ -105,15 +100,16 @@ export default defineComponent({
         this.popup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
         this.popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
       }
-
-      console.log('openPopup: ' + JSON.stringify(this.values.overrides));
       this.popup.render(this.getUserValues(), this.getOptions());
     },
     closePopup() {
       this.popup?.close();
     },
     getUserValues(): UserValues {
-      const valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
+      const valuesAccess = new ValuesAccess(this.values.valuesHolders, {
+        ...this.values.evalOptions,
+        logger: console
+      });
       const values: ExpressionValue[] = expressions(this.item).map((expr) => {
         const locatedValue = valuesAccess.getValue(expr);
         return {
@@ -172,8 +168,7 @@ export default defineComponent({
         this.userOverrides = {};
         this.popup?.clear();
         this.$emit('save', {});
-      }
-      if (valuesAction.action === 'close') {
+      } else if (valuesAction.action === 'close') {
         this.$emit('close');
       }
     }

@@ -49,7 +49,8 @@ export default [
         output: {
             name: 'flow',
             file: 'media/out/flow.js',
-            format: 'umd'
+            format: 'umd',
+            sourcemap: 'inline'
         },
         plugins: [
             resolve(),
@@ -66,7 +67,8 @@ export default [
         output: {
             name: 'viz',
             file: 'media/out/viz.js',
-            format: 'umd'
+            format: 'umd',
+            sourcemap: 'inline'
         },
         plugins: [
             resolve(),

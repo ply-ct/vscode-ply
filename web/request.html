@@ -5,7 +5,7 @@
     <!-- style-src 'unsafe-inline' required due to: https://github.com/microsoft/monaco-editor/issues/271 -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource}; script-src 'nonce-${nonce}'; connect-src ${cspSource}; worker-src blob:;"
+      content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource}; script-src ${trustedEval} 'nonce-${nonce}'; connect-src ${cspSource}; worker-src blob:;"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="${webBase}/out/flowbee.css" rel="stylesheet" />

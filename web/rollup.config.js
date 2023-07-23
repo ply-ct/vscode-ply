@@ -7,13 +7,13 @@ import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy-watch';
 import sass from 'node-sass';
 import json from '@rollup/plugin-json';
-import serve from 'rollup-plugin-serve';
 
 export default {
     input: 'src/main.ts',
     output: {
         file: 'out/bundle.js',
         format: 'es',
+        sourcemap: 'inline',
         inlineDynamicImports: true
     },
     plugins: [

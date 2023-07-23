@@ -1,4 +1,5 @@
 import * as flowbee from 'flowbee/dist/nostyles';
+import { ExpressionHolder, expressions, resolve, Values as ValuesAccess } from '@ply-ct/ply-values';
 import { Options } from './options';
 import { Templates } from './templates';
 import { FlowSplitter, ToolboxSplitter } from './splitter';
@@ -12,8 +13,7 @@ import {
 import { getDescriptors } from './descriptors';
 import { MenuProvider } from './menu';
 import { Request } from './request';
-import { Values } from './values';
-import { safeEval } from './eval';
+import { getValuesOptions, Values } from './values';
 
 const container = document.getElementById('container') as HTMLDivElement;
 
@@ -22,7 +22,6 @@ const vscode = acquireVsCodeApi();
 const EOL = navigator.platform.indexOf('Win') > -1 ? '\r\n' : '\n';
 
 let templates: Templates;
-let values: Values;
 
 interface Confirmation {
     result: boolean;
@@ -62,6 +61,17 @@ export class Flow implements flowbee.Disposable {
     private requestsToolbox?: flowbee.Toolbox;
     private disposables: flowbee.Disposable[] = [];
     static configurator?: flowbee.Configurator;
+    private valuesPopup?: flowbee.ValuesPopup;
+    values: Values = {
+        valuesHolders: [],
+        evalOptions: {
+            env: {},
+            trusted: false,
+            refHolder: '__ply_results'
+        },
+        overrides: {}
+    };
+    private userOverrides = {};
 
     /**
      * @param readonly file is readonly
@@ -588,12 +598,17 @@ export class Flow implements flowbee.Disposable {
     ): string {
         if (element.attributes) {
             if (expr.startsWith('display.') && element.attributes.display) {
-                return safeEval(expr, {
-                    ...element.attributes,
-                    display: flowbee.LinkLayout.fromAttr(element.attributes.display)
-                });
+                return resolve(
+                    expr,
+                    {
+                        ...element.attributes,
+                        display: flowbee.LinkLayout.fromAttr(element.attributes.display)
+                    },
+                    false,
+                    console
+                );
             }
-            return safeEval(expr, element.attributes);
+            return resolve(expr, element.attributes, false, console);
         }
         return fallback;
     }
@@ -650,57 +665,41 @@ export class Flow implements flowbee.Disposable {
                 }
             }
         }
-        let vals: object | 'Files' | undefined;
-        if (flowAction === 'run' || flowAction === 'values') {
-            this.closeConfigurator();
-            if (values && (flowAction === 'values' || !values.isRows)) {
-                const action = e.options?.submit ? 'Submit' : 'Run';
-                const onlyIfNeeded = !step && e.action !== 'values';
-                const storageCall = async (key: string, storeVals?: { [key: string]: string }) => {
-                    if (values.storeVals) {
-                        values.storeVals[key] = storeVals;
-                        updateState({ storeVals });
-                        vscode.postMessage({ type: 'values', key, storeVals });
-                    }
-                };
-                vals = await values.prompt(
-                    step || this.flowDiagram.flow,
-                    action,
-                    onlyIfNeeded,
-                    storageCall
-                );
-                if (vals === 'Files') {
-                    vscode.postMessage({ type: 'valuesFiles' });
-                    return;
-                } else if (!vals) {
-                    return; // canceled or just saved
-                }
-            } else if (flowAction === 'values') {
-                vscode.postMessage({ type: 'alert', message: { text: 'No values known' } });
-                return;
-            }
-        }
 
         if (flowAction === 'toolbox') {
             readState()?.setToolboxOpen(e.options?.state === 'open');
-            return;
         } else if (flowAction === 'configurator') {
             if (e.options?.state === 'open') {
                 readState()?.openConfigurator();
             } else {
                 readState()?.closeConfigurator();
             }
-            return;
+        } else if (flowAction === 'values') {
+            if (!this.valuesPopup) {
+                const container = document.getElementById('flow-container') as HTMLDivElement;
+                this.valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
+                this.valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+                this.valuesPopup.onOpenValues((openValuesEvent) => {
+                    vscode.postMessage({
+                        type: 'edit',
+                        element: 'file',
+                        path: openValuesEvent.path
+                    });
+                });
+            }
+            this.valuesPopup.render(this.getUserValues(), getValuesOptions());
+        } else {
+            if (flowAction === 'run') {
+                this.closeConfigurator();
+            }
+            vscode.postMessage({
+                type: flowAction,
+                flow: this.flowDiagram.flow.path,
+                ...(e.element && { element: e.element }),
+                ...(e.target && { target: e.target }),
+                ...(e.options && { options: e.options })
+            });
         }
-
-        vscode.postMessage({
-            type: flowAction === 'values' ? 'run' : flowAction, // can elect Run from values prompt even when launched as 'values' action
-            flow: this.flowDiagram.flow.path,
-            ...(e.element && { element: e.element }),
-            ...(e.target && { target: e.target }),
-            ...(e.options && { options: e.options }),
-            ...(vals && { values: vals })
-        });
     }
 
     /**
@@ -727,6 +726,46 @@ export class Flow implements flowbee.Disposable {
             readonly: this.flowDiagram.readonly,
             mode: 'select'
         });
+    }
+
+    onValuesAction(valuesAction: flowbee.ValuesActionEvent) {
+        if (valuesAction.action === 'save') {
+            this.userOverrides = this.valuesPopup?.getValues()?.overrides || {};
+            vscode.postMessage({ type: 'save-values', overrides: this.userOverrides });
+            this.valuesPopup?.close();
+        } else if (valuesAction.action === 'clear') {
+            this.userOverrides = {};
+            this.valuesPopup?.clear();
+            vscode.postMessage({ type: 'save-values', overrides: {} });
+        } else if (valuesAction.action === 'close') {
+            this.valuesPopup?.close();
+        }
+    }
+
+    getUserValues(): flowbee.UserValues {
+        const values = readState()?.values;
+        if (values) {
+            const valuesAccess = new ValuesAccess(values.valuesHolders, {
+                ...values.evalOptions,
+                logger: console
+            });
+            const flow: ExpressionHolder = {
+                ...this.flowDiagram.flow,
+                name: this.file
+            } as ExpressionHolder;
+            const exprVals: flowbee.ExpressionValue[] = expressions(flow).map((expr) => {
+                const locatedValue = valuesAccess.getValue(expr);
+                return {
+                    expression: expr,
+                    value: locatedValue?.value,
+                    location: locatedValue?.location?.path
+                };
+            });
+
+            return { values: exprVals, overrides: this.userOverrides };
+        } else {
+            return { values: [], overrides: {} };
+        }
     }
 
     dispose() {
@@ -773,8 +812,7 @@ window.addEventListener('message', async (event) => {
             text,
             readonly: message.readonly,
             mode: 'select',
-            config: message.config,
-            values: values?.defaults
+            config: message.config
         });
     } else if (message.type === 'select') {
         const flow = readState(false);
@@ -814,19 +852,12 @@ window.addEventListener('message', async (event) => {
             flow.updateStep(message.stepId, message.reqObj || message.file);
         }
     } else if (message.type === 'values') {
-        const theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
-        values = new Values(
-            `${message.flowPath}`,
-            `${message.base}/img/icons/${theme}`,
-            message.files,
-            message.values,
-            message.storeVals
-        );
-        updateState({
-            valuesFiles: message.files,
-            values: message.values,
-            storeVals: message.storeVals
-        });
+        const values = {
+            valuesHolders: message.holders,
+            evalOptions: message.options,
+            overrides: message.overrides
+        };
+        updateState({ values });
     } else if (message.type === 'action') {
         readState()?.onFlowAction({
             action: message.action,
@@ -861,8 +892,7 @@ interface FlowState {
         open: boolean;
         position?: { left: number; top: number; width: number; height: number };
     };
-    valuesFiles?: string[];
-    values?: object;
+    values?: Values;
     storeVals?: any;
     requests?: flowbee.Descriptor[];
 }
@@ -901,13 +931,7 @@ function readState(loadInstance = true): Flow | undefined {
             }
         }
         if (state.values) {
-            values = new Values(
-                state.file,
-                flow.options.iconBase,
-                state.valuesFiles,
-                state.values,
-                state.storeVals
-            );
+            flow.values = state.values;
         }
         return flow;
     }
