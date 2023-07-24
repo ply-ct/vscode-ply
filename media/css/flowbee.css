@@ -971,7 +971,8 @@
   box-shadow: 0 2px 8px #a8a8a8;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
   font-size: 13px;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  outline: none; }
   .flowbee-values-light .flowbee-values-header {
     display: flex;
     height: 30px;
@@ -1050,6 +1051,7 @@
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
   font-size: 13px;
   box-sizing: border-box;
+  outline: none;
   background-color: #1e1e1e;
   color: #cccccc;
   border: 1px solid #454545;

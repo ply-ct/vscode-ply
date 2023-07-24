@@ -1,5 +1,11 @@
 import * as flowbee from 'flowbee/dist/nostyles';
-import { ExpressionHolder, expressions, resolve, Values as ValuesAccess } from '@ply-ct/ply-values';
+import {
+    ExpressionHolder,
+    expressions,
+    isExpression,
+    resolve,
+    Values as ValuesAccess
+} from '@ply-ct/ply-values';
 import { Options } from './options';
 import { Templates } from './templates';
 import { FlowSplitter, ToolboxSplitter } from './splitter';
@@ -71,7 +77,7 @@ export class Flow implements flowbee.Disposable {
         },
         overrides: {}
     };
-    private userOverrides = {};
+    userOverrides = {};
 
     /**
      * @param readonly file is readonly
@@ -678,9 +684,10 @@ export class Flow implements flowbee.Disposable {
         } else if (flowAction === 'configurator') {
             if (e.options?.state === 'open') {
                 if (e.options.mode) {
-                    updateState({ mode: e.options.mode });
+                    updateState({ mode: e.options.mode, selected: this.flowDiagram.flow });
                     this.switchMode(e.options.mode);
-                    readState(e.options.mode === 'inspect')?.openConfigurator(e.options.tab);
+                    const flow = readState(e.options.mode === 'inspect');
+                    flow?.openConfigurator(e.options.tab);
                 } else {
                     readState()?.openConfigurator(e.options.tab);
                 }
@@ -700,7 +707,19 @@ export class Flow implements flowbee.Disposable {
                     });
                 });
             }
+            this.closeConfigurator();
             valuesPopup.render(this.getUserValues(), getValuesOptions());
+            valuesPopup.setDecorator((text: string) => {
+                if (text && isExpression(text)) {
+                    return [
+                        {
+                            range: { line: 0, start: 0, end: text.length - 1 },
+                            className: 'expression'
+                        }
+                    ];
+                }
+                return [];
+            });
         } else {
             if (flowAction === 'run') {
                 this.closeConfigurator();
@@ -744,6 +763,7 @@ export class Flow implements flowbee.Disposable {
     onValuesAction(valuesAction: flowbee.ValuesActionEvent) {
         if (valuesAction.action === 'save') {
             this.userOverrides = valuesPopup?.getValues()?.overrides || {};
+            updateState({ userOverrides: this.userOverrides });
             vscode.postMessage({ type: 'save-values', overrides: this.userOverrides });
             valuesPopup?.close();
         } else if (valuesAction.action === 'clear') {
@@ -756,17 +776,18 @@ export class Flow implements flowbee.Disposable {
     }
 
     getUserValues(): flowbee.UserValues {
-        const values = readState()?.values;
-        if (values) {
+        const flow = readState(false);
+        if (flow) {
+            const values = flow.values || {};
             const valuesAccess = new ValuesAccess(values.valuesHolders, {
                 ...values.evalOptions,
                 logger: console
             });
-            const flow: ExpressionHolder = {
-                ...this.flowDiagram.flow,
+            const holder: ExpressionHolder = {
+                ...flow.flowDiagram.flow,
                 name: this.file
             } as ExpressionHolder;
-            const exprVals: flowbee.ExpressionValue[] = expressions(flow).map((expr) => {
+            const exprVals: flowbee.ExpressionValue[] = expressions(holder).map((expr) => {
                 const locatedValue = valuesAccess.getValue(expr);
                 return {
                     expression: expr,
@@ -775,7 +796,7 @@ export class Flow implements flowbee.Disposable {
                 };
             });
 
-            return { values: exprVals, overrides: this.userOverrides };
+            return { values: exprVals, overrides: flow.userOverrides };
         } else {
             return { values: [], overrides: {} };
         }
@@ -870,7 +891,7 @@ window.addEventListener('message', async (event) => {
             evalOptions: message.options,
             overrides: message.overrides
         };
-        updateState({ values });
+        updateState({ values, userOverrides: values.overrides });
     } else if (message.type === 'action') {
         readState(
             message.options.mode !== 'select' && message.options.mode !== 'connect'
@@ -908,6 +929,7 @@ interface FlowState {
         position?: { left: number; top: number; width: number; height: number };
     };
     values?: Values;
+    userOverrides?: { [expr: string]: string };
     storeVals?: any;
     requests?: flowbee.Descriptor[];
 }
@@ -945,9 +967,8 @@ function readState(loadInstance = true): Flow | undefined {
                 }
             }
         }
-        if (state.values) {
-            flow.values = state.values;
-        }
+        if (state.values) flow.values = state.values;
+        if (state.userOverrides) flow.userOverrides = state.userOverrides;
         return flow;
     }
 }

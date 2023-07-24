@@ -230,6 +230,9 @@ body {
   overflow: auto;
   background-color: var(--vscode-sideBar-background);
 }
+.expression {
+  color: #32cd32 !important;
+}
 
 /* customized flowbee styles */
 .flowbee-configurator {

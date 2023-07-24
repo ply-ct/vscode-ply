@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "3.0.0-beta55",
+  "version": "3.0.0-beta56",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -66,7 +66,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.29.3",
     "escape-string-regexp": "^4.0.0",
-    "flowbee": "^1.1.5",
+    "flowbee": "^1.1.6",
     "js-yaml": "^4.1.0",
     "mime-types": "^2.1.35",
     "minimatch": "^7.0.1",
