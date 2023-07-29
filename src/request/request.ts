@@ -32,7 +32,9 @@ export class RequestMerge {
      * Read embedded request from file
      */
     async readRequest(requestUri: vscode.Uri, text: string): Promise<string> {
-        // const fileText = await this.fileText();
+        if (requestUri.path.endsWith('.ply') && !requestUri.fragment) {
+            return text;
+        }
         const reqObj = this.getRequestObject(requestUri, text);
         return ply.util
             .lines(text)
