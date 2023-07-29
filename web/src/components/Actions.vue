@@ -10,6 +10,7 @@
         @click="onAction"
       />
       <icon :base="options.iconBase" file="compare.svg" title="Compare Results" @click="onAction" />
+      <icon :base="options.iconBase" file="auth.svg" title="Auth" @click="onAction" />
       <icon
         :base="options.iconBase"
         file="help.svg"

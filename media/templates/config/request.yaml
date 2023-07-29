@@ -20,6 +20,7 @@ Request:
 Headers:
   widgets:
     - type: table
+      multi: false
       attribute: headers # no label means fill entire tab
       widgets: # table widgets don't specify attribute
         - type: text

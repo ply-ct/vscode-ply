@@ -894,7 +894,8 @@ window.addEventListener('message', async (event) => {
         updateState({ values, userOverrides: values.overrides });
     } else if (message.type === 'action') {
         readState(
-            message.options.mode !== 'select' && message.options.mode !== 'connect'
+            !message.options ||
+                (message.options.mode !== 'select' && message.options.mode !== 'connect')
         )?.onFlowAction({
             action: message.action,
             target: message.target,
