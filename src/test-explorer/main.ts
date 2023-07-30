@@ -17,8 +17,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
             ? workspaceFolders[0].uri
             : undefined;
     const configuration = vscode.workspace.getConfiguration('ply.explorer', workspaceUri);
-    const expandLevels = configuration.get<number>('showExpandButton') || 0;
-    const showCollapseAll = configuration.get<boolean>('showCollapseButton');
     const addToEditorContextMenu = configuration.get<boolean>('addToEditorContextMenu');
     const hideWhen = configuration.get<HideWhenSetting>('hideWhen');
 
@@ -28,14 +26,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((configChange) => {
-            if (
-                configChange.affectsConfiguration('ply.explorer.showExpandButton') ||
-                configChange.affectsConfiguration('ply.explorer.showCollapseButton')
-            ) {
-                vscode.window.showInformationMessage(
-                    'The change will take effect when you restart Visual Studio Code'
-                );
-            }
             if (configChange.affectsConfiguration('ply.explorer.addToEditorContextMenu')) {
                 const configuration = vscode.workspace.getConfiguration(
                     'testExplorer',
@@ -60,7 +50,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
         })
     );
 
-    vscode.commands.executeCommand('setContext', 'showTestExplorerExpandButton', expandLevels > 0);
     vscode.commands.executeCommand(
         'setContext',
         'showTestExplorerEditorContextMenu',
@@ -71,7 +60,7 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
 
     const explorerTreeView = vscode.window.createTreeView('ply-tests', {
         treeDataProvider: plyExplorer,
-        showCollapseAll,
+        showCollapseAll: true,
         canSelectMany: true
     });
     context.subscriptions.push(explorerTreeView);
@@ -87,12 +76,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
     const registerCommand = (command: string, callback: (...args: any[]) => any) => {
         context.subscriptions.push(vscode.commands.registerCommand(command, callback));
     };
-
-    registerCommand('ply.explorer.reload', () => plyExplorer.reload());
-
-    registerCommand('ply.explorer.reload-collection', (node) => plyExplorer.reload(node));
-
-    registerCommand('ply.explorer.reloading', () => {});
 
     registerCommand('ply.explorer.run-all', () => plyExplorer.run());
 
@@ -114,8 +97,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
 
     registerCommand('ply.explorer.run-this-test', () => runTestAtCursor(plyExplorer));
 
-    registerCommand('ply.explorer.cancel', () => plyExplorer.cancel());
-
     registerCommand('ply.explorer.debug-all', () => plyExplorer.debug());
 
     registerCommand('ply.explorer.debug', (clickedNode, allNodes) =>
@@ -134,6 +115,14 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
 
     registerCommand('ply.explorer.debug-this-test', () => debugTestAtCursor(plyExplorer));
 
+    registerCommand('ply.explorer.cancel', () => plyExplorer.cancel());
+
+    registerCommand('ply.explorer.reload', () => plyExplorer.reload());
+
+    registerCommand('ply.explorer.reload-collection', (node) => plyExplorer.reload(node));
+
+    registerCommand('ply.explorer.reloading', () => {});
+
     registerCommand('ply.explorer.show-log', (nodes) => plyExplorer.showLog(nodes));
 
     registerCommand('ply.explorer.show-error', (message) => plyExplorer.showError(message));
@@ -149,10 +138,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
     registerCommand('ply.explorer.reset', (node) => plyExplorer.resetState(node));
 
     registerCommand('ply.explorer.reveal', (node) => plyExplorer.reveal(node, explorerTreeView));
-
-    registerCommand('ply.explorer.expand', () =>
-        expand(plyExplorer, explorerTreeView, expandLevels)
-    );
 
     registerCommand('ply.explorer.sort-by-label', () => plyExplorer.setSortBy('byLabel'));
 

@@ -104,17 +104,17 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
             };
         } else if (method === 'POST') {
             return {
-                badge: 'Po',
+                badge: 'PO',
                 tooltip: 'POST'
             };
         } else if (method === 'PUT') {
             return {
-                badge: 'Pu',
+                badge: 'PU',
                 tooltip: 'PUT'
             };
         } else if (method === 'PATCH') {
             return {
-                badge: 'Pa',
+                badge: 'PA',
                 tooltip: 'PATCH'
             };
         } else if (method === 'DELETE') {

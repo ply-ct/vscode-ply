@@ -329,18 +329,6 @@
           "default": null,
           "scope": "resource"
         },
-        "ply.explorer.showExpandButton": {
-          "description": "Show a button for expanding the top nodes of the test tree, recursively for the given number of levels",
-          "type": "number",
-          "default": 3,
-          "scope": "resource"
-        },
-        "ply.explorer.showCollapseButton": {
-          "description": "Show a button for collapsing the nodes of the test tree",
-          "type": "boolean",
-          "default": true,
-          "scope": "resource"
-        },
         "ply.explorer.addToEditorContextMenu": {
           "description": "Add menu items to the editor context menu for running and debugging the tests in the current file",
           "type": "boolean",
@@ -570,8 +558,8 @@
         "category": "Ply Explorer",
         "title": "Run all tests",
         "icon": {
-          "dark": "./icons/test-explorer/run-dark.svg",
-          "light": "./icons/test-explorer/run-light.svg"
+          "dark": "./icons/test-explorer/run-all-dark.svg",
+          "light": "./icons/test-explorer/run-all-light.svg"
         }
       },
       {
@@ -677,8 +665,8 @@
         "category": "Ply Explorer",
         "title": "Show source",
         "icon": {
-          "dark": "./icons/dark/open-file.svg",
-          "light": "./icons/light/open-file.svg"
+          "dark": "./icons/test-explorer/open-file-dark.svg",
+          "light": "./icons/test-explorer/open-file-light.svg"
         }
       },
       {
@@ -695,15 +683,6 @@
         "command": "ply.explorer.reveal",
         "category": "Ply Explorer",
         "title": "Reveal the given node"
-      },
-      {
-        "command": "ply.explorer.expand",
-        "category": "Ply Explorer",
-        "title": "Expand the top nodes of the test tree",
-        "icon": {
-          "dark": "./icons/test-explorer/expand-all-dark.svg",
-          "light": "./icons/test-explorer/expand-all-light.svg"
-        }
       },
       {
         "command": "ply.explorer.sort-by-label",
@@ -831,11 +810,6 @@
           "command": "ply.explorer.reloading",
           "group": "navigation@4",
           "when": "view == ply-tests && testsLoading"
-        },
-        {
-          "command": "ply.explorer.expand",
-          "group": "navigation@5",
-          "when": "view == ply-tests && showTestExplorerExpandButton"
         },
         {
           "command": "ply.explorer.retire",
@@ -1006,27 +980,27 @@
         },
         {
           "command": "ply.explorer.run",
-          "group": "inline@2",
+          "group": "inline@1",
           "when": "view == ply-tests && viewItem != error"
         },
         {
           "command": "ply.explorer.debug",
-          "group": "inline@1",
+          "group": "inline@2",
           "when": "view == ply-tests && viewItem == debuggableSuiteWithSource"
         },
         {
           "command": "ply.explorer.debug",
-          "group": "inline@1",
+          "group": "inline@2",
           "when": "view == ply-tests && viewItem == debuggableSuite"
         },
         {
           "command": "ply.explorer.debug",
-          "group": "inline@1",
+          "group": "inline@2",
           "when": "view == ply-tests && viewItem == debuggableTestWithSource"
         },
         {
           "command": "ply.explorer.debug",
-          "group": "inline@1",
+          "group": "inline@2",
           "when": "view == ply-tests && viewItem == debuggableTest"
         },
         {
@@ -1191,10 +1165,6 @@
         {
           "command": "ply.explorer.reveal",
           "when": "false"
-        },
-        {
-          "command": "ply.explorer.expand",
-          "when": "showTestExplorerExpandButton"
         },
         {
           "command": "ply.explorer.sort-by-label",
