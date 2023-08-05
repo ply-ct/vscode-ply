@@ -202,6 +202,15 @@ a:hover {
   height: calc(100vh - 100px);
 }
 
+.grid-form {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 5px;
+}
+.grid-form label {
+  padding-top: 3px;
+}
+
 .editor-container {
   height: calc(100vh - 100px);
   overflow-x: visible;
@@ -235,6 +244,36 @@ a:hover {
 .table-container td:focus {
   outline: 1px solid #409eff;
   border-left: 1px solid #409eff;
+}
+
+.flowbee-values-footer {
+  border-top: #808080;
+}
+.flowbee-values-dark .flowbee-values-footer input[type='button'],
+.flowbee-values-light .flowbee-values-footer input[type='button'] {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: none;
+  padding: 4px 6px;
+}
+
+.auth-popper.el-popper.is-light {
+  color: var(--vscode-settings-dropdownForeground);
+  background-color: var(--vscode-settings-dropdownBackground);
+  border: 1px solid var(--vscode-settings-dropdownBorder);
+}
+.el-popover__title {
+  color: var(--vscode-settings-dropdownForeground);
+  background-color: var(--vscode-settings-dropdownBackground);
+}
+.auth-popper.el-popper.is-light .el-popper__arrow::before {
+  width: 20px;
+  height: 20px;
+  background: var(--vscode-settings-dropdownBackground);
+  border: 1px solid var(--vscode-settings-dropdownBorder);
+}
+.auth-popper.el-popper[data-popper-placement^='bottom'] > .el-popper__arrow {
+  top: -10px;
 }
 
 .el-select {

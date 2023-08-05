@@ -87,7 +87,6 @@ export default defineComponent({
   mounted() {
     this.decorate();
   },
-
   methods: {
     decorate() {
       if (document.activeElement === this.urlInput) {

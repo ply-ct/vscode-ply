@@ -324,9 +324,14 @@ export default defineComponent({
     onCloseValues() {
       this.valuesOpen = false;
     },
-    onAction(action: string, requestName: string) {
+    onAction(action: string, requestName: string, value?: string) {
       if (action === 'values') {
         this.valuesOpen = !this.valuesOpen;
+      } else if (action === 'auth') {
+        this.$emit('updateRequest', {
+          ...this.request,
+          headers: { ...this.request.headers, Authorization: value }
+        });
       } else {
         this.$emit('requestAction', action, requestName);
       }
