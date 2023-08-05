@@ -275,6 +275,10 @@ a:hover {
 .auth-popper.el-popper[data-popper-placement^='bottom'] > .el-popper__arrow {
   top: -10px;
 }
+// ignore clicks to avoid closing auth popup
+.el-input__password svg {
+  pointer-events: none;
+}
 
 .el-select {
   border: none;

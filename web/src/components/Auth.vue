@@ -59,7 +59,7 @@ export default defineComponent({
   data() {
     return {
       popVisible: false,
-      authType: 'None',
+      authType: 'None' as 'None' | 'Basic' | 'Bearer',
       username: '',
       password: '',
       token: ''
@@ -71,6 +71,19 @@ export default defineComponent({
     };
   },
   mounted() {
+    if (this.authHeader?.toLowerCase().startsWith('basic ')) {
+      const creds = this.fromBase64(this.authHeader.substring(6).trim()).split(':');
+      if (creds.length >= 2) {
+        this.authType = 'Basic';
+        this.username = creds[0];
+        this.password = creds.slice(1).join(':');
+      }
+    } else if (this.authHeader?.toLowerCase().startsWith('bearer ')) {
+      this.authType = 'Bearer';
+      this.token = this.authHeader.substring(7).trim();
+    }
+
+    // close popover on click outside
     document.onclick = (evt: MouseEvent) => {
       if (evt.target !== this.trigger) {
         if (evt.target instanceof Node) {
@@ -89,7 +102,9 @@ export default defineComponent({
       return btoa(binString);
     },
     fromBase64(input: string): string {
-      return '';
+      const binString = atob(input);
+      const uintArray = Uint8Array.from(binString, (m): number => m.codePointAt(0) || 0);
+      return new TextDecoder().decode(uintArray);
     },
     onChange() {
       if (this.authType === 'None') {
