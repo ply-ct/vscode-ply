@@ -14,7 +14,7 @@ import {
     TestEvent,
     TestDecoration
 } from './test-adapter/api/index';
-import { PlyRoots } from './plyRoots';
+import { PlyRoots } from './ply-roots';
 import { PlyConfig } from './config';
 import { WorkerArgs } from './worker/args';
 import { DiffState } from './result/diff';

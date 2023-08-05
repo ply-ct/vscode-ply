@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { PlyRoots } from './plyRoots';
+import { PlyRoots } from './ply-roots';
 
 export class PlyCodeLensProvider implements vscode.CodeLensProvider {
     constructor(

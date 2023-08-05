@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { RunOptions, loadYaml, PlyResults, TestRun } from '@ply-ct/ply';
 import { Descriptor } from 'flowbee';
 import { PlyAdapter } from './adapter';
-import { PlyRoots } from './plyRoots';
+import { PlyRoots } from './ply-roots';
 import { Request } from './request/request';
 import { Result } from './result/result';
 import { PlyConfig } from './config';
@@ -143,25 +143,29 @@ export class AdapterHelper {
             });
             for (const dotPly of dotPlys) {
                 const dotPlyUri = vscode.Uri.file(dotPly.file!);
-                const text = new TextDecoder('utf-8').decode(
-                    await vscode.workspace.fs.readFile(dotPlyUri.with({ fragment: undefined }))
-                );
-                const obj = text.startsWith('{')
-                    ? JSON.parse(text)
-                    : loadYaml(dotPlyUri.fsPath, text);
-                const name = Object.keys(obj)[0];
-                const request = { ...obj[name], name };
-                ret.push({
-                    path: 'request',
-                    type: 'step',
-                    name: dotPly.label,
-                    icon: 'request.svg',
-                    link: {
-                        label: dotPly.description!,
-                        url: dotPlyUri.with({ scheme: 'ply-request' }).toString()
-                    },
-                    request
-                });
+                const fileUri = dotPlyUri.with({ fragment: undefined });
+                // TODO: remove stale test infos so this isn't required
+                if (fs.existsSync(fileUri.fsPath)) {
+                    const text = new TextDecoder('utf-8').decode(
+                        await vscode.workspace.fs.readFile(fileUri)
+                    );
+                    const obj = text.startsWith('{')
+                        ? JSON.parse(text)
+                        : loadYaml(dotPlyUri.fsPath, text);
+                    const name = Object.keys(obj)[0];
+                    const request = { ...obj[name], name };
+                    ret.push({
+                        path: 'request',
+                        type: 'step',
+                        name: dotPly.label,
+                        icon: 'request.svg',
+                        link: {
+                            label: dotPly.description!,
+                            url: dotPlyUri.with({ scheme: 'ply-request' }).toString()
+                        },
+                        request
+                    });
+                }
             }
         }
         return ret;

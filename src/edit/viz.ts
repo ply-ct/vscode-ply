@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AdapterHelper } from '../adapterHelper';
+import { AdapterHelper } from '../adapter-helper';
 import { Web } from './web';
 
 export class VizEditor implements vscode.CustomTextEditorProvider {

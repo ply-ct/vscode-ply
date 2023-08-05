@@ -4,7 +4,7 @@ import { Result } from './result';
 import { ResultDiffs, ResultDecorator } from './decorator';
 import { PlyAdapter } from '../adapter';
 import { ValuesHolder } from '@ply-ct/ply-values';
-import { Info } from '../plyRoots';
+import { Info } from '../ply-roots';
 
 /**
  * Write-through cached diff state.

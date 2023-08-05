@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as assert from 'assert';
 import * as ply from '@ply-ct/ply';
 import { URI as Uri } from 'vscode-uri';
-import { PlyRoots, PlyRoot } from '../src/plyRoots';
+import { PlyRoots, PlyRoot } from '../src/ply-roots';
 import * as help from './help';
 
 const movieQueries = 'test/requests/movie-queries.ply.yaml';

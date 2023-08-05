@@ -14,11 +14,11 @@ import {
 } from './test-adapter/api/index';
 import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
 import { PlyLoader } from './loader';
-import { Info, PlyRoots } from './plyRoots';
+import { Info, PlyRoots } from './ply-roots';
 import { PlyRunner } from './runner';
 import { PlyConfig } from './config';
 import { DiffState } from './result/diff';
-import { PlyCodeLensProvider } from './codeLens';
+import { PlyCodeLensProvider } from './codelens';
 import { Values } from './values/values';
 
 export class PlyAdapter implements TestAdapter {

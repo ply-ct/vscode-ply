@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { TestHub, testExplorerExtensionId, TestAdapter } from './test-adapter/api/index';
-import { PlyRoots } from './plyRoots';
+import { PlyRoots } from './ply-roots';
 import { PlyConfig } from './config';
 
 interface Item {

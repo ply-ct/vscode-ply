@@ -8,7 +8,7 @@ import * as flowbee from 'flowbee';
 import { PLY_CONFIGS, RunOptions, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
-import { AdapterHelper } from '../adapterHelper';
+import { AdapterHelper } from '../adapter-helper';
 import { Web } from './web';
 import { CreateFileOptions, WorkspaceFiles } from '../util/files';
 import { Custom } from './custom';
