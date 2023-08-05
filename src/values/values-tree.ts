@@ -62,10 +62,6 @@ export class PlyValuesTree {
 
                 // update plyconfig
                 values.config.updatePlyConfig({ valuesFiles });
-
-                if (checked && existsSync(valuesFile.uri.fsPath)) {
-                    vscode.commands.executeCommand('vscode.open', valuesFile.uri);
-                }
             })
         );
         context.subscriptions.push(
