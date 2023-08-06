@@ -233,9 +233,21 @@ body {
 .expression {
   color: #32cd32 !important;
 }
-
+.required::after {
+  content: '*';
+  color: #ff0000;
+  padding-left: 1px;
+}
 /* customized flowbee styles */
 .flowbee-configurator {
   width: calc(100% - 200px);
   height: 167px; /* enough for five tabs */
+}
+
+.flowbee-values-dark .flowbee-values-footer input[type='button'],
+.flowbee-values-light .flowbee-values-footer input[type='button'] {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: none;
+  padding: 4px 6px;
 }

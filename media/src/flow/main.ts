@@ -3,6 +3,7 @@ import {
     ExpressionHolder,
     expressions,
     isExpression,
+    toExpression,
     resolve,
     Values as ValuesAccess
 } from '@ply-ct/ply-values';
@@ -711,10 +712,14 @@ export class Flow implements flowbee.Disposable {
             valuesPopup.render(this.getUserValues(), getValuesOptions());
             valuesPopup.setDecorator((text: string) => {
                 if (text && isExpression(text)) {
+                    // todo: hover for full location?
+                    const required = this.getRequiredValueNames()
+                        .map((v) => toExpression(v))
+                        .includes(text);
                     return [
                         {
                             range: { line: 0, start: 0, end: text.length - 1 },
-                            className: 'expression'
+                            className: required ? 'expression required' : 'expression'
                         }
                     ];
                 }
@@ -800,6 +805,15 @@ export class Flow implements flowbee.Disposable {
         } else {
             return { values: [], overrides: {} };
         }
+    }
+
+    getRequiredValueNames(): string[] {
+        const flowValues = this.flowDiagram.flow.attributes?.values;
+        if (flowValues) {
+            const rows = JSON.parse(flowValues) as string[][];
+            return rows.filter((row) => row[2] === 'true').map((r) => r[0]);
+        }
+        return [];
     }
 
     dispose() {
