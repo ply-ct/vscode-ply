@@ -133,15 +133,11 @@ export default defineComponent({
         actions: [
           {
             name: 'save',
-            label: 'Save'
+            label: 'Apply'
           },
           {
             name: 'clear',
             label: 'Clear'
-          },
-          {
-            name: 'close',
-            label: 'Cancel'
           }
         ]
       };

@@ -19,15 +19,11 @@ export const getValuesOptions = (): ValuesOptions => {
         actions: [
             {
                 name: 'save',
-                label: 'Save'
+                label: 'Apply'
             },
             {
                 name: 'clear',
                 label: 'Clear'
-            },
-            {
-                name: 'close',
-                label: 'Cancel'
             }
         ],
         margins: {
