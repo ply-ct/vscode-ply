@@ -19,11 +19,11 @@ export const getValuesOptions = (): ValuesOptions => {
         actions: [
             {
                 name: 'save',
-                label: 'Apply'
+                label: 'Apply Changes'
             },
             {
                 name: 'clear',
-                label: 'Clear'
+                label: 'Clear Overrides'
             }
         ],
         margins: {

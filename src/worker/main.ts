@@ -1,8 +1,8 @@
 import * as path from 'path';
-import * as flowbee from 'flowbee';
 import { WorkerArgs } from './args';
 // events API must stay compatible
 import * as ply from '@ply-ct/ply';
+import { FlowEvent } from '@ply-ct/ply-api';
 
 (async () => {
     if (process.send) {
@@ -96,7 +96,7 @@ function execute(
                 diffs: outcomeEvent.outcome.diffs
             });
         });
-        plier.on('flow', (flowEvent: flowbee.FlowEvent) => {
+        plier.on('flow', (flowEvent: FlowEvent) => {
             sendMessage({
                 type: 'flow',
                 flowEvent

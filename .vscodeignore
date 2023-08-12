@@ -41,3 +41,6 @@ web/tsconfig.json
 !node_modules/as-table
 !node_modules/printable-characters
 !out/worker/bundle.js
+node_modules/get-source/test/files/original.uglified.beautified.js.map
+node_modules/get-source/test/files/original.uglified.js.map
+node_modules/get-source/test/files/original.uglified.with.sources.js
