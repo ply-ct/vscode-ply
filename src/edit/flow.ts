@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as findUp from 'find-up';
 import { WebSocketServer } from 'ws';
-import * as flowbee from 'flowbee';
+import { Disposable, Listener, TypedEvent, FlowEvent, FlowInstance } from '@ply-ct/ply-api';
 import { PLY_CONFIGS, RunOptions, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
@@ -22,7 +22,7 @@ export interface FlowActionEvent {
     options?: any;
 }
 export interface FlowModeChangeEvent {
-    mode: flowbee.Mode;
+    mode: 'select' | 'connect' | 'runtime';
 }
 interface InstanceSubscribed {
     instanceId: string;
@@ -31,20 +31,16 @@ interface InstanceSubscribed {
 export class FlowEditor implements vscode.CustomTextEditorProvider {
     private websocketPort: number;
     private websocketBound = false;
-    private subscribedEvent = new flowbee.TypedEvent<InstanceSubscribed>();
+    private subscribedEvent = new TypedEvent<InstanceSubscribed>();
 
     onceWebviewReady?: (uri: vscode.Uri) => void;
 
     constructor(
         private context: vscode.ExtensionContext,
         private adapterHelper: AdapterHelper,
-        private onFlowItemSelect: (
-            listener: flowbee.Listener<FlowItemSelectEvent>
-        ) => flowbee.Disposable,
-        private onFlowAction: (listener: flowbee.Listener<FlowActionEvent>) => flowbee.Disposable,
-        private onFlowModeChange: (
-            listener: flowbee.Listener<FlowModeChangeEvent>
-        ) => flowbee.Disposable
+        private onFlowItemSelect: (listener: Listener<FlowItemSelectEvent>) => Disposable,
+        private onFlowAction: (listener: Listener<FlowActionEvent>) => Disposable,
+        private onFlowModeChange: (listener: Listener<FlowModeChangeEvent>) => Disposable
     ) {
         this.websocketPort = vscode.workspace
             .getConfiguration('ply')
@@ -486,9 +482,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             const flowPath = document.uri.fsPath.replace(/\\/g, '/');
             for (const adapter of this.adapterHelper.adapters.values()) {
                 let flowInstanceId: string | null = null;
-                const listener: flowbee.Listener<flowbee.FlowEvent> = async (
-                    flowEvent: flowbee.FlowEvent
-                ) => {
+                const listener: Listener<FlowEvent> = async (flowEvent: FlowEvent) => {
                     if (flowEvent.flowPath === flowPath) {
                         if (
                             flowEvent.elementType === 'flow' &&
@@ -502,7 +496,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             // set the diagram instance so it'll start listening for websocket updates
                             webviewPanel.webview.postMessage({
                                 type: 'instance',
-                                instance: flowEvent.instance as flowbee.FlowInstance,
+                                instance: flowEvent.instance as FlowInstance,
                                 event: flowEvent.eventType
                             });
                         } else {
@@ -641,7 +635,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
     /**
      * Instance from results
      */
-    getInstance(uri: vscode.Uri): flowbee.FlowInstance | undefined {
+    getInstance(uri: vscode.Uri): FlowInstance | undefined {
         const adapter = this.adapterHelper.getAdapter(uri);
         const id = `flows|${uri.toString(true)}`;
         const suite = adapter.plyRoots.getSuite(id);

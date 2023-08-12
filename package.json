@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@kurkle/color": "^0.3.2",
-    "@ply-ct/ply": "^3.2.8",
+    "@ply-ct/ply": "^3.2.9",
     "@ply-ct/ply-api": "1.3.3",
     "@ply-ct/ply-values": "^0.3.3",
     "chart.js": "^4.2.1",

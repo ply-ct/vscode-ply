@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { Listener, Disposable } from 'flowbee';
+import { Listener, Disposable } from '@ply-ct/ply-api';
 import { AdapterHelper } from '../adapter-helper';
 import { Web } from './web';
 import { Response, Flow, Location, util, RunOptions } from '@ply-ct/ply';

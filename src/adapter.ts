@@ -12,7 +12,7 @@ import {
     TestEvent,
     RetireEvent
 } from './test-adapter/api/index';
-import { FlowEvent, TypedEvent as Event, Listener, Disposable } from 'flowbee';
+import { FlowEvent, TypedEvent as Event, Listener, Disposable } from '@ply-ct/ply-api';
 import { PlyLoader } from './loader';
 import { Info, PlyRoots } from './ply-roots';
 import { PlyRunner } from './runner';

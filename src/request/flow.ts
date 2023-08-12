@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { Step } from 'flowbee';
+import { Step } from '@ply-ct/ply-api';
 import { PlyConfig } from '../config';
 
 export class FlowMerge {

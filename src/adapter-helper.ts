@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { RunOptions, loadYaml, PlyResults, TestRun } from '@ply-ct/ply';
-import { Descriptor } from 'flowbee';
+import { Descriptor } from '@ply-ct/ply-api';
 import { PlyAdapter } from './adapter';
 import { PlyRoots } from './ply-roots';
 import { Request } from './request/request';

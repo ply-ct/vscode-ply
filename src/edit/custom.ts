@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { TypedEvent, Listener } from 'flowbee';
-import { Descriptor } from 'flowbee';
+import { TypedEvent, Listener, Descriptor } from '@ply-ct/ply-api';
 import { Setting } from '../config';
 
 export interface DescriptorsChangeEvent {

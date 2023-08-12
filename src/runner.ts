@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
-import { FlowEvent, TypedEvent as Event, Listener } from 'flowbee';
+import { FlowEvent, TypedEvent as Event, Listener } from '@ply-ct/ply-api';
 import { ChildProcess, fork } from 'child_process';
 import {
     TestSuiteInfo,

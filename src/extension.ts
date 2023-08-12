@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TypedEvent as Event, Listener, Disposable } from 'flowbee';
+import { TypedEvent as Event, Listener, Disposable } from '@ply-ct/ply-api';
 import { TestHub } from './test-adapter/api/index';
 import { activate as plyExplorerActivate } from './test-explorer/main';
 import { Log } from './test-adapter/util/log';
