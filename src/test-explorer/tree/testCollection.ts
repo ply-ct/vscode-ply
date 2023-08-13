@@ -22,7 +22,7 @@ import {
     intersect,
     getAdapterIds
 } from '../util';
-import { SortSetting, getCompareFn } from './sort';
+import { getCompareFn } from './sort';
 
 export class TestCollection {
     private static nextCollectionId = 1;
@@ -36,7 +36,6 @@ export class TestCollection {
     private runningSuite = new Map<string | undefined, TestSuiteNode>();
     private _autorunNode: TreeNode | undefined;
     private readonly autorunMementoKey: string | undefined;
-    private sortBy: SortSetting | null;
     private readonly sortMementoKey: string | undefined;
 
     private readonly nodesById = new Map<string, TreeNode>();
@@ -65,12 +64,6 @@ export class TestCollection {
             this.autorunMementoKey = `autorun ${folderPath}`;
         }
 
-        let sortBy = this.getSortSetting();
-        if (sortBy === undefined) {
-            sortBy = this.getSortMemento();
-        }
-        this.sortBy = sortBy || null;
-
         const workspaceUri = adapter.workspaceFolder ? adapter.workspaceFolder.uri : undefined;
 
         this.disposables.push(
@@ -87,16 +80,6 @@ export class TestCollection {
                     configChange.affectsConfiguration('ply.explorer.errorDecoration', workspaceUri)
                 ) {
                     this.explorer.decorator.updateAllDecorations();
-                }
-
-                if (configChange.affectsConfiguration('ply.explorer.sort', workspaceUri)) {
-                    let sortBy = this.getSortSetting();
-                    if (sortBy === undefined) {
-                        sortBy = this.getSortMemento();
-                    }
-                    if (sortBy !== undefined) {
-                        this.setSortBy(sortBy);
-                    }
                 }
             })
         );
@@ -155,6 +138,7 @@ export class TestCollection {
             this.explorer.testLoadStarted(this);
             this.changeEventsWhileLoading = [];
         } else if (testLoadEvent.type === 'finished') {
+            this.sort();
             if (testLoadEvent.suite) {
                 this.rootSuite = new TestSuiteNode(
                     this,
@@ -165,13 +149,9 @@ export class TestCollection {
                 );
                 this.errorNode = undefined;
 
-                if (this.shouldRetireStateOnReload()) {
-                    this.rootSuite.retireState();
-                } else if (this.shouldResetStateOnReload()) {
-                    this.rootSuite.resetState();
-                }
+                this.rootSuite.resetState();
 
-                const sortCompareFn = getCompareFn(this.sortBy || undefined);
+                const sortCompareFn = getCompareFn();
                 if (sortCompareFn) {
                     this.sortRec(this.rootSuite, sortCompareFn);
                 }
@@ -440,34 +420,6 @@ export class TestCollection {
         this.explorer.treeEvents.sendNodeChangedEvents(true);
     }
 
-    getSortSetting(): SortSetting | null | undefined {
-        const settings = this.getConfiguration().inspect<SortSetting | null>('sort');
-        if (!settings) return undefined;
-
-        if (settings.workspaceFolderValue !== undefined) {
-            return settings.workspaceFolderValue;
-        } else if (settings.workspaceValue !== undefined) {
-            return settings.workspaceValue;
-        } else if (settings.globalValue !== undefined) {
-            return settings.globalValue;
-        } else {
-            return undefined;
-        }
-    }
-
-    getSortMemento(): SortSetting | null | undefined {
-        if (!this.sortMementoKey) return undefined;
-        return this.explorer.context.workspaceState.get<SortSetting | null>(this.sortMementoKey);
-    }
-
-    async setSortBy(sortBy: SortSetting | null, saveMemento = false): Promise<void> {
-        this.sortBy = sortBy;
-        if (saveMemento && this.sortMementoKey) {
-            await this.explorer.context.workspaceState.update(this.sortMementoKey, sortBy);
-        }
-        this.sort();
-    }
-
     sendNodeChangedEvents(): void {
         this.explorer.treeEvents.sendNodeChangedEvents(false);
     }
@@ -657,7 +609,7 @@ export class TestCollection {
     private sort(): void {
         if (!this.rootSuite) return;
 
-        const compareFn = getCompareFn(this.sortBy);
+        const compareFn = getCompareFn();
 
         this.sortRec(this.rootSuite, compareFn!);
         this.explorer.treeEvents.sendTreeChangedEvent();

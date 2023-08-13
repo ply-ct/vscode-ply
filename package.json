@@ -253,44 +253,6 @@
           "default": false,
           "scope": "window"
         },
-        "ply.explorer.onStart": {
-          "description": "Retire or reset all test states whenever a test run is started",
-          "type": [
-            "string",
-            "null"
-          ],
-          "enum": [
-            "retire",
-            "reset",
-            null
-          ],
-          "enumDescriptions": [
-            "Retire all test states whenever a test run is started",
-            "Reset all test states whenever a test run is started",
-            "Don't change the test states when a test run is started"
-          ],
-          "default": null,
-          "scope": "resource"
-        },
-        "ply.explorer.onReload": {
-          "description": "Retire or reset all test states whenever the test tree is reloaded",
-          "type": [
-            "string",
-            "null"
-          ],
-          "enum": [
-            "retire",
-            "reset",
-            null
-          ],
-          "enumDescriptions": [
-            "Retire all test states whenever the test tree is reloaded",
-            "Reset all test states whenever the test tree is reloaded",
-            "Don't change the test states when the test tree is reloaded"
-          ],
-          "default": null,
-          "scope": "resource"
-        },
         "ply.explorer.codeLens": {
           "description": "Show a CodeLens above each test or suite for running or debugging the tests",
           "type": "boolean",
@@ -313,23 +275,6 @@
           "description": "Provide hover messages for the error decorations in the editor",
           "type": "boolean",
           "default": true,
-          "scope": "resource"
-        },
-        "ply.explorer.sort": {
-          "description": "Sort the tests and suites by label. If this is not set (or set to null), they will be shown in natural order",
-          "type": [
-            "string",
-            "null"
-          ],
-          "enum": [
-            "byLabel",
-            null
-          ],
-          "enumDescriptions": [
-            "sort by label",
-            "don't sort, the tests and suites will be shown in natural order"
-          ],
-          "default": null,
           "scope": "resource"
         },
         "ply.explorer.addToEditorContextMenu": {
@@ -673,29 +618,9 @@
         }
       },
       {
-        "command": "ply.explorer.retire",
-        "category": "Ply Explorer",
-        "title": "Retire test states"
-      },
-      {
-        "command": "ply.explorer.reset",
-        "category": "Ply Explorer",
-        "title": "Reset test states"
-      },
-      {
         "command": "ply.explorer.reveal",
         "category": "Ply Explorer",
         "title": "Reveal the given node"
-      },
-      {
-        "command": "ply.explorer.sort-by-label",
-        "category": "Ply Explorer",
-        "title": "Sort by label"
-      },
-      {
-        "command": "ply.explorer.dont-sort",
-        "category": "Ply Explorer",
-        "title": "Sort in natural order"
       },
       {
         "command": "ply.values.reload",
@@ -813,26 +738,6 @@
           "command": "ply.explorer.reloading",
           "group": "navigation@4",
           "when": "view == ply-tests && testsLoading"
-        },
-        {
-          "command": "ply.explorer.retire",
-          "group": "2_state@1",
-          "when": "view == ply-tests"
-        },
-        {
-          "command": "ply.explorer.reset",
-          "group": "2_state@2",
-          "when": "view == ply-tests"
-        },
-        {
-          "command": "ply.explorer.sort-by-label",
-          "group": "3_sort@1",
-          "when": "view == ply-tests"
-        },
-        {
-          "command": "ply.explorer.dont-sort",
-          "group": "3_sort@5",
-          "when": "view == ply-tests"
         },
         {
           "command": "ply.values.reload",
@@ -1017,16 +922,6 @@
           "when": "view == ply-tests && viewItem == error"
         },
         {
-          "command": "ply.explorer.retire",
-          "group": "5_state@6",
-          "when": "view == ply-tests && viewItem != error"
-        },
-        {
-          "command": "ply.explorer.reset",
-          "group": "5_state@7",
-          "when": "view == ply-tests && viewItem != error"
-        },
-        {
           "command": "ply.values.open-file",
           "group": "inline@1",
           "when": "view == ply-values"
@@ -1158,23 +1053,7 @@
           "when": "false"
         },
         {
-          "command": "ply.explorer.retire",
-          "when": "false"
-        },
-        {
-          "command": "ply.explorer.reset",
-          "when": "false"
-        },
-        {
           "command": "ply.explorer.reveal",
-          "when": "false"
-        },
-        {
-          "command": "ply.explorer.sort-by-label",
-          "when": "false"
-        },
-        {
-          "command": "ply.explorer.dont-sort",
           "when": "false"
         },
         {

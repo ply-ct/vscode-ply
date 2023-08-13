@@ -169,8 +169,6 @@ export class PlyAdapter implements TestAdapter {
             console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
             console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
 
-            // tests should be sorted in file order (user can override if they want)
-            await vscode.commands.executeCommand('ply.explorer.dont-sort');
             this.log.info(`Loaded plyees in: ${Date.now() - before} ms`);
 
             this.testsEmitter.fire(<TestLoadFinishedEvent>{

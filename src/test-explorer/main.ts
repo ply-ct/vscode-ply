@@ -2,13 +2,7 @@ import * as vscode from 'vscode';
 import { TestHub as ITestHub } from '../test-adapter/api/index';
 import { TestHub } from './hub/testHub';
 import { PlyExplorer, HideWhenSetting } from '../ply-explorer';
-import {
-    runTestsInFile,
-    runTestAtCursor,
-    debugTestAtCursor,
-    expand,
-    debugTestsInFile
-} from './util';
+import { runTestsInFile, runTestAtCursor, debugTestAtCursor, debugTestsInFile } from './util';
 
 export function activate(context: vscode.ExtensionContext): ITestHub {
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -133,25 +127,7 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
 
     registerCommand('ply.explorer.disable-autorun', (node) => plyExplorer.clearAutorun(node));
 
-    registerCommand('ply.explorer.retire', (node) => plyExplorer.retireState(node));
-
-    registerCommand('ply.explorer.reset', (node) => plyExplorer.resetState(node));
-
     registerCommand('ply.explorer.reveal', (node) => plyExplorer.reveal(node, explorerTreeView));
-
-    registerCommand('ply.explorer.sort-by-label', () => plyExplorer.setSortBy('byLabel'));
-
-    registerCommand('ply.explorer.sort-by-location', () => plyExplorer.setSortBy('byLocation'));
-
-    registerCommand('ply.explorer.sort-by-label-with-suites-first', () =>
-        plyExplorer.setSortBy('byLabelWithSuitesFirst')
-    );
-
-    registerCommand('ply.explorer.sort-by-location-with-suites-first', () =>
-        plyExplorer.setSortBy('byLocationWithSuitesFirst')
-    );
-
-    registerCommand('ply.explorer.dont-sort', () => plyExplorer.setSortBy(null));
 
     return {
         registerTestAdapter: (adapter) => hub.registerTestAdapter(adapter),

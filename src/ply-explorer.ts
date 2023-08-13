@@ -7,7 +7,6 @@ import { IconPaths } from './test-explorer/iconPaths';
 import { TreeEventDebouncer } from './test-explorer/treeEventDebouncer';
 import { Decorator } from './test-explorer/decorator';
 import { pickNodes, getAdapterIds } from './test-explorer/util';
-import { SortSetting } from './test-explorer/tree/sort';
 import { TestNode } from './test-explorer/tree/testNode';
 import { TestSuiteNode } from './test-explorer/tree/testSuiteNode';
 import { Result } from './result/result';
@@ -369,12 +368,6 @@ export class PlyExplorer
         }
 
         return undefined;
-    }
-
-    async setSortBy(sortBy: SortSetting | null): Promise<void> {
-        for (const collection of this.collections.values()) {
-            await collection.setSortBy(sortBy, true);
-        }
     }
 
     reveal(
