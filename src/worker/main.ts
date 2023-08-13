@@ -1,8 +1,8 @@
 import * as path from 'path';
+// ** events API must stay compatible to work with built-in and provided ply **
+import { Plier as PlyPlier } from '@ply-ct/ply';
+import { FlowEvent, SuiteEvent, PlyEvent, OutcomeEvent } from '@ply-ct/ply-api';
 import { WorkerArgs } from './args';
-// events API must stay compatible
-import * as ply from '@ply-ct/ply';
-import { FlowEvent } from '@ply-ct/ply-api';
 
 (async () => {
     if (process.send) {
@@ -48,7 +48,7 @@ function execute(
             }
             Plier = require(path.join(args.plyPath, 'dist')).Plier;
         } else {
-            Plier = ply.Plier;
+            Plier = PlyPlier;
         }
 
         const plier = new Plier(args.plyOptions);
@@ -56,7 +56,7 @@ function execute(
         const cwd = process.cwd();
         module.paths.push(cwd, path.join(cwd, 'node_modules'));
 
-        plier.on('suite', (suiteEvent: ply.SuiteEvent) => {
+        plier.on('suite', (suiteEvent: SuiteEvent) => {
             const suiteId = `${suiteEvent.type}s|${getUri(suiteEvent.plyee)}`;
             if (suiteEvent.status === 'Started') {
                 startTimes.set(suiteId, Date.now());
@@ -67,7 +67,7 @@ function execute(
                 state: mapStatus(suiteEvent.status)
             });
         });
-        plier.on('test', (plyEvent: ply.PlyEvent) => {
+        plier.on('test', (plyEvent: PlyEvent) => {
             const testId = getUri(plyEvent.plyee);
             startTimes.set(testId, Date.now());
             const msg = {
@@ -77,7 +77,7 @@ function execute(
             } as any;
             sendMessage(msg);
         });
-        plier.on('outcome', (outcomeEvent: ply.OutcomeEvent) => {
+        plier.on('outcome', (outcomeEvent: OutcomeEvent) => {
             let testId = getUri(outcomeEvent.plyee);
             // request steps in subflows have hyphens instead of dots separating f and s (why?)
             const hash = testId.lastIndexOf('#');

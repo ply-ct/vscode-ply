@@ -7,5 +7,5 @@ dist
 npm-debug.log*
 /notes/
 .parcel-cache
-/content.txt
+/contents.txt
 /deps.txt

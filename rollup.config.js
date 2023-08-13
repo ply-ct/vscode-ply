@@ -4,6 +4,8 @@ import json from '@rollup/plugin-json';
 import typescript from 'rollup-plugin-typescript2';
 import terser from '@rollup/plugin-terser';
 
+console.log('NODE_ENV: ' + process.env.NODE_ENV);
+
 export default [
     {
         // ply worker
@@ -50,7 +52,7 @@ export default [
             name: 'flow',
             file: 'media/out/flow.js',
             format: 'umd',
-            sourcemap: 'inline'
+            sourcemap: process.env.NODE_ENV === 'production' ? false : 'inline'
         },
         plugins: [
             resolve(),
@@ -68,7 +70,7 @@ export default [
             name: 'viz',
             file: 'media/out/viz.js',
             format: 'umd',
-            sourcemap: 'inline'
+            sourcemap: process.env.NODE_ENV === 'production' ? false : 'inline'
         },
         plugins: [
             resolve(),

@@ -3,7 +3,7 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "3.0.0-beta57",
+  "version": "3.0.0-beta58",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
@@ -41,6 +41,7 @@
   "scripts": {
     "preinstall": "npm install --prefix web",
     "build": "tsc && npm run build-bundles && npm run build-web",
+    "build-prod": "cross-env NODE_ENV=production npm run build-bundles && npm run esbuild-base -- --minify && npm run web-prod",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:../out/worker/bundle.js --external:stacktracey --format=cjs --platform=node --main-fields=module,main",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
@@ -48,11 +49,13 @@
     "copy-css": "cp node_modules/flowbee/dist/css/style.css media/css/flowbee.css || copy node_modules\\flowbee\\dist\\css\\style.css media\\css\\flowbee.css",
     "watch-bundles": "rollup --watch -c",
     "build-web": "npm --prefix web run build",
+    "web-prod": "npm --prefix web run build-prod",
     "compile": "tsc",
     "lint": "eslint",
     "test": "TS_NODE_TRANSPILE_ONLY=1 mocha --require ts-node/register test/**/*.ts",
     "package": "vsce package",
-    "vscode:prepublish": "npm run esbuild-base -- --minify"
+    "list": "vsce ls > contents.txt",
+    "vscode:prepublish": "npm run build-prod"
   },
   "engines": {
     "vscode": "^1.75.1"

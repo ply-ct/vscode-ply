@@ -3,6 +3,7 @@
   "version": "0.3.1",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=--max_old_space_size=8192 npm run fonts && npm run copy-styles && rollup -c && npm run monaco-workers",
+    "build-prod": "npm run fonts && npm run copy-styles && npm run monaco-workers && cross-env NODE_ENV=production rollup -c ",
     "esbuild": "node es-build.js",
     "watch": "cross-env VSCODE_PLY_WEB_WATCH='css/style.scss' NODE_OPTIONS=--max_old_space_size=8192 rollup --watch -c",
     "fonts": "npx mkdirp out/fonts && npm run copy-fonts",

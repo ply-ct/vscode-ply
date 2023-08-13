@@ -8,12 +8,14 @@ import copy from 'rollup-plugin-copy-watch';
 import sass from 'node-sass';
 import json from '@rollup/plugin-json';
 
+console.log('NODE_ENV: ' + process.env.NODE_ENV);
+
 export default {
     input: 'src/main.ts',
     output: {
         file: 'out/bundle.js',
         format: 'es',
-        sourcemap: 'inline',
+        sourcemap: process.env.NODE_ENV === 'production' ? false : 'inline',
         inlineDynamicImports: true
     },
     plugins: [
