@@ -149,7 +149,8 @@ export class TestCollection {
                 );
                 this.errorNode = undefined;
 
-                this.rootSuite.resetState();
+                // reset state is forced
+                this.explorer.resetState();
 
                 const sortCompareFn = getCompareFn();
                 if (sortCompareFn) {

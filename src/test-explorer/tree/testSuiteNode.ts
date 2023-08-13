@@ -208,18 +208,22 @@ export class TestSuiteNode implements TreeNode {
         }
     }
 
+    /**
+     * Modified to unconditionally reset to 'pending' state
+     */
     resetState(): void {
         if (this.description !== this.info.description || this.tooltip !== this.info.tooltip) {
-            this._state.current = this.info.errored ? 'errored' : 'pending';
-            this._state.previous = this.info.errored ? 'errored' : 'pending';
             this._log = this.info.message || '';
             this.description = this.info.description;
             this.tooltip = this.info.tooltip;
             this._file = this.info.file;
             this._line = this.info.line;
             this._fileUri = normalizeFilename(this.file);
-            this.sendStateNeeded = true;
         }
+
+        this._state.current = 'pending';
+        this._state.previous = 'pending';
+        this.sendStateNeeded = true;
 
         for (const child of this._children) {
             child.resetState();
