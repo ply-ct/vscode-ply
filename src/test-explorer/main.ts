@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TestHub as ITestHub } from '../test-adapter/api/index';
 import { TestHub } from './hub/testHub';
-import { PlyExplorer, HideWhenSetting } from '../ply-explorer';
+import { PlyExplorer } from '../ply-explorer';
 import { runTestsInFile, runTestAtCursor, debugTestAtCursor, debugTestsInFile } from './util';
 
 export function activate(context: vscode.ExtensionContext): ITestHub {
@@ -12,7 +12,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
             : undefined;
     const configuration = vscode.workspace.getConfiguration('ply.explorer', workspaceUri);
     const addToEditorContextMenu = configuration.get<boolean>('addToEditorContextMenu');
-    const hideWhen = configuration.get<HideWhenSetting>('hideWhen');
 
     const hub = new TestHub();
     const plyExplorer = new PlyExplorer(context);
@@ -32,15 +31,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
                     addToEditorContextMenu
                 );
             }
-            if (configChange.affectsConfiguration('ply.explorer.hideWhen')) {
-                const configuration = vscode.workspace.getConfiguration(
-                    'testExplorer',
-                    workspaceUri
-                );
-                const hideWhen = configuration.get<HideWhenSetting>('hideWhen');
-                plyExplorer.hideWhen = hideWhen !== undefined ? hideWhen : 'never';
-                plyExplorer.updateVisibility();
-            }
         })
     );
 
@@ -49,8 +39,6 @@ export function activate(context: vscode.ExtensionContext): ITestHub {
         'showTestExplorerEditorContextMenu',
         addToEditorContextMenu
     );
-    plyExplorer.hideWhen = hideWhen !== undefined ? hideWhen : 'never';
-    plyExplorer.updateVisibility();
 
     const explorerTreeView = vscode.window.createTreeView('ply-tests', {
         treeDataProvider: plyExplorer,

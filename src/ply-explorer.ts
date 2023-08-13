@@ -11,8 +11,6 @@ import { TestNode } from './test-explorer/tree/testNode';
 import { TestSuiteNode } from './test-explorer/tree/testSuiteNode';
 import { Result } from './result/result';
 
-export type HideWhenSetting = 'never' | 'noAdapters' | 'noTests';
-
 export class PlyExplorer
     implements
         TestController,
@@ -20,9 +18,6 @@ export class PlyExplorer
         vscode.CodeLensProvider,
         vscode.HoverProvider
 {
-    public disabled = false;
-    public hideWhen: HideWhenSetting = 'never';
-
     public readonly iconPaths: IconPaths;
     public readonly decorator: Decorator;
     public readonly treeEvents: TreeEventDebouncer;
@@ -63,7 +58,6 @@ export class PlyExplorer
 
     registerTestAdapter(adapter: TestAdapter): void {
         this.collections.set(adapter, new TestCollection(adapter, this));
-        this.updateVisibility();
     }
 
     unregisterTestAdapter(adapter: TestAdapter): void {
@@ -74,7 +68,6 @@ export class PlyExplorer
             this.decorator.updateAllDecorations();
             this.treeEvents.sendTreeChangedEvent();
             this.codeLensesChanged.fire();
-            this.updateVisibility();
         }
     }
 
@@ -397,7 +390,7 @@ export class PlyExplorer
         if (this.loadingCollections.size === 0) {
             vscode.commands.executeCommand('setContext', 'testsLoading', false);
         }
-        this.updateVisibility();
+        vscode.commands.executeCommand('setContext', 'ply.explorer.showTree', true);
     }
 
     testRunStarted(collection: TestCollection): void {
@@ -420,20 +413,6 @@ export class PlyExplorer
         ) {
             this.updateLog();
         }
-    }
-
-    updateVisibility(): void {
-        let visible = !this.disabled;
-        if (!this.disabled) {
-            if (this.hideWhen === 'noAdapters') {
-                visible = this.collections.size > 0;
-            } else if (this.hideWhen === 'noTests') {
-                visible = [...this.collections.values()].some(
-                    (collection) => collection.suite !== undefined || collection.error !== undefined
-                );
-            }
-        }
-        vscode.commands.executeCommand('setContext', 'plyExplorerVisible', visible);
     }
 
     private updateLog(): void {

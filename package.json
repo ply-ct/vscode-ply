@@ -294,17 +294,6 @@
           "type": "boolean",
           "default": true,
           "scope": "resource"
-        },
-        "ply.explorer.hideWhen": {
-          "description": "Hide the Ply Explorer when no test adapters have been registered or when no tests have been found",
-          "type": "string",
-          "enum": [
-            "never",
-            "noAdapters",
-            "noTests"
-          ],
-          "default": "never",
-          "scope": "resource"
         }
       }
     },
@@ -313,7 +302,8 @@
         {
           "id": "ply-explorer",
           "title": "Ply",
-          "icon": "icons/ply.svg"
+          "icon": "icons/ply.svg",
+          "when": ""
         }
       ]
     },
@@ -333,12 +323,14 @@
         {
           "id": "ply-tests",
           "name": "Ply Tests",
-          "initialSize": 100
+          "initialSize": 100,
+          "when": "ply.explorer.showTree"
         },
         {
           "id": "ply-values",
           "name": "Values",
-          "visibility": "collapsed"
+          "visibility": "collapsed",
+          "when": "ply.showValuesTree"
         }
       ]
     },
@@ -966,7 +958,7 @@
         },
         {
           "command": "ply.explorer.reload",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.reload-collection",
@@ -978,7 +970,7 @@
         },
         {
           "command": "ply.explorer.run-all",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.run",
@@ -990,15 +982,15 @@
         },
         {
           "command": "ply.explorer.rerun",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.run-file",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.run-test-at-cursor",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.run-this-file",
@@ -1010,7 +1002,7 @@
         },
         {
           "command": "ply.explorer.debug-all",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.debug",
@@ -1022,15 +1014,15 @@
         },
         {
           "command": "ply.explorer.redebug",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.debug-file",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.debug-test-at-cursor",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.debug-this-test",
@@ -1038,7 +1030,7 @@
         },
         {
           "command": "ply.explorer.cancel",
-          "when": "plyExplorerVisible"
+          "when": "ply.explorer.showTree"
         },
         {
           "command": "ply.explorer.show-log",
