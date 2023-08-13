@@ -1,4 +1,4 @@
-import { PlyResults, TestRun, Request } from '@ply-ct/ply';
+import { TestRun, PlyRequest, PlyResults } from '@ply-ct/ply-api';
 import { backgroundColor, borderColor } from './options';
 
 export interface RunDataOptions {
@@ -19,7 +19,7 @@ export interface Dataset {
 
 export interface RequestRun extends TestRun {
     run: number;
-    request: Request;
+    request: PlyRequest;
     submittedTime: number;
 }
 

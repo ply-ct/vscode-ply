@@ -1,5 +1,5 @@
 import { EvalOptions, ValuesHolder } from '@ply-ct/ply-values';
-import { ValuesOptions } from 'flowbee';
+import { ValuesOptions } from 'flowbee/dist/nostyles';
 
 export interface Values {
     valuesHolders: ValuesHolder[];
