@@ -1,85 +1,36 @@
-import * as path from 'path';
 import * as assert from 'assert';
-import * as ply from '@ply-ct/ply';
 import { URI as Uri } from 'vscode-uri';
-import { PlyRoots, PlyRoot } from '../src/ply-roots';
+import { PlyRoot, PlyRoots } from '../src/ply-roots';
 import * as help from './help';
 
-const movieQueries = 'test/requests/movie-queries.ply.yaml';
-const movieQueriesUri = Uri.file(path.normalize(path.resolve(movieQueries))).toString();
-const moviesApi = 'test/requests/movies-api.ply.yaml';
-const moviesApiUri = Uri.file(path.normalize(path.resolve(moviesApi))).toString();
-
-const movieCrud = path.resolve('test/cases/movieCrud.ply.ts');
-const movieCrudUri = Uri.file(path.normalize(path.resolve(movieCrud))).toString();
-
 describe('ply roots', function () {
-    it('should know parents', async () => {
-        const plyRoots = new PlyRoots(Uri.file('.'));
-        const p = new ply.Ply();
-        const requestSuites = await p.loadRequests(movieQueries, moviesApi);
-        const requests = new Map<Uri, ply.Suite<ply.Request>>();
-        requestSuites.forEach((requestSuite) => {
-            requests.set(Uri.file(path.normalize(path.resolve(requestSuite.path))), requestSuite);
-        });
+    const requestRoot = new PlyRoot(help.workspaceFolderUri, 'requests', 'Requests');
+    const requestUris: [Uri, number][] = [
+        [requestRoot.toUri('src/test/ply/up-here.request.yaml#oneUp'), 0],
+        [requestRoot.toUri('src/test/ply/requests/create-movie.request.yaml#createMovie'), 0],
+        [requestRoot.toUri('src/test/ply/requests/delete-movie.request.yaml#deleteMovie'), 0],
+        [requestRoot.toUri('src/test/plyables/x.request.yaml#reqX1'), 0],
+        [requestRoot.toUri('src/test/plyables/x.request.yaml#reqX2'), 0],
+        [requestRoot.toUri('src/test/plyables/y.request.yaml#reqY'), 0],
+        [requestRoot.toUri('test/ply/requests/a.request.yaml#reqA'), 0]
+    ];
 
-        const caseSuites = await p.loadCases(movieCrud);
-        const cases = new Map<Uri, ply.Suite<ply.Case>>();
-        caseSuites.forEach((caseSuite) => {
-            cases.set(Uri.file(path.normalize(path.resolve(caseSuite.path))), caseSuite);
-        });
+    const flowRoot = new PlyRoot(help.workspaceFolderUri, 'flows', 'Flows');
+    const flowUris: [Uri, number][] = [
+        [flowRoot.toUri('src/test/ply/flow-here.ply.flow'), 0],
+        [flowRoot.toUri('src/test/ply/flows/create-movies.ply.flow#s2'), 0],
+        [flowRoot.toUri('src/test/ply/flows/delete-movie.ply.flow'), 0],
+        [flowRoot.toUri('src/test/plyables/a.ply.flow'), 0],
+        [flowRoot.toUri('src/test/plyables/a.ply.flow#s3'), 0],
+        [flowRoot.toUri('src/test/plyables/y.ply.flow'), 0],
+        [flowRoot.toUri('src/test/plyables/y.ply.flow#s4'), 0],
+        [flowRoot.toUri('test/ply/requests/in-requests.ply.flow'), 0]
+    ];
 
-        plyRoots.build(requests, cases, new Map<Uri, ply.Suite<ply.Step>>());
-
-        const moviesByYearAndRating = plyRoots.requestsRoot.find(
-            (t) => t.id === `${movieQueriesUri}#moviesByYearAndRating`
-        );
-        assert.ok(moviesByYearAndRating);
-        let parent = plyRoots.getParent(moviesByYearAndRating!.id);
-        assert.ok(parent);
+    it('should be grouped by location', () => {
+        requestRoot.build(requestUris);
         assert.strictEqual(
-            plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id,
-            plyRoots.requestsRoot.id
-        );
-
-        const createMovie = plyRoots.requestsRoot.find(
-            (t) => t.id === `${moviesApiUri}#createMovie`
-        );
-        assert.ok(createMovie);
-        parent = plyRoots.getParent(createMovie!.id);
-        assert.ok(parent);
-        assert.strictEqual(
-            plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id,
-            plyRoots.requestsRoot.id
-        );
-
-        const addNewMovie = plyRoots.casesRoot.find(
-            (t) => t.id === `${movieCrudUri}#add new movie`
-        );
-        assert.ok(addNewMovie);
-        parent = plyRoots.getParent(addNewMovie!.id);
-        assert.ok(parent);
-        assert.strictEqual(
-            plyRoots.getParent(plyRoots.getParent(parent!.id)!.id)!.id,
-            plyRoots.casesRoot.id
-        );
-    });
-
-    it('should be grouped', async () => {
-        const plyRoot = new PlyRoot(help.workspaceFolderUri, 'requests', 'Requests');
-        const plyableUris: [Uri, number][] = [
-            [plyRoot.toUri('src/test/ply/up-here.request.yaml#oneUp'), 0],
-            [plyRoot.toUri('src/test/ply/requests/create-movie.request.yaml#createMovie'), 0],
-            [plyRoot.toUri('src/test/ply/requests/delete-movie.request.yaml#deleteMovie'), 0],
-            [plyRoot.toUri('src/test/plyables/x.request.yaml#reqX1'), 0],
-            [plyRoot.toUri('src/test/plyables/x.request.yaml#reqX2'), 0],
-            [plyRoot.toUri('src/test/plyables/y.request.yaml#reqY'), 0],
-            [plyRoot.toUri('test/ply/requests/a.request.yaml#reqA'), 0]
-        ];
-        plyRoot.build(plyableUris);
-
-        assert.strictEqual(
-            plyRoot.toString(),
+            requestRoot.toString(),
             `Requests
     src/test/ply
         up-here.request.yaml
@@ -100,5 +51,28 @@ describe('ply roots', function () {
             - reqA
 `
         );
+    });
+
+    it('should merge children across roots', () => {
+        const plyRoots = new PlyRoots(help.workspaceFolderUri);
+        // requestRoot.build(requestUris);
+
+        flowUris.sort((u1, u2) => {
+            const segs1 = u1[0].path.split('/');
+            const segs2 = u2[0].path.split('/');
+            return segs1.length - segs2.length;
+        });
+
+        flowRoot.build(flowUris);
+
+        console.log('flowRoot: ' + flowRoot.toString());
+
+        // plyRoots.rootSuite.children = [];
+        // plyRoots.merge(plyRoots.rootSuite, requestRoot.baseSuite.children);
+        // plyRoots.merge(plyRoots.rootSuite, flowRoot.baseSuite.children);
+
+        // plyRoots.sort(plyRoots.rootSuite);
+
+        // console.log('MERGED: ' + plyRoots.toString());
     });
 });

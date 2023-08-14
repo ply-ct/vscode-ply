@@ -159,7 +159,7 @@ export class PlyAdapter implements TestAdapter {
         try {
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-            const loader = new PlyLoader(this.config);
+            const loader = new PlyLoader(this.config.plyOptions);
             const requests = await loader.loadRequests();
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();

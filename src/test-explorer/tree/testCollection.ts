@@ -22,7 +22,6 @@ import {
     intersect,
     getAdapterIds
 } from '../util';
-import { getCompareFn } from './sort';
 
 export class TestCollection {
     private static nextCollectionId = 1;
@@ -36,7 +35,6 @@ export class TestCollection {
     private runningSuite = new Map<string | undefined, TestSuiteNode>();
     private _autorunNode: TreeNode | undefined;
     private readonly autorunMementoKey: string | undefined;
-    private readonly sortMementoKey: string | undefined;
 
     private readonly nodesById = new Map<string, TreeNode>();
     private readonly idCount = new Map<string, number>();
@@ -60,7 +58,6 @@ export class TestCollection {
 
         if (this.adapter.workspaceFolder) {
             const folderPath = this.adapter.workspaceFolder.uri.fsPath;
-            this.sortMementoKey = `sort ${folderPath}`;
             this.autorunMementoKey = `autorun ${folderPath}`;
         }
 
@@ -138,7 +135,6 @@ export class TestCollection {
             this.explorer.testLoadStarted(this);
             this.changeEventsWhileLoading = [];
         } else if (testLoadEvent.type === 'finished') {
-            this.sort();
             if (testLoadEvent.suite) {
                 this.rootSuite = new TestSuiteNode(
                     this,
@@ -151,11 +147,6 @@ export class TestCollection {
 
                 // reset state is forced
                 this.explorer.resetState();
-
-                const sortCompareFn = getCompareFn();
-                if (sortCompareFn) {
-                    this.sortRec(this.rootSuite, sortCompareFn);
-                }
             } else {
                 this.rootSuite = undefined;
                 if (testLoadEvent.errorMessage) {
@@ -605,25 +596,6 @@ export class TestCollection {
         const workspaceFolder = this.adapter.workspaceFolder;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : null;
         return vscode.workspace.getConfiguration('ply.explorer', workspaceUri);
-    }
-
-    private sort(): void {
-        if (!this.rootSuite) return;
-
-        const compareFn = getCompareFn();
-
-        this.sortRec(this.rootSuite, compareFn!);
-        this.explorer.treeEvents.sendTreeChangedEvent();
-    }
-
-    private sortRec(suite: TestSuiteNode, compareFn: (a: TreeNode, b: TreeNode) => number): void {
-        suite.children.sort(compareFn);
-
-        for (const child of suite.children) {
-            if (child instanceof TestSuiteNode) {
-                this.sortRec(child, compareFn);
-            }
-        }
     }
 
     private collectNodesById(): void {

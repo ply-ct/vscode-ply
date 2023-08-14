@@ -1,19 +1,18 @@
 import * as vscode from 'vscode';
 import { URI as Uri } from 'vscode-uri';
-import { Ply, Suite, Request, Case, Step } from '@ply-ct/ply';
-import { PlyConfig } from './config';
+import { Ply, Suite, Request, Case, Step, PlyOptions } from '@ply-ct/ply';
 
 export class PlyLoader {
     private testsLocation: string;
-    constructor(private readonly config: PlyConfig) {
-        this.testsLocation = this.config.plyOptions.testsLocation;
+    constructor(private readonly plyOptions: PlyOptions) {
+        this.testsLocation = this.plyOptions.testsLocation;
     }
 
     async getSkipped(): Promise<Uri[]> {
         let skipped: Uri[] = [];
-        if (this.config.plyOptions.skip) {
+        if (this.plyOptions.skip) {
             skipped = await vscode.workspace.findFiles(
-                new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.skip)
+                new vscode.RelativePattern(this.testsLocation, this.plyOptions.skip)
             );
         }
         return skipped;
@@ -25,18 +24,16 @@ export class PlyLoader {
      */
     async loadRequests(): Promise<Map<Uri, Suite<Request>>> {
         const requestFileUris = await vscode.workspace.findFiles(
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.requestFiles),
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.ignore)
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.requestFiles),
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.ignore)
         );
         const requests = new Map<Uri, Suite<Request>>();
-        const requestSuites = await new Ply(this.config.plyOptions).loadRequests(
+        const requestSuites = await new Ply(this.plyOptions).loadRequests(
             requestFileUris.map((fileUri) => fileUri.fsPath)
         );
         const skipped = await this.getSkipped();
         requestSuites.forEach((requestSuite) => {
-            const suiteUri = Uri.file(
-                this.config.plyOptions.testsLocation + '/' + requestSuite.path
-            );
+            const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + requestSuite.path);
             if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
                 requestSuite.skip = true;
             }
@@ -50,19 +47,17 @@ export class PlyLoader {
      */
     async loadCases(): Promise<Map<Uri, Suite<Case>>> {
         const caseFileUris = await vscode.workspace.findFiles(
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.caseFiles),
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.ignore)
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.caseFiles),
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.ignore)
         );
         const cases = new Map<Uri, Suite<Case>>();
         if (caseFileUris.length > 0) {
-            const caseSuites = await new Ply(this.config.plyOptions).loadCases(
+            const caseSuites = await new Ply(this.plyOptions).loadCases(
                 caseFileUris.map((fileUri) => fileUri.fsPath)
             );
             const skipped = await this.getSkipped();
             caseSuites.forEach((caseSuite) => {
-                const suiteUri = Uri.file(
-                    this.config.plyOptions.testsLocation + '/' + caseSuite.path
-                );
+                const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + caseSuite.path);
                 if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
                     caseSuite.skip = true;
                 }
@@ -77,19 +72,17 @@ export class PlyLoader {
      */
     async loadFlows(): Promise<Map<Uri, Suite<Step>>> {
         const flowFileUris = await vscode.workspace.findFiles(
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.flowFiles),
-            new vscode.RelativePattern(this.testsLocation, this.config.plyOptions.ignore)
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.flowFiles),
+            new vscode.RelativePattern(this.testsLocation, this.plyOptions.ignore)
         );
         const flows = new Map<Uri, Suite<Step>>();
         if (flowFileUris.length > 0) {
-            const flowSuites = await new Ply(this.config.plyOptions).loadFlows(
+            const flowSuites = await new Ply(this.plyOptions).loadFlows(
                 flowFileUris.map((fileUri) => fileUri.fsPath)
             );
             const skipped = await this.getSkipped();
             flowSuites.forEach((flowSuite) => {
-                const suiteUri = Uri.file(
-                    this.config.plyOptions.testsLocation + '/' + flowSuite.path
-                );
+                const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + flowSuite.path);
                 if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
                     flowSuite.skip = true;
                 }

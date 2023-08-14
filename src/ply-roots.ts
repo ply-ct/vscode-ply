@@ -34,8 +34,6 @@ export class PlyRoot {
 
     /**
      * Creates the test/suite hierarchy.
-     * Relies on Uris coming in already sorted by shortest segment count first, then alpha.
-     * Within files requests/cases should be sorted by the order they appear in the file.
      */
     build(
         testUris: [Uri, number][],
@@ -225,28 +223,7 @@ export class PlyRoot {
     }
 
     toString() {
-        const indent = '    ';
-        let str = this.label + '\n';
-        for (const dirSuiteOrTest of this.baseSuite.children as (TestSuiteInfo | TestInfo)[]) {
-            str += indent + dirSuiteOrTest.label + '\n';
-            if (dirSuiteOrTest.type === 'test') {
-                str += indent + indent + '- ' + dirSuiteOrTest.label + '\n';
-            } else {
-                for (const fileSuiteOrTest of dirSuiteOrTest.children as
-                    | TestSuiteInfo[]
-                    | TestInfo[]) {
-                    if (fileSuiteOrTest.type === 'suite') {
-                        str += indent + indent + fileSuiteOrTest.label + '\n';
-                        for (const plyTest of fileSuiteOrTest.children as TestInfo[]) {
-                            str += indent + indent + indent + '- ' + plyTest.label + '\n';
-                        }
-                    } else {
-                        str += indent + indent + '- ' + fileSuiteOrTest.label + '\n';
-                    }
-                }
-            }
-        }
-        return str;
+        return this.label + '\n' + PlyRoots.toString(this.baseSuite.children);
     }
 }
 
@@ -390,7 +367,64 @@ export class PlyRoots {
             return this.suitesByTestOrSuiteId.get(suiteId)!.name;
         });
 
-        this.rootSuite.children = this.roots.map((root) => root.baseSuite);
+        this.rootSuite.children = [];
+        for (const root of this.roots) {
+            this.merge(this.rootSuite, root.baseSuite.children);
+        }
+
+        this.sort(this.rootSuite);
+    }
+
+    merge(parent: TestSuiteInfo, children: Info[]) {
+        for (const child of children) {
+            const childUri = PlyRoots.toUri(child.id);
+            if (!childUri.fragment) {
+                let path = childUri.path;
+                if (child.type === 'test') path = path.substring(0, path.lastIndexOf('/'));
+                const suiteInfo = parent.children.find((c) => {
+                    return c.type === 'suite' && PlyRoots.toUri(c.id).path === path;
+                }) as TestSuiteInfo | undefined;
+
+                if (suiteInfo) {
+                    if (child.type === 'suite') {
+                        suiteInfo.children = [...suiteInfo.children, ...child.children];
+                    } else {
+                        suiteInfo.children.push(child);
+                    }
+                } else {
+                    parent.children.push(child);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sort suite children by shortest segment count first, then alpha.
+     * Within files requests/flows/cases should be sorted by the order they appear in the file.
+     */
+    sort(suite: TestSuiteInfo) {
+        if (suite.file) return; // no sort for file children
+
+        suite.children.sort((info1, info2) => {
+            const uri1 = PlyRoots.toUri(info1.id);
+            const uri2 = PlyRoots.toUri(info2.id);
+            const segs1 = uri1.path.split('/');
+            const segs2 = uri2.path.split('/');
+            if (
+                (segs1.length > segs2.length && uri1.path.startsWith(`${uri2.path}/`)) ||
+                (segs2.length > segs1.length && uri2.path.startsWith(`${uri1.path}/`))
+            ) {
+                return segs1.length - segs2.length;
+            } else {
+                return info1.label.localeCompare(info2.label);
+            }
+        });
+
+        for (const child of suite.children) {
+            if (child.type === 'suite') {
+                this.sort(child as TestSuiteInfo);
+            }
+        }
     }
 
     find(test: (testOrSuiteInfo: Info) => boolean): Info | undefined {
@@ -557,6 +591,10 @@ export class PlyRoots {
         }
     }
 
+    toString() {
+        return PlyRoots.toString(this.rootSuite.children);
+    }
+
     static toUri(infoId: string): Uri {
         const pipe = infoId.indexOf('|');
         if (pipe > 0) {
@@ -573,5 +611,30 @@ export class PlyRoots {
             ? 'cases'
             : 'requests';
         return `${rootId}|${uri.toString(true)}`;
+    }
+
+    static toString(infos: Info[]) {
+        let str = '';
+        const indent = '    ';
+        for (const dirSuiteOrTest of infos) {
+            str += indent + dirSuiteOrTest.label + '\n';
+            if (dirSuiteOrTest.type === 'test') {
+                str += indent + indent + '- ' + dirSuiteOrTest.label + '\n';
+            } else {
+                for (const fileSuiteOrTest of dirSuiteOrTest.children as
+                    | TestSuiteInfo[]
+                    | TestInfo[]) {
+                    if (fileSuiteOrTest.type === 'suite') {
+                        str += indent + indent + fileSuiteOrTest.label + '\n';
+                        for (const plyTest of fileSuiteOrTest.children as TestInfo[]) {
+                            str += indent + indent + indent + '- ' + plyTest.label + '\n';
+                        }
+                    } else {
+                        str += indent + indent + '- ' + fileSuiteOrTest.label + '\n';
+                    }
+                }
+            }
+        }
+        return str;
     }
 }
