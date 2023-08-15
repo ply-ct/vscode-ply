@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as jsYaml from 'js-yaml';
+import { Flow } from '@ply-ct/ply-api';
 import { TestController, TestAdapter } from './test-adapter/api/index';
 import { TestCollection } from './test-explorer/tree/testCollection';
 import { TreeNode } from './test-explorer/tree/treeNode';
@@ -253,17 +255,32 @@ export class PlyExplorer
     }
 
     async openEditor(fileUri: vscode.Uri, preview: boolean, lineNumber?: number) {
-        const reqEd =
-            fileUri.fragment &&
-            vscode.workspace
-                .getConfiguration('ply', fileUri)
-                .get('plyExplorerUseRequestEditor', false);
+        const reqEdPref = vscode.workspace
+            .getConfiguration('ply', fileUri)
+            .get('plyExplorerUseRequestEditor', false);
 
-        if (reqEd) {
-            await vscode.commands.executeCommand('ply.open-request', {
-                uri: fileUri.with({ scheme: 'ply-request' }),
-                preview
-            });
+        if (reqEdPref && fileUri.fragment) {
+            if (fileUri.path.endsWith('.flow')) {
+                const yaml = await vscode.workspace.fs.readFile(fileUri);
+                const flow = jsYaml.load(new TextDecoder().decode(yaml), {
+                    filename: fileUri.fsPath
+                }) as Flow;
+                // TODO use ply-api util
+                const step = flow.steps?.find((s) => s.id === fileUri.fragment);
+                if (step?.path?.endsWith('request')) {
+                    await vscode.commands.executeCommand('ply.open-request', {
+                        uri: fileUri.with({ scheme: 'ply-request' }),
+                        preview
+                    });
+                    return;
+                }
+                await vscode.commands.executeCommand('ply.open-flow', { uri: fileUri, preview });
+            } else {
+                await vscode.commands.executeCommand('ply.open-request', {
+                    uri: fileUri.with({ scheme: 'ply-request' }),
+                    preview
+                });
+            }
         } else {
             if (fileUri.path.endsWith('.flow')) {
                 // fragment should be used for step select
@@ -276,7 +293,7 @@ export class PlyExplorer
                 );
             }
 
-            if (lineNumber && !reqEd) {
+            if (lineNumber) {
                 const editor = vscode.window.visibleTextEditors.find((editor) => {
                     let docUri = editor.document.uri;
                     if (docUri.scheme === Result.URI_SCHEME) {

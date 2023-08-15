@@ -12,7 +12,7 @@ describe('ply roots', function () {
         [requestRoot.toUri('src/test/plyables/x.request.yaml#reqX1'), 0],
         [requestRoot.toUri('src/test/plyables/x.request.yaml#reqX2'), 0],
         [requestRoot.toUri('src/test/plyables/y.request.yaml#reqY'), 0],
-        [requestRoot.toUri('test/ply/requests/a.request.yaml#reqA'), 0]
+        [requestRoot.toUri('src/test2/ply/requests/a.request.yaml#reqA'), 0]
     ];
 
     const flowRoot = new PlyRoot(help.workspaceFolderUri, 'flows', 'Flows');
@@ -25,11 +25,11 @@ describe('ply roots', function () {
         [flowRoot.toUri('src/test/plyables/z.ply.flow#s2'), 0],
         [flowRoot.toUri('src/test/plyables/a.ply.flow#s3'), 0],
         [flowRoot.toUri('src/test/plyables/a.ply.flow#s1'), 0],
-        [flowRoot.toUri('test/ply/requests/in-requests.ply.flow#s1'), 0]
+        [flowRoot.toUri('src/test2/ply/requests/in-requests.ply.flow#s1'), 0]
     ];
 
     it('should be grouped by location', () => {
-        requestRoot.build(requestUris);
+        requestRoot.build(help.workspaceFolderUri, requestUris);
         assert.strictEqual(
             requestRoot.toString(),
             `Requests
@@ -47,7 +47,7 @@ describe('ply roots', function () {
             - reqX2
         y.request.yaml
             - reqY
-    test/ply/requests
+    src/test2/ply/requests
         a.request.yaml
             - reqA
 `
@@ -56,8 +56,8 @@ describe('ply roots', function () {
 
     it('should merge children across roots', () => {
         const plyRoots = new PlyRoots(help.workspaceFolderUri);
-        requestRoot.build(requestUris);
-        flowRoot.build(flowUris);
+        requestRoot.build(Uri.file(help.workspaceFolderUri.fsPath + '/src'), requestUris);
+        flowRoot.build(Uri.file(help.workspaceFolderUri.fsPath + '/src'), flowUris);
 
         plyRoots.rootSuite.children = [];
         plyRoots.merge(plyRoots.rootSuite, requestRoot.baseSuite.children);
@@ -65,25 +65,27 @@ describe('ply roots', function () {
 
         plyRoots.sort(plyRoots.rootSuite);
 
+        console.log('ROOTS:\n' + plyRoots.toString());
+
         assert.strictEqual(
             plyRoots.toString(),
-            `    src/test/ply
+            `    test/ply
         flow-here.ply.flow
             - s1
             - s2
         up-here.request.yaml
             - oneUp
-    src/test/ply/flows
+    test/ply/flows
         create-movies.ply.flow
             - s1
         delete-movie.ply.flow
             - s2
-    src/test/ply/requests
+    test/ply/requests
         create-movie.request.yaml
             - createMovie
         delete-movie.request.yaml
             - deleteMovie
-    src/test/plyables
+    test/plyables
         a.ply.flow
             - s3
             - s1
@@ -95,7 +97,7 @@ describe('ply roots', function () {
         z.ply.flow
             - s1
             - s2
-    test/ply/requests
+    test2/ply/requests
         a.request.yaml
             - reqA
         in-requests.ply.flow

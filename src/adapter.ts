@@ -164,7 +164,12 @@ export class PlyAdapter implements TestAdapter {
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();
 
-            this.plyRoots.build(requests, cases, flows);
+            this.plyRoots.build(
+                vscode.Uri.file(this.config.plyOptions.testsLocation),
+                requests,
+                cases,
+                flows
+            );
             console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
             console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
             console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);

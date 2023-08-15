@@ -36,6 +36,7 @@ export class PlyRoot {
      * Creates the test/suite hierarchy.
      */
     build(
+        plyBase: Uri,
         testUris: [Uri, number][],
         description?: string,
         suiteLabeler?: (suiteId: string) => string,
@@ -58,7 +59,7 @@ export class PlyRoot {
         for (let i = 0; i < testUris.length; i++) {
             const query = testUris[i][0].query;
             const testUri = testUris[i][0].with({ query: '' });
-            const testPath = this.relativize(testUri);
+            const testPath = PlyRoots.relativize(testUri, this.uri);
             const lastHash = testPath.lastIndexOf('#');
             const testName = testPath.substring(lastHash + 1);
 
@@ -109,7 +110,7 @@ export class PlyRoot {
                 const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
                 const dirUri = this.toUri(dirPath);
                 let parentSuite: TestSuiteInfo | undefined;
-                if (dirPath === '') {
+                if (dirPath === '' || plyBase.toString() === dirUri.toString()) {
                     parentSuite = this.baseSuite;
                 } else {
                     parentSuite = this.findSuite((suite) => suite.id === this.formSuiteId(dirUri));
@@ -118,7 +119,7 @@ export class PlyRoot {
                     parentSuite = {
                         type: 'suite',
                         id: this.formSuiteId(dirUri),
-                        label: dirPath,
+                        label: PlyRoots.relativize(dirUri, plyBase),
                         debuggable: false,
                         children: []
                     };
@@ -145,13 +146,6 @@ export class PlyRoot {
 
     toUri(path: string): Uri {
         return Uri.parse(this.uri.toString(true) + '/' + path);
-    }
-
-    /**
-     * Uri path relative to base uri.
-     */
-    relativize(uri: Uri): string {
-        return uri.toString(true).substring(this.uri.toString(true).length + 1);
     }
 
     findSuite(test: (suite: TestSuiteInfo) => boolean): TestSuiteInfo | undefined {
@@ -263,6 +257,7 @@ export class PlyRoots {
     }
 
     build(
+        plyBase: Uri,
         requestSuites: Map<Uri, Suite<Request>>,
         caseSuites: Map<Uri, Suite<Case>>,
         flowSuites: Map<Uri, Suite<Step>>
@@ -296,7 +291,7 @@ export class PlyRoots {
                 }
             }
         }
-        this.requestsRoot.build(requestUris);
+        this.requestsRoot.build(plyBase, requestUris);
 
         // flows
         const flowSuiteUris = Array.from(flowSuites.keys());
@@ -331,7 +326,7 @@ export class PlyRoots {
         if (flowCount > 0) {
             description = `${flowCount} ${flowCount === 1 ? 'flow' : 'flows'}`;
         }
-        this.flowsRoot.build(flowUris, description, undefined, (testId) => {
+        this.flowsRoot.build(plyBase, flowUris, description, undefined, (testId) => {
             const test = this.testsById.get(testId) as Step;
             return (
                 (test.subflow ? `${test.subflow.name} → ` : '') +
@@ -363,13 +358,21 @@ export class PlyRoots {
                 }
             }
         }
-        this.casesRoot.build(caseUris, undefined, (suiteId) => {
+        this.casesRoot.build(plyBase, caseUris, undefined, (suiteId) => {
             return this.suitesByTestOrSuiteId.get(suiteId)!.name;
         });
 
-        this.rootSuite.children = [];
+        const workspaceDirRoot: TestSuiteInfo = {
+            type: 'suite',
+            id: `WorkspaceDir:${this.uri.toString(true)}`,
+            label: PlyRoots.relativize(plyBase, this.uri),
+            debuggable: false,
+            children: []
+        };
+
+        this.rootSuite.children = [workspaceDirRoot];
         for (const root of this.roots) {
-            this.merge(this.rootSuite, root.baseSuite.children);
+            this.merge(workspaceDirRoot, root.baseSuite.children);
         }
 
         this.sort(this.rootSuite);
@@ -611,6 +614,13 @@ export class PlyRoots {
             ? 'cases'
             : 'requests';
         return `${rootId}|${uri.toString(true)}`;
+    }
+
+    /**
+     * Uri path relative to base uri.
+     */
+    static relativize(uri: Uri, base: Uri): string {
+        return uri.toString(true).substring(base.toString(true).length + 1);
     }
 
     static toString(infos: Info[]) {
