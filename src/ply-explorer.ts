@@ -259,7 +259,7 @@ export class PlyExplorer
             .getConfiguration('ply', fileUri)
             .get('plyExplorerUseRequestEditor', false);
 
-        if (reqEdPref && fileUri.fragment) {
+        if (reqEdPref && fileUri.fragment && !fileUri.path.endsWith('.ts')) {
             if (fileUri.path.endsWith('.flow')) {
                 const yaml = await vscode.workspace.fs.readFile(fileUri);
                 const flow = jsYaml.load(new TextDecoder().decode(yaml), {
