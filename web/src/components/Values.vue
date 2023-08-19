@@ -139,7 +139,8 @@ export default defineComponent({
             name: 'clear',
             label: 'Clear Overrides'
           }
-        ]
+        ],
+        abbreviateLocations: true
       };
     },
     handleMessage(event: MessageEvent) {

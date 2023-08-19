@@ -31,6 +31,7 @@ export const getValuesOptions = (): ValuesOptions => {
             right: 50,
             bottom: 75,
             left: 50
-        }
+        },
+        abbreviateLocations: true
     };
 };

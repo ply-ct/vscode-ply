@@ -712,7 +712,6 @@ export class Flow implements flowbee.Disposable {
             valuesPopup.render(this.getUserValues(), getValuesOptions());
             valuesPopup.setDecorator((text: string) => {
                 if (text && isExpression(text)) {
-                    // todo: hover for full location?
                     const required = this.getRequiredValueNames()
                         .map((v) => toExpression(v))
                         .includes(text);
@@ -800,7 +799,6 @@ export class Flow implements flowbee.Disposable {
                     location: locatedValue?.location?.path
                 };
             });
-
             return { values: exprVals, overrides: flow.userOverrides };
         } else {
             return { values: [], overrides: {} };
