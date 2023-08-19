@@ -1,21 +1,20 @@
+import { relative as relPath } from 'path';
 import * as vscode from 'vscode';
 import { URI as Uri } from 'vscode-uri';
-import { Ply, Suite, Request, Case, Step, PlyOptions } from '@ply-ct/ply';
+import { Ply, Suite, Request, Case, Step, PlyOptions, Skip } from '@ply-ct/ply';
 
 export class PlyLoader {
     private testsLocation: string;
+    private skip?: Skip;
     constructor(private readonly plyOptions: PlyOptions) {
         this.testsLocation = this.plyOptions.testsLocation;
+        if (this.plyOptions.skip) {
+            this.skip = new Skip(this.plyOptions.skip);
+        }
     }
 
-    async getSkipped(): Promise<Uri[]> {
-        let skipped: Uri[] = [];
-        if (this.plyOptions.skip) {
-            skipped = await vscode.workspace.findFiles(
-                new vscode.RelativePattern(this.testsLocation, this.plyOptions.skip)
-            );
-        }
-        return skipped;
+    isSkipped(path: string): boolean {
+        return !!this.skip?.isSkipped(relPath(this.testsLocation, path));
     }
 
     /**
@@ -31,12 +30,9 @@ export class PlyLoader {
         const requestSuites = await new Ply(this.plyOptions).loadRequests(
             requestFileUris.map((fileUri) => fileUri.fsPath)
         );
-        const skipped = await this.getSkipped();
         requestSuites.forEach((requestSuite) => {
             const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + requestSuite.path);
-            if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
-                requestSuite.skip = true;
-            }
+            if (this.isSkipped(suiteUri.fsPath)) requestSuite.skip = true;
             requests.set(suiteUri, requestSuite);
         });
         return requests;
@@ -55,12 +51,9 @@ export class PlyLoader {
             const caseSuites = await new Ply(this.plyOptions).loadCases(
                 caseFileUris.map((fileUri) => fileUri.fsPath)
             );
-            const skipped = await this.getSkipped();
             caseSuites.forEach((caseSuite) => {
                 const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + caseSuite.path);
-                if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
-                    caseSuite.skip = true;
-                }
+                if (this.isSkipped(suiteUri.fsPath)) caseSuite.skip = true;
                 cases.set(suiteUri, caseSuite);
             });
         }
@@ -80,12 +73,9 @@ export class PlyLoader {
             const flowSuites = await new Ply(this.plyOptions).loadFlows(
                 flowFileUris.map((fileUri) => fileUri.fsPath)
             );
-            const skipped = await this.getSkipped();
             flowSuites.forEach((flowSuite) => {
                 const suiteUri = Uri.file(this.plyOptions.testsLocation + '/' + flowSuite.path);
-                if (skipped && skipped.find((s) => s.toString() === suiteUri.toString())) {
-                    flowSuite.skip = true;
-                }
+                if (this.isSkipped(suiteUri.fsPath)) flowSuite.skip = true;
                 flows.set(suiteUri, flowSuite);
             });
         }

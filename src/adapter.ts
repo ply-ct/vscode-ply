@@ -170,9 +170,9 @@ export class PlyAdapter implements TestAdapter {
                 cases,
                 flows
             );
-            console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
-            console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
-            console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
+            // console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
+            // console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
+            // console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
 
             this.log.info(`Loaded plyees in: ${Date.now() - before} ms`);
 
