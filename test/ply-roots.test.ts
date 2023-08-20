@@ -28,8 +28,10 @@ describe('ply roots', function () {
         [flowRoot.toUri('src/test2/ply/requests/in-requests.ply.flow#s1'), 0]
     ];
 
+    const labeler = (_uri: Uri) => undefined;
+
     it('should be grouped by location', () => {
-        requestRoot.build(help.workspaceFolderUri, requestUris);
+        requestRoot.build(help.workspaceFolderUri, requestUris, labeler, labeler);
         assert.strictEqual(
             requestRoot.toString(),
             `Requests
@@ -55,9 +57,19 @@ describe('ply roots', function () {
     });
 
     it('should merge children across roots', () => {
-        const plyRoots = new PlyRoots(help.workspaceFolderUri);
-        requestRoot.build(Uri.file(help.workspaceFolderUri.fsPath + '/src'), requestUris);
-        flowRoot.build(Uri.file(help.workspaceFolderUri.fsPath + '/src'), flowUris);
+        const plyRoots = new PlyRoots(help.workspaceFolderUri, Uri.file('.'));
+        requestRoot.build(
+            Uri.file(help.workspaceFolderUri.fsPath + '/src'),
+            requestUris,
+            labeler,
+            labeler
+        );
+        flowRoot.build(
+            Uri.file(help.workspaceFolderUri.fsPath + '/src'),
+            flowUris,
+            labeler,
+            labeler
+        );
 
         plyRoots.rootSuite.children = [];
         plyRoots.merge(plyRoots.rootSuite, requestRoot.baseSuite.children);

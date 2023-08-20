@@ -164,12 +164,8 @@ export class PlyAdapter implements TestAdapter {
             const cases = await loader.loadCases();
             const flows = await loader.loadFlows();
 
-            this.plyRoots.build(
-                vscode.Uri.file(this.config.plyOptions.testsLocation),
-                requests,
-                cases,
-                flows
-            );
+            this.plyRoots.plyBase = vscode.Uri.file(this.config.plyOptions.testsLocation);
+            this.plyRoots.build(requests, cases, flows);
             // console.debug(`requestsRoot: ${this.plyRoots.requestsRoot.toString()}`);
             // console.debug(`casesRoot: ${this.plyRoots.casesRoot.toString()}`);
             // console.debug(`flowsRoot: ${this.plyRoots.flowsRoot.toString()}`);
@@ -178,7 +174,7 @@ export class PlyAdapter implements TestAdapter {
 
             this.testsEmitter.fire(<TestLoadFinishedEvent>{
                 type: 'finished',
-                suite: this.plyRoots.rootSuite
+                suite: this.plyRoots.root
             });
             this._onLoad.emit({ success: true });
         } catch (err: unknown) {

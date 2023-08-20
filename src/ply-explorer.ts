@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as jsYaml from 'js-yaml';
-import { Flow } from '@ply-ct/ply-api';
+import { Flow, getStepForFragment } from '@ply-ct/ply-api';
 import { TestController, TestAdapter } from './test-adapter/api/index';
 import { TestCollection } from './test-explorer/tree/testCollection';
 import { TreeNode } from './test-explorer/tree/treeNode';
@@ -265,8 +265,7 @@ export class PlyExplorer
                 const flow = jsYaml.load(new TextDecoder().decode(yaml), {
                     filename: fileUri.fsPath
                 }) as Flow;
-                // TODO use ply-api util
-                const step = flow.steps?.find((s) => s.id === fileUri.fragment);
+                const step = getStepForFragment(flow, fileUri.fragment);
                 if (step?.path?.endsWith('request')) {
                     await vscode.commands.executeCommand('ply.open-request', {
                         uri: fileUri.with({ scheme: 'ply-request' }),
