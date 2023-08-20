@@ -222,7 +222,7 @@ export class PlyRoot {
  */
 export class PlyRoots {
     private baseRoot: PlyRoot;
-    private rootSuite: TestSuiteInfo;
+    readonly rootSuite: TestSuiteInfo;
     requestsScheme = true;
 
     private readonly testsById = new Map<string, Test>();
