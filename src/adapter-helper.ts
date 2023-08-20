@@ -131,7 +131,7 @@ export class AdapterHelper {
         if (uri.scheme === 'ply-request') {
             suiteUri = uri.with({ scheme: 'file', fragment: '', query: '' });
         }
-        return (uri.path.endsWith('.flow') ? 'flows|' : 'requests|') + suiteUri.toString(true);
+        return `base|${suiteUri.toString(true)}`;
     }
 
     async getRequestDescriptors(uri: vscode.Uri): Promise<(Descriptor & { request: Request })[]> {

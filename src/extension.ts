@@ -227,7 +227,10 @@ export async function activate(context: vscode.ExtensionContext) {
             testHub,
             (workspaceFolder) => {
                 // TODO dispose plyRoots and diffHandlers in onDidChangeWorkspaceFolders
-                const plyRoots = new PlyRoots(workspaceFolder.uri);
+                const plyRoots = new PlyRoots(
+                    workspaceFolder.uri,
+                    vscode.Uri.file(new PlyConfig(workspaceFolder).plyOptions.testsLocation)
+                );
                 context.subscriptions.push(plyRoots);
                 const diffState = new DiffState(workspaceFolder, context.workspaceState);
                 const adapter = new PlyAdapter(
