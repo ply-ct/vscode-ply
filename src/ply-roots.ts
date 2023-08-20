@@ -221,9 +221,8 @@ export class PlyRoot {
  * Per one workspace folder.  Currently only has local requests.
  */
 export class PlyRoots {
-    private roots: PlyRoot[] = [];
-    readonly baseRoot: PlyRoot;
-    readonly rootSuite: TestSuiteInfo;
+    private baseRoot: PlyRoot;
+    private rootSuite: TestSuiteInfo;
     requestsScheme = true;
 
     private readonly testsById = new Map<string, Test>();
@@ -231,10 +230,20 @@ export class PlyRoots {
     private readonly suiteIdsByExpectedResultUri = new Map<string, string>();
     private readonly suiteIdsByActualResultUri = new Map<string, string>();
 
+    private _plyBase: Uri;
+    get plyBase(): Uri {
+        return this._plyBase;
+    }
+    set plyBase(base: Uri) {
+        this._plyBase = base;
+        this.baseRoot = new PlyRoot(this.uri, 'base', PlyRoots.relativize(this.plyBase, this.uri));
+    }
+
     /**
      * @param uri workspaceFolder uri for local fs; url for remote
      */
-    constructor(readonly uri: Uri, readonly plyBase: Uri) {
+    constructor(readonly uri: Uri, plyBase: Uri) {
+        this._plyBase = plyBase;
         this.rootSuite = {
             type: 'suite',
             id: `Ply:${uri.toString(true)}`,
@@ -243,8 +252,16 @@ export class PlyRoots {
             children: []
         };
 
-        this.baseRoot = new PlyRoot(uri, 'base', PlyRoots.relativize(plyBase, this.uri));
-        this.roots.push(this.baseRoot);
+        this.baseRoot = new PlyRoot(uri, 'base', PlyRoots.relativize(this.plyBase, this.uri));
+    }
+
+    get root(): TestSuiteInfo {
+        if (!this.baseRoot.label) {
+            // testsLocattion is workspace folder
+            return this.baseRoot.baseSuite;
+        } else {
+            return this.rootSuite;
+        }
     }
 
     build(
@@ -435,11 +452,9 @@ export class PlyRoots {
         if (test(this.rootSuite)) {
             return this.rootSuite;
         }
-        for (const plyRoot of this.roots) {
-            const testOrSuite = plyRoot.find(test);
-            if (testOrSuite) {
-                return testOrSuite;
-            }
+        const testOrSuite = this.baseRoot.find(test);
+        if (testOrSuite) {
+            return testOrSuite;
         }
     }
 
@@ -459,9 +474,7 @@ export class PlyRoots {
         if (test(this.rootSuite)) {
             infos.push(this.rootSuite);
         }
-        for (const plyRoot of this.roots) {
-            infos = [...infos, ...plyRoot.filter(test)];
-        }
+        infos = [...infos, ...this.baseRoot.filter(test)];
         return infos;
     }
 
@@ -469,11 +482,9 @@ export class PlyRoots {
         if (id === this.rootSuite.id) {
             return this.rootSuite;
         }
-        for (const plyRoot of this.roots) {
-            const testOrSuite = plyRoot.find((t) => t.id === id);
-            if (testOrSuite) {
-                return testOrSuite;
-            }
+        const testOrSuite = this.baseRoot.find((t) => t.id === id);
+        if (testOrSuite) {
+            return testOrSuite;
         }
     }
 
@@ -497,14 +508,12 @@ export class PlyRoots {
         if (testOrSuiteId === this.rootSuite.id) {
             return undefined;
         }
-        for (const plyRoot of this.roots) {
-            if (plyRoot.id === testOrSuiteId) {
-                return this.rootSuite;
-            }
-            const parent = plyRoot.getParent(plyRoot.baseSuite, testOrSuiteId);
-            if (parent) {
-                return parent;
-            }
+        if (this.baseRoot.id === testOrSuiteId) {
+            return this.rootSuite;
+        }
+        const parent = this.baseRoot.getParent(this.baseRoot.baseSuite, testOrSuiteId);
+        if (parent) {
+            return parent;
         }
     }
 
@@ -590,9 +599,7 @@ export class PlyRoots {
         this.suitesByTestOrSuiteId.clear();
         this.suiteIdsByExpectedResultUri.clear();
         this.suiteIdsByActualResultUri.clear();
-        for (const root of this.roots) {
-            root.baseSuite.children = [];
-        }
+        this.baseRoot.baseSuite.children = [];
     }
 
     toString() {

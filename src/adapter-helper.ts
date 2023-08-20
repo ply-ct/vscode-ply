@@ -9,10 +9,7 @@ import { Result } from './result/result';
 import { PlyConfig } from './config';
 
 export class AdapterHelper {
-    constructor(
-        readonly type: 'requests' | 'cases' | 'flows',
-        readonly adapters: Map<string, PlyAdapter>
-    ) {}
+    constructor(readonly adapters: Map<string, PlyAdapter>) {}
 
     getAdapter(uri: vscode.Uri): PlyAdapter {
         // without try/catch, user sees the following with no info in console/log:
@@ -121,7 +118,7 @@ export class AdapterHelper {
         if (target) {
             id += `#${target}`;
         } else {
-            id = `${this.type}|${id}`;
+            id = `base|${id}`;
         }
         return id;
     }

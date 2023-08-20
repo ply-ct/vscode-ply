@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const requestEditor = new RequestEditor(
         context,
-        new AdapterHelper('requests', testAdapters),
+        new AdapterHelper(testAdapters),
         onRequestAction
     );
     context.subscriptions.push(
@@ -109,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const flowEditor = new FlowEditor(
         context,
-        new AdapterHelper('flows', testAdapters),
+        new AdapterHelper(testAdapters),
         onFlowItemSelect,
         onFlowAction,
         onFlowModeChange
@@ -187,7 +187,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('ply.flow.mode.inspect', () => setFlowMode('runtime'))
     );
 
-    const vizEditor = new VizEditor(context, new AdapterHelper('requests', testAdapters));
+    const vizEditor = new VizEditor(context, new AdapterHelper(testAdapters));
     context.subscriptions.push(
         vscode.window.registerCustomEditorProvider('ply.viz', vizEditor, {
             webviewOptions: { retainContextWhenHidden: true }

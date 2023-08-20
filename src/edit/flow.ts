@@ -637,7 +637,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
      */
     getInstance(uri: vscode.Uri): FlowInstance | undefined {
         const adapter = this.adapterHelper.getAdapter(uri);
-        const id = `flows|${uri.toString(true)}`;
+        const id = `base|${uri.toString(true)}`;
         const suite = adapter.plyRoots.getSuite(id);
         if (suite) {
             return suite.runtime.results.flowInstanceFromActual(uri.fsPath);
