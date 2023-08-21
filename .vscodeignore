@@ -31,6 +31,9 @@ web/.eslintrc.yaml
 web/package-lock.json
 web/rollup.config.js
 web/tsconfig.json
+web/out/workers/editor.worker.js.map
+web/out/workers/json.worker.js.map
+web/out/workers/yaml.worker.js.map
 !node_modules/@ply-ct/ply/package.json
 !node_modules/@ply-ct/ply/templates
 !node_modules/@ply-ct/ply/dist/index.js
