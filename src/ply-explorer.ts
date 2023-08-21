@@ -396,6 +396,12 @@ export class PlyExplorer
         }
     }
 
+    expand(treeView: vscode.TreeView<TreeNode | ErrorNode>): void {
+        for (const node of this.getChildren()) {
+            treeView.reveal(node, { expand: 1 });
+        }
+    }
+
     testLoadStarted(collection: TestCollection): void {
         this.loadingCollections.add(collection);
         vscode.commands.executeCommand('setContext', 'testsLoading', true);
