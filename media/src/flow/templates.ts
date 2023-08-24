@@ -34,10 +34,20 @@ export class Templates {
                         const descriptor = this.customDescriptors?.find((d) => {
                             return d.path === flowElement.path;
                         });
-                        if (descriptor?.template) {
-                            template = this.parseTemplate(descriptor.template);
+                        if (prefix === 'inspect') {
+                            if (descriptor?.runtimeTemplate) {
+                                template = this.parseTemplate(descriptor.runtimeTemplate);
+                            } else {
+                                template = this.parseTemplate(
+                                    await this.get(`${prefix}/typescript.yaml`)
+                                );
+                            }
                         } else {
-                            template = baseTemplate;
+                            if (descriptor?.template) {
+                                template = this.parseTemplate(descriptor.template);
+                            } else {
+                                template = baseTemplate;
+                            }
                         }
                     } else {
                         const path = `${prefix}/${flowElement.path}.yaml`;

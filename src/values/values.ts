@@ -7,7 +7,7 @@ import {
     PlyAccess,
     FileSystemAccess
 } from '@ply-ct/ply-api';
-import { Values as PlyValues, ValuesHolder, EvalOptions } from '@ply-ct/ply-values';
+import { ValuesAccess, ValuesHolder, EvalOptions } from '@ply-ct/ply-values';
 import { PlyRoots } from '../ply-roots';
 import { PlyConfig } from '../config';
 
@@ -270,7 +270,7 @@ export class Values implements Disposable {
 
     async getValues(suiteId: string): Promise<object | void> {
         if (!this._values) {
-            this._values = new PlyValues(
+            this._values = new ValuesAccess(
                 await this.getValuesHolders(suiteId),
                 this.getEvalOptions()
             ).getValues();

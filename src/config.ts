@@ -139,7 +139,7 @@ export class PlyConfig {
         return this.getConfiguration().get(Setting.useDist, false);
     }
 
-    get requireTsNode(): boolean {
+    get requireTsNode(): boolean | undefined {
         return this.getConfiguration().get(Setting.requireTsNode, false);
     }
 

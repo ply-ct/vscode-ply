@@ -5,7 +5,7 @@ import {
     isExpression,
     toExpression,
     resolve,
-    Values as ValuesAccess
+    ValuesAccess
 } from '@ply-ct/ply-values';
 import { Options } from './options';
 import { Templates } from './templates';
@@ -510,11 +510,15 @@ export class Flow implements flowbee.Disposable {
             }
             if (instances && instances.length > 0) {
                 const instance = instances[instances.length - 1] as any;
-                if (instance.data?.request) {
-                    instance.request = instance.data.request;
-                    if (instance.data.response) {
-                        instance.response = instance.data.response;
+                if (instance.data) {
+                    if (instance.data.request) {
+                        instance.request = instance.data.request;
+                        if (instance.data.response) {
+                            instance.response = instance.data.response;
+                        }
                     }
+                } else {
+                    instance.data = '';
                 }
             }
             if (!Flow.configurator.isOpen) {

@@ -107,6 +107,8 @@ a:hover {
   background: var(--vscode-button-background);
   margin-left: 1.5px;
   margin-bottom: 6px;
+  padding-left: 7px;
+  padding-right: 7px;
   text-align: center;
   font-size: 14px;
   outline: 1px solid transparent;
@@ -251,7 +253,7 @@ a:hover {
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
   border: none;
-  padding: 4px 6px;
+  padding: 5px 7px;
 }
 
 .auth-popper.el-popper.is-light {

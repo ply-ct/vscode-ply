@@ -9,12 +9,7 @@ import {
   ValuesOptions,
   ValuesActionEvent
 } from 'flowbee';
-import {
-  Values as ValuesAccess,
-  ExpressionHolder,
-  expressions,
-  isExpression
-} from '@ply-ct/ply-values';
+import { ValuesAccess, ExpressionHolder, expressions, isExpression } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
 
 export default defineComponent({

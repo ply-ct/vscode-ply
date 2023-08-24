@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as process from 'process';
-import { Values as ValuesAccess, ValuesHolder, findExpressions, isRegex } from '@ply-ct/ply-values';
+import { ValuesAccess, ValuesHolder, findExpressions, isRegex } from '@ply-ct/ply-values';
 import { PlyAdapter } from '../adapter';
 import { Result } from './result';
 

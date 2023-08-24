@@ -355,11 +355,13 @@ export class PlyRoots {
 
         const testLabeler = (testUri: Uri) => {
             if (testUri.path.endsWith('.flow')) {
-                const test = this.testsById.get(testUri.toString()) as Step;
-                return (
-                    (test.subflow ? `${test.subflow.name} → ` : '') +
-                    test.step.name.replace(/\r?\n/g, ' ')
-                );
+                const step = this.testsById.get(testUri.toString(true)) as Step;
+                if (step) {
+                    return (
+                        (step.subflow ? `${step.subflow.name} → ` : '') +
+                        step.step.name.replace(/\r?\n/g, ' ')
+                    );
+                }
             }
         };
 
@@ -378,21 +380,6 @@ export class PlyRoots {
         );
 
         this.rootSuite.children = [this.baseRoot.baseSuite];
-
-        // const baseSuite: TestSuiteInfo = {
-        //     type: 'suite',
-        //     id: 'base|' + plyBase.toString(true),
-        //     label: PlyRoots.relativize(plyBase, this.uri),
-        //     debuggable: false,
-        //     children: []
-        // };
-
-        // this.rootSuite.children = [baseSuite];
-        // for (const root of [this.requestsRoot, this.flowsRoot, this.casesRoot]) {
-        //     this.merge(baseSuite, root.baseSuite.children);
-        // }
-        // this.baseRoot.baseSuite.children = baseSuite.children;
-
         this.sort(this.rootSuite);
     }
 

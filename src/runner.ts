@@ -15,7 +15,7 @@ import {
     TestDecoration
 } from './test-adapter/api/index';
 import { PlyRoots } from './ply-roots';
-import { PlyConfig } from './config';
+import { PlyConfig, Setting } from './config';
 import { WorkerArgs } from './worker/args';
 import { DiffState } from './result/diff';
 
@@ -53,7 +53,7 @@ export class PlyRunner {
             for (const testId of testIds) {
                 const testOrSuite = this.plyRoots.find((i) => i.id === testId);
                 if (testOrSuite) {
-                    this.collectTests(testOrSuite, testInfos, testOrSuite.type === 'test');
+                    await this.collectTests(testOrSuite, testInfos, testOrSuite.type === 'test');
                 } else {
                     throw new Error(`No such ply test: ${testId}`);
                 }
@@ -298,18 +298,21 @@ export class PlyRunner {
     /**
      * Returns a flattened list of all test ids
      */
-    collectTests(
+    async collectTests(
         testOrSuite: TestSuiteInfo | TestInfo,
         testInfos: TestInfo[],
         isExplicitTest = false,
         skip = false
     ) {
+        const plySettings = vscode.workspace.getConfiguration('ply', this.workspaceFolder.uri);
+        let requireTsNode = plySettings.get(Setting.requireTsNode);
+
         if (testOrSuite.type === 'suite') {
             for (const child of testOrSuite.children) {
                 // honor skip when executing from parent suite (not explicitly running test or suite)
                 const shouldSkip =
                     skip || (child.type === 'suite' && this.plyRoots.getSuite(child.id)?.skip);
-                this.collectTests(child, testInfos, false, shouldSkip);
+                await this.collectTests(child, testInfos, false, shouldSkip);
             }
         } else {
             if (!skip && !testInfos.find((ti) => ti.id === testOrSuite.id)) {
@@ -318,6 +321,22 @@ export class PlyRunner {
                     // .ply suite may be skipped
                     if (isExplicitTest || !testSuite.skip) testInfos.push(testOrSuite);
                 } else {
+                    if (requireTsNode === null) {
+                        // check whether need to auto-set
+                        const uri = PlyRoots.toUri(testOrSuite.id);
+                        if (uri.path.endsWith('.flow') && uri.fragment) {
+                            const test = this.plyRoots.getTest(testOrSuite.id);
+                            const step = (test as ply.Step)?.step;
+                            if (step?.path === 'typescript' || step?.path?.endsWith('.ts')) {
+                                requireTsNode = true;
+                                await plySettings.update(
+                                    Setting.requireTsNode,
+                                    true,
+                                    vscode.ConfigurationTarget.Workspace
+                                );
+                            }
+                        }
+                    }
                     testInfos.push(testOrSuite);
                 }
             }

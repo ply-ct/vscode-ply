@@ -403,5 +403,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // plyconfig.json supports comments
-    await PlyConfig.setFileAssociations({ 'plyconfig.json': 'jsonc' });
+    if (vscode.workspace.workspaceFolders) {
+        await PlyConfig.setFileAssociations({ 'plyconfig.json': 'jsonc' });
+    }
 }
