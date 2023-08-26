@@ -1,8 +1,8 @@
 import * as os from 'os';
-import * as fs from 'fs';
 import * as url from 'url';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
+import { Fs } from '../fs';
 
 export type ResultContents = {
     contents: string;
@@ -87,7 +87,7 @@ export class Result {
      * TODO: memoize: load only once per instance?
      */
     private async load(): Promise<string | undefined> {
-        if (fs.existsSync(this.plyResult.location.path) && this.getWorkspaceFolderUri()) {
+        if ((await new Fs(this.plyResult.location.path).exists()) && this.getWorkspaceFolderUri()) {
             const document = await vscode.workspace.openTextDocument(
                 Result.convertUri(this.toUri())
             );

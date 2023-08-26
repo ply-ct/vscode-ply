@@ -1,7 +1,7 @@
-import { promises as fs, existsSync } from 'fs';
 import * as vscode from 'vscode';
 import * as jsYaml from 'js-yaml';
 import { PlyRequest, Flow, Step } from '@ply-ct/ply-api';
+import { Fs } from './fs';
 
 export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvider {
     async provideFileDecoration(
@@ -9,43 +9,29 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
         _token: vscode.CancellationToken
     ): Promise<vscode.FileDecoration | null> {
         if (uri.scheme === 'ply-explorer' && uri.fragment) {
-            if (uri.path.endsWith('.ply')) {
-                const file = this.fileFromUri(uri);
-                if (existsSync(file)) {
-                    try {
-                        const yaml = await fs.readFile(file, { encoding: 'utf-8' });
-                        const plyObj = jsYaml.load(yaml, { filename: file }) as {
+            const fs = new Fs(this.fileFromUri(uri));
+            if (await fs.exists()) {
+                try {
+                    if (uri.path.endsWith('.ply')) {
+                        const yaml = await fs.readTextFile();
+                        const plyObj = jsYaml.load(yaml, { filename: fs.file }) as {
                             [key: string]: PlyRequest;
                         };
                         const id = this.idFromFragment(uri.fragment);
                         return this.getFileDecoration(plyObj[id]?.method);
-                    } catch (err: unknown) {
-                        console.error(err);
-                    }
-                }
-            } else if (uri.path.endsWith('.yaml') || uri.path.endsWith('.yml')) {
-                const file = this.fileFromUri(uri);
-                if (existsSync(file)) {
-                    try {
-                        const yaml = await fs.readFile(file, { encoding: 'utf-8' });
+                    } else if (uri.path.endsWith('.yaml') || uri.path.endsWith('.yml')) {
+                        const yaml = await fs.readTextFile();
                         const yamlObj = jsYaml.load(yaml, {
-                            filename: `${file}#${uri.fragment}`
+                            filename: `${fs.file}#${uri.fragment}`
                         }) as {
                             [key: string]: PlyRequest;
                         };
                         const id = this.idFromFragment(uri.fragment);
                         return this.getFileDecoration(yamlObj[id]?.method);
-                    } catch (err: unknown) {
-                        console.error(err);
-                    }
-                }
-            } else if (uri.path.endsWith('.flow')) {
-                const file = this.fileFromUri(uri);
-                if (existsSync(file)) {
-                    try {
-                        const yaml = await fs.readFile(file, { encoding: 'utf-8' });
+                    } else if (uri.path.endsWith('.flow')) {
+                        const yaml = await fs.readTextFile();
                         const flow = jsYaml.load(yaml, {
-                            filename: `${file}#${uri.fragment}`
+                            filename: `${fs.file}#${uri.fragment}`
                         }) as Flow;
                         const id = this.idFromFragment(uri.fragment);
                         const dot = id.indexOf('.');
@@ -63,9 +49,9 @@ export class PlyExplorerDecorationProvider implements vscode.FileDecorationProvi
                         if (step?.path === 'request') {
                             return this.getFileDecoration(step.attributes?.method);
                         }
-                    } catch (err: unknown) {
-                        console.error(err);
                     }
+                } catch (err: unknown) {
+                    console.error(err);
                 }
             }
         }

@@ -1,9 +1,9 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { FlowEvent, TypedEvent as Event, Listener } from '@ply-ct/ply-api';
+import { Fs } from './fs';
 import { ChildProcess, fork } from 'child_process';
 import {
     TestSuiteInfo,
@@ -152,7 +152,7 @@ export class PlyRunner {
         }
 
         const plyPath = this.config.plyPath;
-        if (!fs.existsSync(plyPath)) {
+        if (!(await new Fs(plyPath).exists())) {
             const msg = `Ply path not found: ${plyPath}`;
             vscode.window.showErrorMessage(msg);
             throw new Error(msg);
@@ -466,8 +466,9 @@ export class PlyRunner {
     private async getPlyVersion(plyPath: string): Promise<string> {
         if (!this.plyVersion) {
             try {
-                if (fs.existsSync(`${plyPath}/package.json`)) {
-                    const contents = await fs.promises.readFile(`${plyPath}/package.json`, 'utf-8');
+                const fs = new Fs(`${plyPath}/package.json`);
+                if (await fs.exists()) {
+                    const contents = await fs.readTextFile();
                     this.plyVersion = JSON.parse(contents).version;
                 }
             } catch (err: unknown) {

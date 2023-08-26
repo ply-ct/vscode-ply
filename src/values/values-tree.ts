@@ -1,6 +1,6 @@
-import { promises as fs, existsSync } from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Fs } from '../fs';
 import { WorkspaceFiles } from '../util/files';
 import { Values } from './values';
 import { ValuesFile } from './values-file';
@@ -30,7 +30,7 @@ export class PlyValuesTree {
                     // TODO: scroll based on line num in cached vals
                 } else {
                     configFile = values.config.defaultFile;
-                    await fs.writeFile(configFile, '', { encoding: 'utf-8' });
+                    await new Fs(configFile).writeFile('');
                     vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configFile));
                 }
             })
@@ -66,7 +66,7 @@ export class PlyValuesTree {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand('ply.values.open-file', async (valuesFile) => {
-                if (existsSync(valuesFile.uri.fsPath)) {
+                if (await new Fs(valuesFile.uri.fsPath).exists()) {
                     vscode.commands.executeCommand('vscode.open', valuesFile.uri);
                 }
             })

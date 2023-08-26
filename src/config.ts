@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
-import { detectNodePath } from './test-adapter/util/misc';
+import { Fs } from './fs';
 import * as ply from '@ply-ct/ply';
+import { detectNodePath } from './test-adapter/util/misc';
 
 export enum Setting {
     customSteps = 'customSteps',
@@ -214,24 +214,25 @@ export class PlyConfig {
         const indent = this.plyOptions.prettyIndent || 2;
         let configFile = this.configFile;
         if (configFile) {
-            const configContent = await fs.promises.readFile(configFile, { encoding: 'utf-8' });
+            const fs = new Fs(configFile);
+            const configContent = await fs.readTextFile();
             let mergedConfig: string;
             if (configFile.endsWith('.json')) {
                 mergedConfig = ply.mergeJson(configFile, configContent, delta, indent);
             } else {
                 mergedConfig = ply.mergeYaml(configFile, configContent, delta, indent);
             }
-            await fs.promises.writeFile(configFile, mergedConfig);
+            await fs.writeFile(mergedConfig);
         } else {
             configFile = this.defaultFile;
-            await fs.promises.writeFile(configFile, ply.dumpYaml(delta, indent));
+            await new Fs(configFile).writeFile(ply.dumpYaml(delta, indent));
         }
     }
 
     get configFile(): string | undefined {
         return ply.PLY_CONFIGS.map((plyConfig) =>
             path.join(this.workspaceFolder.uri.fsPath, plyConfig)
-        ).find((file) => fs.existsSync(file));
+        ).find((file) => new Fs(file).existsSync());
     }
 
     get defaultFile(): string {

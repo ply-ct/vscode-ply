@@ -1,11 +1,9 @@
 import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import { Fs } from '../fs';
 import * as vscode from 'vscode';
-import * as findUp from 'find-up';
 import { WebSocketServer } from 'ws';
 import { Disposable, Listener, TypedEvent, FlowEvent, FlowInstance } from '@ply-ct/ply-api';
-import { PLY_CONFIGS, RunOptions, loadYaml } from '@ply-ct/ply';
+import { RunOptions, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapter-helper';
@@ -138,8 +136,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         .getConfiguration('ply', document.uri)
                         .get('flowSourceTab', false)
                 },
-                readonly:
-                    !isFile || ((await fs.promises.stat(document.uri.fsPath)).mode & 146) === 0
+                readonly: !isFile || (await new Fs(document.uri).isReadonly())
             } as any;
             await webviewPanel.webview.postMessage(msg);
         };
@@ -165,7 +162,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     const isNew = !document.getText().trim();
                     if (isNew) {
                         // applyEdit does not update file -- why?
-                        fs.writeFileSync(document.uri.fsPath, message.text);
+                        new Fs(document.uri).writeFile(message.text);
                     } else {
                         const edit = new vscode.WorkspaceEdit();
                         edit.replace(
@@ -175,7 +172,6 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         );
                         await vscode.workspace.applyEdit(edit);
                     }
-                    this.adapterHelper.removeActualResult(document.uri);
                 } else if (message.type === 'alert' || message.type === 'confirm') {
                     const options: vscode.MessageOptions = {};
                     const items: string[] = [];
@@ -372,60 +368,14 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     await vscode.commands.executeCommand('workbench.action.closePanel');
                 } else if (message.type === 'save-values') {
                     this.setOverrideValues(document.uri, message.overrides || {});
-                } else if (message.type === 'valuesFiles') {
-                    let configPath = findUp.sync(PLY_CONFIGS, {
-                        cwd: path.dirname(document.fileName)
-                    });
+                }
+            })
+        );
 
-                    if (!configPath) {
-                        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-                        if (!workspaceFolder) {
-                            throw new Error(`No workspace folder: ${document.uri}`);
-                        }
-                        configPath = vscode.Uri.parse(
-                            `${workspaceFolder.uri}/plyconfig.json`
-                        ).fsPath;
-                        fs.writeFileSync(
-                            configPath,
-                            `{${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}}`,
-                            { encoding: 'utf-8' }
-                        );
-                    }
-
-                    const configDoc = await vscode.workspace.openTextDocument(
-                        vscode.Uri.file(configPath)
-                    );
-                    await vscode.window.showTextDocument(configDoc);
-                    const lines = configDoc.getText().split(/\r?\n/);
-                    const lineNumber = lines.findIndex(
-                        (line) => line.indexOf('valuesFiles') !== -1
-                    );
-                    if (lineNumber >= 0) {
-                        await vscode.commands.executeCommand('revealLine', {
-                            lineNumber,
-                            at: 'top'
-                        });
-                    } else {
-                        const edit = new vscode.WorkspaceEdit();
-                        const lastClosingBrace = lines.reduce((lcb, line, i) => {
-                            if (line.trimEnd().endsWith('}')) {
-                                return i;
-                            } else {
-                                return lcb;
-                            }
-                        }, -1);
-                        if (lastClosingBrace !== -1) {
-                            const insLine = lastClosingBrace > 0 ? lastClosingBrace - 1 : 0;
-                            edit.insert(
-                                configDoc.uri,
-                                new vscode.Position(insLine, lines[insLine].length),
-                                `,${os.EOL}\t"valuesFiles": [${os.EOL}\t]${os.EOL}`
-                            );
-                            await vscode.workspace.applyEdit(edit);
-
-                            await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
-                        }
-                    }
+        disposables.push(
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                if (doc.uri === document.uri) {
+                    this.adapterHelper.removeActualResult(doc.uri);
                 }
             })
         );
@@ -441,6 +391,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             stepId: uri.fragment,
                             reqObj: loadYaml(uri.toString(), docChange.document.getText())
                         });
+                        this.adapterHelper.removeActualResult(document.uri);
                     }
                 }
             })

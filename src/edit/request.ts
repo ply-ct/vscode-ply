@@ -1,7 +1,7 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { Listener, Disposable } from '@ply-ct/ply-api';
+import { Fs } from '../fs';
 import { AdapterHelper } from '../adapter-helper';
 import { Web } from './web';
 import { Response, Flow, Location, util, RunOptions } from '@ply-ct/ply';
@@ -139,7 +139,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             webviewPanel.webview.onDidReceiveMessage(async (message) => {
                 if (message.type === 'ready') {
                     await updateRequest(
-                        this.getOptions(document.uri, {
+                        await this.getOptions(document.uri, {
                             base: baseUri.toString(),
                             indent: adapter.config.plyOptions.prettyIndent,
                             readonly: false,
@@ -184,7 +184,6 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                     });
                 } else if (message.type === 'change') {
                     await this.update(document, message.text, true);
-                    this.adapterHelper.removeActualResult(document.uri);
                 } else if (message.type === 'markers' && Array.isArray(message.markers)) {
                     this.showProblems(problems, document.uri, message.resource, message.markers);
                 } else if (message.type === 'open-file') {
@@ -198,6 +197,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                         if (document.isDirty) {
                             requestCanceled = !(await this.promptOrSave(document.uri));
                             if (!requestCanceled) {
+                                this.adapterHelper.removeActualResult(document.uri);
                                 await document.save();
                             }
                         }
@@ -254,7 +254,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                             }
                             const fileUri = await vscode.window.showSaveDialog(saveOptions);
                             if (fileUri) {
-                                await fs.promises.writeFile(fileUri.fsPath, body);
+                                await new Fs(fileUri).writeFile(body);
                                 await vscode.commands.executeCommand('vscode.open', fileUri);
                             }
                         }
@@ -292,6 +292,14 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
             })
         );
 
+        disposables.push(
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                if (doc.uri === document.uri) {
+                    this.adapterHelper.removeActualResult(doc.uri);
+                }
+            })
+        );
+
         if (document.uri.scheme === 'ply-request') {
             // listen for external changes to embedded requests
             disposables.push(
@@ -318,6 +326,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                                 await updateRequest(); // reflect doc changes
                             }
                         }
+                        this.adapterHelper.removeActualResult(document.uri);
                     }
                 })
             );
@@ -461,7 +470,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
     private async update(document: vscode.TextDocument, text: string, alsoFile = false) {
         const isNew = !document.getText().trim();
         if (isNew) {
-            fs.writeFileSync(document.uri.fsPath, text);
+            await new Fs(document.uri).writeFile(text);
         } else {
             const edit = new vscode.WorkspaceEdit();
             edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), text);
@@ -470,7 +479,7 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
                 const fileUri = document.uri.with({ scheme: 'file', fragment: '', query: '' });
                 const openFileDoc = this.openFileDocs.get(fileUri.toString());
                 if (openFileDoc && !openFileDoc.isClosed) {
-                    this.updateFileDoc(document.uri, openFileDoc, text);
+                    await this.updateFileDoc(document.uri, openFileDoc, text);
                 }
             }
         }
@@ -505,14 +514,17 @@ export class RequestEditor implements vscode.CustomTextEditorProvider {
         await vscode.workspace.applyEdit(edit);
     }
 
-    getOptions(uri: vscode.Uri, baseOptions: RequestEditorOptions): RequestEditorOptions {
+    async getOptions(
+        uri: vscode.Uri,
+        baseOptions: RequestEditorOptions
+    ): Promise<RequestEditorOptions> {
         const editorSettings = vscode.workspace.getConfiguration('editor', uri);
         return {
             ...baseOptions,
             lineNumbers: editorSettings.get('lineNumbers', 'on') === 'on',
             hovers: editorSettings.get('hover.enabled', true),
             folding: editorSettings.get('folding', true),
-            readonly: uri.scheme === 'git' || (fs.statSync(uri.fsPath).mode & 146) === 0,
+            readonly: await new Fs(uri).isReadonly(),
             runnable: uri.scheme !== 'git'
         };
     }

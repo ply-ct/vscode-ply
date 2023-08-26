@@ -1,7 +1,7 @@
-import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { RunOptions, loadYaml, PlyResults, TestRun } from '@ply-ct/ply';
 import { Descriptor } from '@ply-ct/ply-api';
+import { Fs } from './fs';
 import { PlyAdapter } from './adapter';
 import { PlyRoots } from './ply-roots';
 import { Request } from './request/request';
@@ -83,7 +83,7 @@ export class AdapterHelper {
             const expectedUri = Result.fromUri(fileUri)
                 .toUri()
                 .with({ query: `type=${type}` });
-            if (fs.existsSync(expectedUri.fsPath)) {
+            if (await new Fs(expectedUri).exists()) {
                 await vscode.commands.executeCommand('ply.openResult', expectedUri);
             } else {
                 vscode.window.showErrorMessage(
@@ -106,10 +106,8 @@ export class AdapterHelper {
         const adapter = this.getAdapter(uri);
         const suite = adapter?.plyRoots.getSuite(id);
         if (suite) {
-            const actual = suite.runtime.results.actual.toString();
-            if (fs.existsSync(actual)) {
-                fs.promises.unlink(actual);
-            }
+            const fs = new Fs(suite.runtime.results.actual.toString());
+            if (await fs.exists()) await fs.delete();
         }
     }
 
@@ -142,7 +140,7 @@ export class AdapterHelper {
                 const dotPlyUri = vscode.Uri.file(dotPly.file!);
                 const fileUri = dotPlyUri.with({ fragment: undefined });
                 // TODO: remove stale test infos so this isn't required
-                if (fs.existsSync(fileUri.fsPath)) {
+                if (await new Fs(fileUri).exists()) {
                     const text = new TextDecoder('utf-8').decode(
                         await vscode.workspace.fs.readFile(fileUri)
                     );

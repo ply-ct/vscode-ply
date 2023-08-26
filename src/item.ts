@@ -1,8 +1,8 @@
 import * as process from 'process';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
+import { Fs } from './fs';
 import { TestHub, testExplorerExtensionId, TestAdapter } from './test-adapter/api/index';
 import { PlyRoots } from './ply-roots';
 import { PlyConfig } from './config';
@@ -80,7 +80,7 @@ export class PlyItem {
         });
         if (uri) {
             const dir = path.dirname(uri.fsPath);
-            if (!fs.existsSync(dir)) {
+            if (!(await new Fs(dir).exists())) {
                 vscode.window.showErrorMessage(`Folder does not exist: ${dir}`);
             } else {
                 const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(dir));
@@ -88,11 +88,7 @@ export class PlyItem {
                     const testsLoc = new PlyConfig(workspaceFolder).plyOptions.testsLocation;
                     const fileLoc = new ply.Location(uri.fsPath);
                     if (fileLoc.isChildOf(testsLoc)) {
-                        await fs.promises.writeFile(
-                            uri.fsPath,
-                            await this.defaultContents(type),
-                            'utf-8'
-                        );
+                        await new Fs(uri.fsPath).writeFile(await this.defaultContents(type));
                         this.openItem(type, uri);
                     } else {
                         vscode.window.showErrorMessage(
@@ -104,11 +100,7 @@ export class PlyItem {
                     // add workspace folder
 
                     // create from template since adding workspace folder triggers adapter load (empty flow = no good)
-                    await fs.promises.writeFile(
-                        uri.fsPath,
-                        await this.defaultContents(type),
-                        'utf-8'
-                    );
+                    await new Fs(uri.fsPath).writeFile(await this.defaultContents(type));
 
                     const pos = vscode.workspace.workspaceFolders
                         ? vscode.workspace.workspaceFolders.length
@@ -157,10 +149,9 @@ export class PlyItem {
 
     async defaultContents(type: ply.TestType): Promise<string> {
         if (type === 'flow') {
-            return await fs.promises.readFile(
-                path.join(this.context.extensionPath, 'media/templates/default.flow'),
-                'utf-8'
-            );
+            return await new Fs(
+                path.join(this.context.extensionPath, 'media/templates/default.flow')
+            ).readTextFile();
         } else {
             return '';
         }

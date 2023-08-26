@@ -1,8 +1,8 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ply from '@ply-ct/ply';
 import { TypedEvent, Listener, Descriptor } from '@ply-ct/ply-api';
+import { Fs } from '../fs';
 import { Setting } from '../config';
 
 export interface DescriptorsChangeEvent {
@@ -57,25 +57,27 @@ export class Custom {
     }
 
     private async loadDescriptor(uri: vscode.Uri): Promise<Descriptor | undefined> {
-        const fsPath = uri.fsPath;
-        if (fs.existsSync(fsPath)) {
-            const obj = JSON.parse(await fs.promises.readFile(fsPath, 'utf-8'));
+        const fs = new Fs(uri);
+        if (await fs.exists()) {
+            const obj = JSON.parse(await fs.readTextFile());
             if (obj.path && obj.name && obj.type === 'step') {
                 if (obj.icon && !obj.icon.startsWith('<svg')) {
                     // inline
-                    const iconFile = path.join(this.workspaceFolder.uri.fsPath, obj.icon);
-                    if (fs.existsSync(iconFile)) {
-                        obj.icon = await fs.promises.readFile(iconFile, 'utf-8');
+                    const iconFs = new Fs(path.join(this.workspaceFolder.uri.fsPath, obj.icon));
+                    if (await iconFs.exists()) {
+                        obj.icon = await iconFs.readTextFile();
                     }
                 }
                 if (obj.template) {
                     if (typeof obj.template === 'string') {
-                        const templateFile = path.join(path.resolve(fsPath, '..'), obj.template);
-                        if (fs.existsSync(templateFile)) {
-                            const yml = await fs.promises.readFile(templateFile, 'utf-8');
-                            obj.template = ply.loadYaml(templateFile, yml);
+                        const templateFs = new Fs(
+                            path.join(path.resolve(fs.file, '..'), obj.template)
+                        );
+                        if (await templateFs.exists()) {
+                            const yml = await templateFs.readTextFile();
+                            obj.template = ply.loadYaml(templateFs.file, yml);
                         } else {
-                            this.log.error(`Error: Template not found: ${templateFile}`);
+                            this.log.error(`Error: Template not found: ${templateFs.file}`);
                             delete obj.template;
                         }
                     } else {
@@ -87,7 +89,7 @@ export class Custom {
                 }
                 return obj as Descriptor;
             } else {
-                this.log.error(`Error: Invalid descriptor: ${fsPath}`);
+                this.log.error(`Error: Invalid descriptor: ${fs.file}`);
             }
         }
     }

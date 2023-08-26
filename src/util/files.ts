@@ -1,8 +1,8 @@
 import { EOL } from 'os';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as mime from 'mime-types';
+import { Fs } from '../fs';
 
 /**
  * split a string into an array of lines, ignoring escaped
@@ -78,7 +78,8 @@ export class WorkspaceFiles {
      */
     async createFile(options: CreateFileOptions): Promise<string | undefined> {
         let dir = this.workspaceFolder.uri;
-        if (fs.existsSync(path.join(this.workspaceFolder.uri.fsPath, options.dirpath))) {
+        const fs = new Fs(path.join(this.workspaceFolder.uri.fsPath, options.dirpath));
+        if (await fs.exists()) {
             dir = dir.with({ path: `${dir.path}/${options.dirpath}` });
         }
 
@@ -94,15 +95,15 @@ export class WorkspaceFiles {
         if (fileUri) {
             const filepath = this.pathInWorkspaceFolder(this.workspaceFolder, fileUri);
             if (filepath) {
-                const templateFile = path.join(this.templatePath, options.template);
+                const templateFs = new Fs(path.join(this.templatePath, options.template));
                 let contents: string | undefined;
-                if (fs.existsSync(templateFile)) {
-                    contents = await fs.promises.readFile(templateFile, 'utf-8');
+                if (await templateFs.exists()) {
+                    contents = await templateFs.readTextFile();
                 } else if (options.template === 'blank.json') {
                     contents = ['{', '}'].join(EOL);
                 }
                 if (!contents) {
-                    vscode.window.showErrorMessage(`Ply template not found: ${templateFile}`);
+                    vscode.window.showErrorMessage(`Ply template not found: ${templateFs.file}`);
                     return;
                 }
                 if (options.substs) {
@@ -110,10 +111,8 @@ export class WorkspaceFiles {
                         contents = contents.replace(subst, options.substs[subst]);
                     }
                 }
-                await fs.promises.writeFile(
-                    path.join(this.workspaceFolder.uri.fsPath, filepath),
-                    contents,
-                    'utf-8'
+                await new Fs(path.join(this.workspaceFolder.uri.fsPath, filepath)).writeFile(
+                    contents
                 );
                 if (options.doOpen) {
                     await vscode.commands.executeCommand('vscode.open', fileUri);
