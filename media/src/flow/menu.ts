@@ -61,7 +61,7 @@ export class MenuProvider extends flowbee.DefaultMenuProvider {
         ];
         if (flowElementEvent.instances) {
             const hasCompare =
-                type === 'flow' || (step?.path === 'request' && step.attributes?.submit !== 'true');
+                type === 'flow' || (type === 'step' && step?.attributes?.submit !== 'true');
             items = [
                 { id: 'inspect', label: 'Inspect' },
                 ...(hasCompare

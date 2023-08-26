@@ -516,6 +516,8 @@ export class Flow implements flowbee.Disposable {
                         if (instance.data.response) {
                             instance.response = instance.data.response;
                         }
+                    } else if (typeof instance.data === 'object') {
+                        instance.data = JSON.stringify(instance.data, null, this.options.indent);
                     }
                 } else {
                     instance.data = '';

@@ -424,6 +424,11 @@ export class PlyRoots {
             ) {
                 return segs1.length - segs2.length;
             } else {
+                if (this.isFile(info1) && !this.isFile(info2)) {
+                    return 1;
+                } else if (this.isFile(info2) && !this.isFile(info1)) {
+                    return -1;
+                }
                 return info1.label.localeCompare(info2.label);
             }
         });
@@ -433,6 +438,15 @@ export class PlyRoots {
                 this.sort(child as TestSuiteInfo);
             }
         }
+    }
+
+    isFile(info: Info): boolean {
+        const testFile =
+            info.file?.endsWith('.ply') ||
+            info.file?.endsWith('.yaml') ||
+            info.file?.endsWith('.yml') ||
+            info.file?.endsWith('.flow');
+        return !!testFile;
     }
 
     find(test: (testOrSuiteInfo: Info) => boolean): Info | undefined {

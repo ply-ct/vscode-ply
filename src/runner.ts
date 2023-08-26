@@ -152,6 +152,11 @@ export class PlyRunner {
         }
 
         const plyPath = this.config.plyPath;
+        if (!fs.existsSync(plyPath)) {
+            const msg = `Ply path not found: ${plyPath}`;
+            vscode.window.showErrorMessage(msg);
+            throw new Error(msg);
+        }
         const plyVersion = await this.getPlyVersion(plyPath);
         if (options.valuesFiles && semver.lt(plyVersion, '3.0.54')) {
             // use array-style valuesFiles for old @ply-ct/ply

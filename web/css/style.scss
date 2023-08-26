@@ -237,6 +237,13 @@ a:hover {
 .flowbee-configurator-dark .flowbee-config-tab-content {
   overflow: visible; // tooltips extend outside container
 }
+.flowbee-configurator-light .flowbee-config-tab-content {
+  overflow: visible; // tooltips extend outside container
+}
+.table-container .flowbee-config-tab-content table {
+  overflow-x: clip; // no grow beyond width
+  width: 100%;
+}
 .table-container .flowbee-config-tab-content th {
   border: 1px solid var(--vscode-panel-border);
 }
