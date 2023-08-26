@@ -107,7 +107,9 @@ export class AdapterHelper {
         const suite = adapter?.plyRoots.getSuite(id);
         if (suite) {
             const fs = new Fs(suite.runtime.results.actual.toString());
-            if (await fs.exists()) await fs.delete();
+            if (await fs.exists()) {
+                await fs.delete();
+            }
         }
     }
 
