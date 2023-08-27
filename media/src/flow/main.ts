@@ -439,6 +439,20 @@ export class Flow implements flowbee.Disposable {
         this.requestsToolbox.render(this.options.toolboxOptions);
     }
 
+    findInstances(flowElement: flowbee.FlowElement): flowbee.FlowElementInstance[] | undefined {
+        const flowInstance = this.flowDiagram.instance;
+        if (flowInstance) {
+            const id = flowElement.id;
+            if (id?.startsWith('s') && flowInstance.stepInstances) {
+                return flowInstance.stepInstances.filter((si) => si.id === id);
+            } else if (id?.startsWith('f') && flowInstance.subflowInstances) {
+                return flowInstance.subflowInstances.filter((sfi) => sfi.id === id);
+            } else {
+                return [flowInstance];
+            }
+        }
+    }
+
     findStep(stepId: string) {
         let step = this.flowDiagram.flow.steps?.find((s) => s.id === stepId);
         if (step) return step;
@@ -679,7 +693,7 @@ export class Flow implements flowbee.Disposable {
                 for (const subflow of this.flowDiagram.flow.subflows) {
                     step = subflow.steps?.find((step) => step.id === e.target);
                     if (step) {
-                        e.target = `${subflow.id}.${step.id}`;
+                        e.target = `${subflow.id}-${step.id}`;
                         break;
                     }
                 }
@@ -696,7 +710,12 @@ export class Flow implements flowbee.Disposable {
                     const flow = readState(e.options.mode === 'inspect');
                     flow?.openConfigurator(e.options.tab);
                 } else {
-                    readState()?.openConfigurator(e.options.tab);
+                    if (this.flowDiagram.mode !== 'runtime') {
+                        const sel = this.flowDiagram.selected.length
+                            ? this.flowDiagram.selected[0]
+                            : this.flowDiagram.flow;
+                        this.updateConfigurator(sel, undefined, true);
+                    }
                 }
             } else {
                 readState()?.closeConfigurator();
@@ -786,7 +805,7 @@ export class Flow implements flowbee.Disposable {
     }
 
     getUserValues(): flowbee.UserValues {
-        const flow = readState(false);
+        const flow = readState();
         if (flow) {
             const values = flow.values || {};
             const valuesAccess = new ValuesAccess(values.valuesHolders, {
