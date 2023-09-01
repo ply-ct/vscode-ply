@@ -75,6 +75,9 @@
           @open-file="onOpenFile"
         />
       </el-tab-pane>
+      <el-tab-pane label="Auth">
+        <auth :auth-header="request.headers.Authorization" @auth-change="onUpdateAuth" />
+      </el-tab-pane>
       <el-tab-pane label="Source">
         <editor
           resource="Request Source"
@@ -105,18 +108,18 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { Request, Result } from '../model/request';
+import { Values } from '../model/values';
+import { Options } from '../model/options';
 import { getContentType, getLanguage } from '../util/content';
 import Actions from './Actions.vue';
 import Endpoint from './Endpoint.vue';
 import Editor from './Editor.vue';
 import TableComp from './Table.vue';
+import Auth from './Auth.vue';
 import Vals from './Values.vue';
-import { Values } from '../model/values';
-import { Options } from '../model/options';
-
 export default defineComponent({
   name: 'Request',
-  components: { Actions, Endpoint, Editor, TableComp, Vals },
+  components: { Actions, Endpoint, Editor, TableComp, Auth, Vals },
   props: {
     request: {
       type: Object as PropType<Request>,
@@ -306,6 +309,16 @@ export default defineComponent({
       else url = `${this.request.url}${query}`;
       this.$emit('updateRequest', { ...this.request, url });
     },
+    onUpdateAuth(authHeader: string) {
+      const headers: { [key: string]: string } = {
+        ...this.request.headers,
+        Authorization: authHeader
+      };
+      if (!headers.Authorization) {
+        delete headers.Authorization;
+      }
+      this.$emit('updateRequest', { ...this.request, headers });
+    },
     onUpdateSource(content: string) {
       this.$emit('updateSource', content);
     },
@@ -324,14 +337,10 @@ export default defineComponent({
     onCloseValues() {
       this.valuesOpen = false;
     },
-    onAction(action: string, requestName: string, value?: string) {
+    onAction(action: string, requestName: string) {
       if (action === 'values') {
         this.valuesOpen = !this.valuesOpen;
       } else if (action === 'auth') {
-        this.$emit('updateRequest', {
-          ...this.request,
-          headers: { ...this.request.headers, Authorization: value }
-        });
       } else {
         this.$emit('requestAction', action, requestName);
       }

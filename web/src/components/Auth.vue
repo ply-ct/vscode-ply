@@ -1,55 +1,38 @@
 <template>
-  <el-popover
-    :visible="popVisible"
-    popper-class="auth-popper"
-    placement="bottom"
-    title="Request Auth"
-    :width="600"
-  >
-    <div class="grid-form" tabindex="30">
-      <label>Auth Type</label>
-      <el-select v-model="authType" placeholder="Select" @change="onChange">
-        <el-option value="None" />
-        <el-option value="Basic" />
-        <el-option value="Bearer" />
-      </el-select>
-      <label v-if="authType === 'Basic'">Username</label>
-      <el-input v-if="authType === 'Basic'" v-model="username" @change="onChange" />
-      <label v-if="authType === 'Basic'">Password</label>
-      <el-input
-        v-if="authType === 'Basic'"
-        v-model="password"
-        type="password"
-        show-password
-        @change="onChange"
-      />
-      <label v-if="authType === 'Bearer'">Token</label>
-      <el-input v-if="authType === 'Bearer'" v-model="token" @change="onChange" />
-    </div>
-    <template #reference>
-      <img
-        ref="trigger"
-        class="icon"
-        :src="`${iconBase}/auth.svg`"
-        alt="Request Auth"
-        title="Request Auth"
-        @click="popVisible = !popVisible"
-      />
-    </template>
-  </el-popover>
+  <div class="grid-form" tabindex="30">
+    <label>Auth Type</label>
+    <el-select v-model="authType" placeholder="Select" @change="onChange">
+      <el-option value="None" />
+      <el-option value="Basic" />
+      <el-option value="Bearer" />
+    </el-select>
+    <label v-if="authType === 'Basic'">Username</label>
+    <el-input v-if="authType === 'Basic'" v-model="username" @change="onChange" />
+    <label v-if="authType === 'Basic'">Password</label>
+    <el-input
+      v-if="authType === 'Basic'"
+      v-model="password"
+      type="password"
+      show-password
+      @change="onChange"
+    />
+    <label v-if="authType === 'Bearer'">Token</label>
+    <el-input v-if="authType === 'Bearer'" v-model="token" @change="onChange" />
+    <label class="note"
+      >Note: The Authorization header is populated from values entered here. For sensitive
+      credentials, you can use
+      <a href="https://ply-ct.org/ply/topics/values">Value Expressions</a> to directly set
+      Authorization via the Headers tab.</label
+    >
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { ElPopover, ElSelect } from 'element-plus';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'Auth',
   props: {
-    iconBase: {
-      type: String,
-      required: true
-    },
     authHeader: {
       type: String,
       default: null
@@ -58,16 +41,10 @@ export default defineComponent({
   emits: ['authChange'],
   data() {
     return {
-      popVisible: false,
       authType: 'None' as 'None' | 'Basic' | 'Bearer',
       username: '',
       password: '',
       token: ''
-    };
-  },
-  setup() {
-    return {
-      trigger: ref<HTMLImageElement>()
     };
   },
   mounted() {
@@ -82,18 +59,6 @@ export default defineComponent({
       this.authType = 'Bearer';
       this.token = this.authHeader.substring(7).trim();
     }
-
-    // close popover on click outside
-    document.onclick = (evt: MouseEvent) => {
-      if (evt.target !== this.trigger) {
-        if (evt.target instanceof Node) {
-          const popper = document.getElementsByClassName('auth-popper').item(0);
-          if (!popper?.contains(evt.target)) {
-            this.popVisible = false;
-          }
-        }
-      }
-    };
   },
   methods: {
     toBase64(input: string): string {
@@ -109,20 +74,16 @@ export default defineComponent({
     onChange() {
       if (this.authType === 'None') {
         this.username = this.password = this.token = '';
-        this.$emit('authChange', 'auth');
+        this.$emit('authChange');
       } else if (this.authType === 'Basic') {
         this.token = '';
         if (this.username && this.password) {
-          this.$emit(
-            'authChange',
-            'auth',
-            'Basic ' + this.toBase64(`${this.username}:${this.password}`)
-          );
+          this.$emit('authChange', 'Basic ' + this.toBase64(`${this.username}:${this.password}`));
         }
       } else if (this.authType === 'Bearer') {
         this.username = this.password = '';
         if (this.token) {
-          this.$emit('authChange', 'auth', 'Bearer ' + this.token);
+          this.$emit('authChange', 'Bearer ' + this.token);
         }
       }
     }

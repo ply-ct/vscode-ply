@@ -80,6 +80,11 @@ export default defineComponent({
     }
   },
   watch: {
+    'request.url'() {
+      if (this.urlInput.innerText !== this.request.url) {
+        this.urlInput.innerText = this.request.url;
+      }
+    },
     values() {
       this.decorate();
     }

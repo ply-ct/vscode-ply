@@ -10,11 +10,6 @@
         @click="onAction"
       />
       <icon :base="options.iconBase" file="compare.svg" title="Compare Results" @click="onAction" />
-      <auth
-        :iconBase="options.iconBase"
-        :auth-header="request.headers.Authorization"
-        @auth-change="onAction"
-      />
       <icon
         :base="options.iconBase"
         file="help.svg"
@@ -30,11 +25,10 @@ import { defineComponent, PropType } from 'vue';
 import { Request } from '../model/request';
 import { Options } from '../model/options';
 import Icon from './Icon.vue';
-import Auth from './Auth.vue';
 
 export default defineComponent({
   name: 'Actions',
-  components: { Icon, Auth },
+  components: { Icon },
   props: {
     options: {
       type: Object as PropType<Options>,

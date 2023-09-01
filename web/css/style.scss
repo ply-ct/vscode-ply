@@ -205,12 +205,18 @@ a:hover {
 }
 
 .grid-form {
+  margin: 0 10px 5px 5px;
   display: grid;
   grid-template-columns: 80px 1fr;
   row-gap: 5px;
 }
 .grid-form label {
   padding-top: 3px;
+}
+.grid-form .note {
+  margin-top: 20px;
+  padding: 0 7.5px;
+  grid-column: 1/3;
 }
 
 .editor-container {

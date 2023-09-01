@@ -162,14 +162,8 @@ export class TestSuiteNode implements TreeNode {
         }
 
         if (this.recalcStateNeeded) {
-            const newCurrentNodeState =
-                this._state.current === 'errored'
-                    ? 'errored'
-                    : parentCurrentNodeState(this.children);
-            const newPreviousNodeState =
-                this._state.previous === 'errored'
-                    ? 'errored'
-                    : parentPreviousNodeState(this.children);
+            const newCurrentNodeState = parentCurrentNodeState(this.children);
+            const newPreviousNodeState = parentPreviousNodeState(this.children);
             const newAutorunFlag = parentAutorunFlag(this.children);
 
             if (
