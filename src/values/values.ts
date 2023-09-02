@@ -105,7 +105,7 @@ export class Values implements Disposable {
 
     setValuesFile(file: string, enabled: boolean): { [file: string]: boolean } {
         const valuesFiles = Object.keys(this.valuesFiles || {}).reduce((vfs, vf) => {
-            vfs[vscode.workspace.asRelativePath(vf)] = this.valuesFiles[vf];
+            vfs[vscode.workspace.asRelativePath(vf, false)] = this.valuesFiles[vf];
             return vfs;
         }, {} as { [file: string]: boolean });
         valuesFiles[file] = enabled;

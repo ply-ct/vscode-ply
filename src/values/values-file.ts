@@ -1,5 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+export class ValuesRoot extends vscode.TreeItem {
+    id: string;
+
+    constructor(readonly workspaceFolder: string) {
+        super(workspaceFolder, vscode.TreeItemCollapsibleState.Expanded);
+        this.id = workspaceFolder;
+    }
+}
 
 export class ValuesFile extends vscode.TreeItem {
     id: string;
@@ -10,8 +18,10 @@ export class ValuesFile extends vscode.TreeItem {
     constructor(
         private iconBase: string,
         readonly uri: vscode.Uri,
+        readonly folder: string, // workspace folder name
         readonly file: string,
-        readonly checked: boolean
+        readonly checked: boolean,
+        readonly onSelect: (valueFile: ValuesFile) => Promise<void>
     ) {
         super(path.basename(file), vscode.TreeItemCollapsibleState.None);
         this.id = uri.toString();

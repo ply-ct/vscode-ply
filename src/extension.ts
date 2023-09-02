@@ -221,42 +221,49 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new PlyItem(context, 'case').command);
     context.subscriptions.push(new PlyItem(context, 'flow').command);
 
+    const valuesTree = new PlyValuesTree(context, log);
+
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
+    const registrar = new TestAdapterRegistrar(
+        testHub,
+        (workspaceFolder) => {
+            const plyRoots = new PlyRoots(
+                workspaceFolder.uri,
+                vscode.Uri.file(new PlyConfig(workspaceFolder).plyOptions.testsLocation)
+            );
+            context.subscriptions.push(plyRoots);
+            const diffState = new DiffState(workspaceFolder, context.workspaceState);
+            const adapter = new PlyAdapter(
+                workspaceFolder,
+                plyRoots,
+                diffState,
+                outputChannel,
+                log
+            );
+            const retire = (testIds: string[]) => adapter.retireIds(testIds);
+            const diffHandler = new DiffHandler(adapter, diffState, decorator, retire);
+            context.subscriptions.push(diffHandler);
+            diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
+
+            context.subscriptions.push(new ExpectedResultsDecorator(workspaceFolder, adapter));
+
+            testAdapters.set(workspaceFolder.uri.toString(), adapter);
+
+            valuesTree.dataProvider.register(adapter);
+
+            return adapter;
+        },
+        log
+    );
+    context.subscriptions.push(registrar);
     context.subscriptions.push(
-        new TestAdapterRegistrar(
-            testHub,
-            (workspaceFolder) => {
-                // TODO dispose plyRoots and diffHandlers in onDidChangeWorkspaceFolders
-                const plyRoots = new PlyRoots(
-                    workspaceFolder.uri,
-                    vscode.Uri.file(new PlyConfig(workspaceFolder).plyOptions.testsLocation)
-                );
-                context.subscriptions.push(plyRoots);
-                const diffState = new DiffState(workspaceFolder, context.workspaceState);
-                const adapter = new PlyAdapter(
-                    workspaceFolder,
-                    plyRoots,
-                    diffState,
-                    outputChannel,
-                    log
-                );
-                const retire = (testIds: string[]) => adapter.retireIds(testIds);
-                const diffHandler = new DiffHandler(adapter, diffState, decorator, retire);
-                context.subscriptions.push(diffHandler);
-                diffHandlers.set(workspaceFolder.uri.toString(), diffHandler);
-
-                context.subscriptions.push(new ExpectedResultsDecorator(workspaceFolder, adapter));
-
-                testAdapters.set(workspaceFolder.uri.toString(), adapter);
-
-                adapter.onceValues((valuesEvent) => {
-                    vscode.commands.executeCommand('setContext', 'ply.showValuesTree', true);
-                    new PlyValuesTree(context, valuesEvent.values, log);
-                });
-                return adapter;
-            },
-            log
-        )
+        vscode.workspace.onDidChangeWorkspaceFolders((changeEvent) => {
+            for (const removedFolder of changeEvent.removed) {
+                valuesTree.dataProvider.unregister(removedFolder.uri);
+                const diffHandler = diffHandlers.get(removedFolder.uri.toString());
+                diffHandler?.dispose();
+            }
+        })
     );
 
     const submitCommand = async (...args: any[]) => {
@@ -264,7 +271,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const item = await PlyItem.getItem(...args);
             console.debug('ply.submit item: ' + JSON.stringify(item));
             if (item) {
-                const adapter = testAdapters.get(item.workspaceFolder.uri.toString());
+                const adapter = registrar.getAdapter(item.workspaceFolder);
                 if (!adapter) {
                     throw new Error(
                         `No test adapter found for workspace folder: ${item.workspaceFolder.uri}`

@@ -57,7 +57,7 @@ export class PlyAdapter implements TestAdapter {
     }
     private _onceValues = new Event<{ values: Values }>();
     onceValues(listener: Listener<{ values: Values }>) {
-        return this._onceValues.once(listener);
+        this._onceValues.once(listener);
     }
     private _onLoad = new Event<{ success: boolean }>();
     onLoad(listener: Listener<{ success: boolean }>) {
@@ -72,6 +72,7 @@ export class PlyAdapter implements TestAdapter {
         readonly log: ply.Log
     ) {
         this.log.info(`Initializing Ply for workspace folder: ${workspaceFolder.name}`);
+        this.disposables.push(plyRoots);
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.retireEmitter);

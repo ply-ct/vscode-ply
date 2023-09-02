@@ -329,8 +329,7 @@
         {
           "id": "ply-values",
           "name": "Values",
-          "visibility": "collapsed",
-          "when": "ply.showValuesTree"
+          "visibility": "collapsed"
         }
       ]
     },
@@ -624,15 +623,6 @@
         }
       },
       {
-        "command": "ply.values.reloading",
-        "category": "Ply Values",
-        "title": "Reloading values",
-        "icon": {
-          "dark": "./icons/test-explorer/reloading-dark.svg",
-          "light": "./icons/test-explorer/reloading-light.svg"
-        }
-      },
-      {
         "command": "ply.values.open-config",
         "category": "Ply Values",
         "title": "Values config",
@@ -640,12 +630,6 @@
           "dark": "./icons/dark/open-file.svg",
           "light": "./icons/light/open-file.svg"
         }
-      },
-      {
-        "command": "ply.values.new",
-        "category": "Ply Values",
-        "title": "New values file",
-        "icon": "$(new-file)"
       },
       {
         "command": "ply.values.select",
@@ -733,23 +717,12 @@
         },
         {
           "command": "ply.values.reload",
-          "group": "navigation@1",
-          "when": "view == ply-values && !valuesLoading"
-        },
-        {
-          "command": "ply.values.reloading",
-          "group": "navigation@2",
-          "when": "view == ply-values && valuesLoading"
+          "group": "navigation@1"
         },
         {
           "command": "ply.values.open-config",
           "group": "navigation@3",
-          "when": "view == ply-values"
-        },
-        {
-          "command": "ply.values.new",
-          "group": "navigation@4",
-          "when": "view == ply-values"
+          "when": "view == ply-values && !ply.values.multiRoots"
         }
       ],
       "view/item/context": [
@@ -1046,10 +1019,6 @@
         },
         {
           "command": "ply.explorer.reveal",
-          "when": "false"
-        },
-        {
-          "command": "ply.values.reloading",
           "when": "false"
         }
       ]

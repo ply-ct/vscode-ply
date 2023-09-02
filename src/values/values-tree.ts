@@ -1,9 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Fs } from '../fs';
-import { WorkspaceFiles } from '../util/files';
-import { Values } from './values';
-import { ValuesFile } from './values-file';
+import { ValuesFile, ValuesRoot } from './values-file';
 import { PlyValuesProvider } from './values-provider';
 import { Log } from '../test-adapter/util/log';
 
@@ -11,64 +9,50 @@ import { Log } from '../test-adapter/util/log';
  * Ply config must reside in root of workspace folder.
  */
 export class PlyValuesTree {
-    private treeView: vscode.TreeView<ValuesFile>;
-    private dataProvider: PlyValuesProvider;
+    private treeView: vscode.TreeView<ValuesRoot | ValuesFile>;
+    dataProvider: PlyValuesProvider;
 
-    constructor(readonly context: vscode.ExtensionContext, values: Values, log: Log) {
-        this.dataProvider = new PlyValuesProvider(context.asAbsolutePath('.'), values, log);
+    constructor(readonly context: vscode.ExtensionContext, log: Log) {
+        this.dataProvider = new PlyValuesProvider(context.asAbsolutePath('.'), log);
 
         context.subscriptions.push(
             vscode.commands.registerCommand('ply.values.reload', () => {
                 this.dataProvider.refresh();
             })
         );
+
+        const openConfig = async (workspaceFolder = '') => {
+            const config = this.dataProvider.getConfig(workspaceFolder);
+            if (config?.configFile) {
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.file(config.configFile));
+            }
+        };
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(
+                'ply.values.open-file',
+                async (item: ValuesRoot | ValuesFile) => {
+                    const valuesFileUri = (item as ValuesFile).uri;
+                    if (valuesFileUri && (await new Fs(valuesFileUri).exists())) {
+                        // TODO scroll to line number
+                        vscode.commands.executeCommand('vscode.open', valuesFileUri);
+                    } else {
+                        openConfig((item as ValuesRoot).workspaceFolder);
+                    }
+                }
+            )
+        );
         context.subscriptions.push(
             vscode.commands.registerCommand('ply.values.open-config', async () => {
-                let configFile = values.config.configFile;
-                if (configFile) {
-                    vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configFile));
-                    // TODO: scroll based on line num in cached vals
-                } else {
-                    configFile = values.config.defaultFile;
-                    await new Fs(configFile).writeFile('');
-                    vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configFile));
+                const workspaceFolders = vscode.workspace.workspaceFolders || [];
+                if (workspaceFolders.length === 1) {
+                    openConfig(path.basename(workspaceFolders[0].uri.fsPath));
                 }
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand('ply.values.new', async () => {
-                const plyPath = values.config.plyPath;
-                const files = new WorkspaceFiles(
-                    values.workspaceFolder.uri,
-                    path.join(plyPath, 'templates')
-                );
-                const valuesFile = await files.createFile({
-                    dirpath: '.',
-                    template: path.join('blank.json'),
-                    filters: { 'Ply Values File': ['json'] },
-                    doOpen: true
-                });
-                if (valuesFile) {
-                    const valuesFiles = values.setValuesFile(valuesFile, true);
-                    values.config.updatePlyConfig({ valuesFiles });
-                }
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand('ply.values.select', async (valuesFile) => {
-                const checked = !valuesFile.checked;
-                const valuesFiles = values.setValuesFile(valuesFile.file, checked);
-                this.dataProvider.refresh();
-
-                // update plyconfig
-                values.config.updatePlyConfig({ valuesFiles });
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand('ply.values.open-file', async (valuesFile) => {
-                if (await new Fs(valuesFile.uri.fsPath).exists()) {
-                    vscode.commands.executeCommand('vscode.open', valuesFile.uri);
-                }
+            vscode.commands.registerCommand('ply.values.select', async (valuesFile: ValuesFile) => {
+                await valuesFile.onSelect(valuesFile);
             })
         );
 
