@@ -221,8 +221,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new PlyItem(context, 'case').command);
     context.subscriptions.push(new PlyItem(context, 'flow').command);
 
-    let valuesInited = false; // TODO TEMP
-
     // register PlyAdapter and DiffHandler for each WorkspaceFolder
     context.subscriptions.push(
         new TestAdapterRegistrar(
@@ -250,13 +248,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 context.subscriptions.push(new ExpectedResultsDecorator(workspaceFolder, adapter));
 
                 testAdapters.set(workspaceFolder.uri.toString(), adapter);
-                if (!valuesInited) {
-                    valuesInited = true;
-                    adapter.onceValues((valuesEvent) => {
-                        vscode.commands.executeCommand('setContext', 'ply.showValuesTree', true);
-                        new PlyValuesTree(context, valuesEvent.values, log);
-                    });
-                }
+
+                adapter.onceValues((valuesEvent) => {
+                    vscode.commands.executeCommand('setContext', 'ply.showValuesTree', true);
+                    new PlyValuesTree(context, valuesEvent.values, log);
+                });
                 return adapter;
             },
             log

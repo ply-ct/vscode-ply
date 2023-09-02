@@ -247,7 +247,7 @@ export class TestSuiteNode implements TreeNode {
             vscode.workspace.workspaceFolders &&
             vscode.workspace.workspaceFolders.length > 1
         ) {
-            label = `${this.collection.adapter.workspaceFolder.name} - ${label}`;
+            label = `${this.collection.adapter.workspaceFolder.name}`;
         }
 
         const treeItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Collapsed);
