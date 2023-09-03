@@ -4,7 +4,6 @@ import { StateIconType } from './tree/state';
 export type IconPath = string | { dark: string; light: string; themeIcon?: ThemeIcon };
 
 export class IconPaths {
-    pendingCategory: IconPath;
     pendingFolder: IconPath;
     pendingRequest: IconPath;
     pendingTest: IconPath;
@@ -34,10 +33,6 @@ export class IconPaths {
     erroredFaint: IconPath;
 
     constructor(context: ExtensionContext) {
-        this.pendingCategory = {
-            dark: context.asAbsolutePath('icons/test-explorer/folders-dark.svg'),
-            light: context.asAbsolutePath('icons/test-explorer/folders-light.svg')
-        };
         this.pendingFolder = {
             dark: context.asAbsolutePath('icons/test-explorer/folder-dark.svg'),
             light: context.asAbsolutePath('icons/test-explorer/folder-light.svg')

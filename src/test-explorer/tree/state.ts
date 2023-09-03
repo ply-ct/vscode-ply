@@ -117,7 +117,6 @@ export function parentAutorunFlag(children: TreeNode[]): boolean {
 }
 
 export type StateIconType =
-    | 'pendingCategory'
     | 'pendingFolder'
     | 'pendingRequest'
     | 'pendingTest'
@@ -197,9 +196,6 @@ export function stateIcon(state: NodeState, testId: string): StateIconType {
                     } else {
                         const uri = toUri(testId);
                         const path = uri.path;
-                        if (path === '/requests' || path === '/flows' || path === '/cases') {
-                            return 'pendingCategory';
-                        }
                         if (path.endsWith('.ply')) {
                             return 'pendingRequest';
                         } else if (path.endsWith('.flow')) {

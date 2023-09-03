@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { IconPaths, IconPath } from './iconPaths';
 
 export class StateDecorationTypes {
-    readonly pendingCategory: vscode.TextEditorDecorationType;
     readonly pendingFolder: vscode.TextEditorDecorationType;
     readonly pendingRequest: vscode.TextEditorDecorationType;
     readonly pendingTest: vscode.TextEditorDecorationType;
@@ -34,7 +33,6 @@ export class StateDecorationTypes {
     readonly all: vscode.TextEditorDecorationType[];
 
     constructor(context: vscode.ExtensionContext, iconPaths: IconPaths) {
-        this.pendingCategory = toDecorationType(iconPaths.pendingCategory);
         this.pendingFolder = toDecorationType(iconPaths.pendingFolder);
         this.pendingRequest = toDecorationType(iconPaths.pendingRequest);
         this.pendingTest = toDecorationType(iconPaths.pendingTest);

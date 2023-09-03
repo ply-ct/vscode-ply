@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="16"
-   height="16"
    viewBox="0 0 16 16"
-   fill="currentColor"
    version="1.1"
-   id="svg31"
+   id="svg2595"
    sodipodi:docname="folder-dark.svg"
    inkscape:version="1.2 (dc2aeda, 2022-05-15)"
+   width="16"
+   height="16"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs35" />
+     id="defs2599" />
   <sodipodi:namedview
-     id="namedview33"
+     id="namedview2597"
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
@@ -24,17 +23,18 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
-     inkscape:zoom="51.375"
-     inkscape:cx="4.8953771"
-     inkscape:cy="8"
-     inkscape:window-width="1920"
-     inkscape:window-height="972"
+     inkscape:zoom="3.2109375"
+     inkscape:cx="180.78832"
+     inkscape:cy="-77.236009"
+     inkscape:window-width="1834"
+     inkscape:window-height="924"
      inkscape:window-x="0"
      inkscape:window-y="25"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg31" />
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2595" />
   <path
-     d="M14.5 3H7.71l-.85-.85L6.51 2h-5l-.5.5v11l.5.5h13l.5-.5v-10L14.5 3zm-.51 8.49V13h-12V7h4.49l.35-.15.86-.86H14v1.5l-.01 4zm0-6.49h-6.5l-.35.15-.86.86H2v-3h4.29l.85.85.36.15H14l-.01.99z"
-     id="path29"
-     style="fill:#c5c5c5;fill-opacity:1" />
+     fill="currentColor"
+     d="M 2.8571429,3.8333333 V 12.166667 H 13.142857 V 5.5 H 7.6485714 L 5.9308571,3.8333333 Z M 2.4285714,3 H 6.284 L 8.0034286,4.6666667 H 13.571429 A 0.42857143,0.41666667 0 0 1 14,5.0833333 V 12.583333 A 0.42857143,0.41666667 0 0 1 13.571429,13 H 2.4285714 A 0.42857143,0.41666667 0 0 1 2,12.583333 V 3.4166667 A 0.42857143,0.41666667 0 0 1 2.4285714,3 Z"
+     id="path2593"
+     style="fill:#c5c5c5;fill-opacity:1;stroke-width:0.0132055" />
 </svg>
