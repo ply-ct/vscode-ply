@@ -34,6 +34,7 @@ export class PlyValuesProvider implements vscode.TreeDataProvider<ValuesRoot | V
             );
 
             this.refresh();
+            vscode.commands.executeCommand('setContext', 'ply.values.showTree', true);
         });
     }
 

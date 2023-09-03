@@ -404,13 +404,13 @@ export class PlyExplorer
 
     testLoadStarted(collection: TestCollection): void {
         this.loadingCollections.add(collection);
-        vscode.commands.executeCommand('setContext', 'testsLoading', true);
+        vscode.commands.executeCommand('setContext', 'ply.explorer.testsLoading', true);
     }
 
     testLoadFinished(collection: TestCollection): void {
         this.loadingCollections.delete(collection);
         if (this.loadingCollections.size === 0) {
-            vscode.commands.executeCommand('setContext', 'testsLoading', false);
+            vscode.commands.executeCommand('setContext', 'ply.explorer.testsLoading', false);
         }
         vscode.commands.executeCommand('setContext', 'ply.explorer.showTree', true);
     }

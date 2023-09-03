@@ -329,6 +329,7 @@
         {
           "id": "ply-values",
           "name": "Values",
+          "when": "ply.values.showTree",
           "visibility": "collapsed"
         }
       ]
@@ -487,10 +488,7 @@
         "command": "ply.explorer.reloading",
         "category": "Ply Explorer",
         "title": "Reloading tests",
-        "icon": {
-          "dark": "./icons/test-explorer/reloading-dark.svg",
-          "light": "./icons/test-explorer/reloading-light.svg"
-        }
+        "icon": "$(loading~spin)"
       },
       {
         "command": "ply.explorer.run-all",
@@ -708,16 +706,17 @@
         {
           "command": "ply.explorer.reload",
           "group": "navigation@3",
-          "when": "view == ply-tests && !testsLoading"
+          "when": "view == ply-tests && !ply.explorer.testsLoading"
         },
         {
           "command": "ply.explorer.reloading",
           "group": "navigation@4",
-          "when": "view == ply-tests && testsLoading"
+          "when": "view == ply-tests && ply.explorer.testsLoading"
         },
         {
           "command": "ply.values.reload",
-          "group": "navigation@1"
+          "group": "navigation@1",
+          "when": "view == ply-values"
         },
         {
           "command": "ply.values.open-config",
