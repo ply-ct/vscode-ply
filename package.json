@@ -23,13 +23,12 @@
     "api",
     "graphql",
     "automated",
-    "continuous",
     "test",
     "flow",
     "yaml",
-    "ply",
     "postman",
-    "insomnia"
+    "insomnia",
+    "thunder client"
   ],
   "categories": [
     "Programming Languages",

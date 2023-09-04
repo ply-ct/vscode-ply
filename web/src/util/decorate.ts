@@ -10,7 +10,7 @@ export class Decorator {
         return this._onHoverAction.on(listener);
     }
 
-    constructor(values: Values) {
+    constructor(private values: Values) {
         this.valuesAccess = new ValuesAccess(values.valuesHolders, values.evalOptions);
     }
 
@@ -24,17 +24,20 @@ export class Decorator {
                     const locatedValue = this.valuesAccess.getValue(expr.text);
                     const hoverLines: HoverLine[] = [];
 
-                    if (locatedValue) {
-                        hoverLines.push({ label: 'Value:', value: locatedValue.value });
+                    const override = this.values.overrides ? this.values.overrides[expr.text] : '';
+                    const value = override || locatedValue?.value;
+                    if (value) {
+                        hoverLines.push({ label: 'Value:', value: override || value });
                     }
-                    if (locatedValue?.location) {
+                    const location = override ? '<Override>' : locatedValue?.location?.path;
+                    if (location) {
                         hoverLines.push({
                             label: 'From:',
                             link: {
-                                label: locatedValue.location.path,
+                                label: location,
                                 action: {
                                     name: 'openFile',
-                                    args: { path: locatedValue.location.path }
+                                    args: { path: location }
                                 },
                                 title: 'Open values file'
                             }

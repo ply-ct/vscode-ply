@@ -352,6 +352,9 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 fragment: message.target
                             });
                         }
+                        if (message.options?.overrides) {
+                            this.setOverrideValues(uri, message.options.overrides);
+                        }
                         vscode.commands.executeCommand('ply.open-request', { uri });
                     }
                 } else if (message.type === 'expected') {

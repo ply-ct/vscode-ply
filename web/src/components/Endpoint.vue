@@ -115,7 +115,9 @@ export default defineComponent({
           );
           decs.forEach((dec) => {
             if (dec.hover?.lines) {
-              let left = (dec.range.end - dec.range.start) * 7.5;
+              const expr = text.substring(dec.range.start, dec.range.end + 1);
+              const width = this.measureTextWidth(expr);
+              let left = width;
               dec.hover.location = {
                 top: '-32px',
                 left: `${left}px`
@@ -130,11 +132,11 @@ export default defineComponent({
                   if (ttRect.width > roomOnRight) {
                     const roomOnLeft = eRect.left - iRect.left;
                     if (roomOnLeft > roomOnRight) {
-                      tooltip.style.left = `${left - eRect.width - ttRect.width + 3}px`;
+                      tooltip.style.left = `${left - eRect.width - ttRect.width}px`;
                       if (ttRect.width > roomOnLeft) {
                         // no room -- encroach on expr text
                         tooltip.style.left = `${
-                          left - eRect.width - ttRect.width + 3 + eRect.width / 3
+                          left - eRect.width - ttRect.width + eRect.width / 3
                         }px`;
                       }
                     } else {
@@ -142,7 +144,7 @@ export default defineComponent({
                       tooltip.style.left = `${left - eRect.width / 3}px`;
                     }
                   } else {
-                    tooltip.style.left = `${(dec.range.end - dec.range.start) * 7.5}px`;
+                    tooltip.style.left = `${width}px`;
                   }
                   tooltip.style.visibility = 'visible';
                 };
@@ -152,6 +154,19 @@ export default defineComponent({
           return decs;
         }
       ]);
+    },
+    measureTextWidth(text: string): number {
+      const mdiv = document.createElement('div');
+      mdiv.className = 'mdiv';
+      mdiv.innerHTML = text;
+      mdiv.style.position = 'absolute';
+      mdiv.style.whiteSpace = 'nowrap';
+      mdiv.style.font = 'inherit';
+      this.urlInput.appendChild(mdiv);
+      let div = document.querySelector('.mdiv') as HTMLDivElement;
+      let w = div.clientWidth;
+      div.remove();
+      return w;
     },
     onUrlKeyPress(event: KeyboardEvent) {
       if (event.key === 'Enter') {

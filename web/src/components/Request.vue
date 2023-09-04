@@ -329,7 +329,11 @@ export default defineComponent({
       this.onAction('submit', requestName);
     },
     onOpenFile(file: string) {
-      this.$emit('openFile', file);
+      if (file === '<Override>') {
+        this.valuesOpen = true;
+      } else {
+        this.$emit('openFile', file);
+      }
     },
     onSaveValues(overrides: { [expr: string]: string }) {
       this.$emit('saveValues', overrides);
