@@ -74,7 +74,8 @@ export class PlyConfig {
                 if (
                     setting === Setting.customSteps ||
                     setting === Setting.nodePath ||
-                    setting === Setting.plyPath
+                    setting === Setting.plyPath ||
+                    setting === Setting.env
                 ) {
                     this._plyOptions = undefined;
                     if (this.reload) this.reload();
