@@ -85,6 +85,9 @@ export default defineComponent({
         this.urlInput.innerText = this.request.url;
       }
     },
+    'options.theme'() {
+      this.decorate();
+    },
     values() {
       this.decorate();
     },

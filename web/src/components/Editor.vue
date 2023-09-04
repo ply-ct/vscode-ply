@@ -65,6 +65,9 @@ export default defineComponent({
         }
       }
     },
+    'options.theme'() {
+      this.syncTheme();
+    },
     readonly(newReadonly) {
       if (this.editor) {
         this.editor.updateOptions({ ...this.editor.getOptions(), readOnly: newReadonly });
@@ -93,7 +96,6 @@ export default defineComponent({
       });
       this.resizeObserver.observe(this.$el);
     });
-    window.addEventListener('message', this.handleMessage);
   },
   unmounted() {
     if (this.resizeObserver) {
@@ -101,7 +103,6 @@ export default defineComponent({
       this.resizeObserver.disconnect();
       this.resizeObserver = undefined;
     }
-    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
     initMonaco() {
@@ -200,15 +201,9 @@ export default defineComponent({
         disposables = [];
       });
     },
-    handleMessage(event: MessageEvent) {
-      if (event.data.type === 'theme-change') {
-        this.syncTheme();
-      }
-    },
     syncTheme() {
-      const theme = document.body.className.endsWith('vscode-dark') ? 'vs-dark' : 'vs';
       if (this.editor) {
-        monaco.editor.setTheme(theme);
+        monaco.editor.setTheme(this.options.theme === 'dark' ? 'vs-dark' : 'vs');
       }
     }
   }

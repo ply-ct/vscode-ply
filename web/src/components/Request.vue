@@ -49,7 +49,7 @@
         <div v-if="isFormUrlEncoded" class="form-data">
           <table-comp
             :value="formParams"
-            :readonly="options.readonly"
+            :options="options"
             :values="values"
             @update-value="onUpdateFormParams"
             @open-file="onOpenFile"
@@ -59,7 +59,7 @@
       <el-tab-pane label="Headers">
         <table-comp
           :value="request.headers"
-          :readonly="options.readonly"
+          :options="options"
           :values="values"
           @update-value="onUpdateHeaders"
           @open-file="onOpenFile"
@@ -68,7 +68,7 @@
       <el-tab-pane label="Query">
         <table-comp
           :value="queryParams"
-          :readonly="options.readonly"
+          :options="options"
           :single-line="true"
           :values="values"
           @update-value="onUpdateQuery"
@@ -95,6 +95,7 @@
   </div>
   <vals
     title="Request Values"
+    :theme="options.theme"
     :icon-base="options.iconBase"
     :item="request"
     :open="valuesOpen"

@@ -730,34 +730,7 @@ export class Flow implements flowbee.Disposable {
                 readState()?.closeConfigurator();
             }
         } else if (flowAction === 'values') {
-            if (!valuesPopup) {
-                const container = document.getElementById('flow-container') as HTMLDivElement;
-                valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
-                valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
-                valuesPopup.onOpenValues((openValuesEvent) => {
-                    vscode.postMessage({
-                        type: 'edit',
-                        element: 'file',
-                        path: openValuesEvent.path
-                    });
-                });
-            }
-            this.closeConfigurator();
-            valuesPopup.render(this.getUserValues(), getValuesOptions());
-            valuesPopup.setDecorator((text: string) => {
-                if (text && isExpression(text)) {
-                    const required = this.getRequiredValueNames()
-                        .map((v) => toExpression(v))
-                        .includes(text);
-                    return [
-                        {
-                            range: { line: 0, start: 0, end: text.length - 1 },
-                            className: required ? 'expression required' : 'expression'
-                        }
-                    ];
-                }
-                return [];
-            });
+            this.openValuesPopup();
         } else {
             if (flowAction === 'run') {
                 this.closeConfigurator();
@@ -770,6 +743,37 @@ export class Flow implements flowbee.Disposable {
                 ...(e.options && { options: e.options })
             });
         }
+    }
+
+    openValuesPopup() {
+        if (!valuesPopup) {
+            const container = document.getElementById('flow-container') as HTMLDivElement;
+            valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
+            valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+            valuesPopup.onOpenValues((openValuesEvent) => {
+                vscode.postMessage({
+                    type: 'edit',
+                    element: 'file',
+                    path: openValuesEvent.path
+                });
+            });
+        }
+        this.closeConfigurator();
+        valuesPopup.render(this.getUserValues(), getValuesOptions());
+        valuesPopup.setDecorator((text: string) => {
+            if (text && isExpression(text)) {
+                const required = this.getRequiredValueNames()
+                    .map((v) => toExpression(v))
+                    .includes(text);
+                return [
+                    {
+                        range: { line: 0, start: 0, end: text.length - 1 },
+                        className: required ? 'expression required' : 'expression'
+                    }
+                ];
+            }
+            return [];
+        });
     }
 
     /**
@@ -954,7 +958,10 @@ window.addEventListener('message', async (event) => {
             flow.switchMode(message.mode);
         }
     } else if (message.type === 'theme-change') {
-        readState();
+        const flow = readState();
+        if (flow && valuesPopup?.isOpen) {
+            flow.openValuesPopup();
+        }
     } else if (message.type === 'confirm') {
         dlgEvt.emit({ result: message.result });
     }

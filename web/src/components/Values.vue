@@ -19,6 +19,10 @@ export default defineComponent({
       type: String,
       default: 'Values'
     },
+    theme: {
+      type: String,
+      required: true
+    },
     iconBase: {
       type: String,
       required: true
@@ -53,6 +57,9 @@ export default defineComponent({
     // };
   },
   watch: {
+    theme() {
+      if (this.isOpen()) this.openPopup();
+    },
     open() {
       if (this.open) {
         this.userOverrides = this.values.overrides;
@@ -76,19 +83,11 @@ export default defineComponent({
       }
     }
   },
-  mounted() {
-    window.addEventListener('message', this.handleMessage);
-  },
-  unmounted() {
-    window.removeEventListener('message', this.handleMessage);
-  },
   methods: {
     isOpen() {
       return this.popup?.isOpen;
     },
     openPopup() {
-      this.syncTheme();
-
       if (!this.popup) {
         const split = document.getElementById('split') as HTMLDivElement;
         this.popup = new ValuesPopup(split, this.iconBase);
@@ -119,7 +118,7 @@ export default defineComponent({
     getOptions(): ValuesOptions {
       return {
         title: this.title,
-        theme: this.getTheme(),
+        theme: this.theme,
         help: {
           link: 'https://ply-ct.org/ply/topics/values',
           title: 'Values help',
@@ -137,17 +136,6 @@ export default defineComponent({
         ],
         abbreviateLocations: true
       };
-    },
-    handleMessage(event: MessageEvent) {
-      if (event.data.type === 'theme-change') {
-        this.syncTheme();
-      }
-    },
-    syncTheme() {
-      this.$el.className = `flowbee-values-${this.getTheme()}`;
-    },
-    getTheme(): 'light' | 'dark' {
-      return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
     },
     onValuesAction(valuesAction: ValuesActionEvent) {
       if (valuesAction.action === 'save') {

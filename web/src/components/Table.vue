@@ -9,6 +9,7 @@ import { defineComponent, PropType } from 'vue';
 import * as flowbee from 'flowbee';
 import { Values } from '../model/values';
 import { Decorator } from '../util/decorate';
+import { Options } from '../model/options';
 
 export default defineComponent({
   name: 'Table',
@@ -17,9 +18,9 @@ export default defineComponent({
       type: Object,
       required: true
     },
-    readonly: {
-      type: Boolean,
-      default: false
+    options: {
+      type: Object as PropType<Options>,
+      required: true
     },
     singleLine: {
       type: Boolean,
@@ -35,6 +36,9 @@ export default defineComponent({
     value() {
       this.initTable();
     },
+    'options.theme'() {
+      this.initTable();
+    },
     values() {
       this.initTable();
     },
@@ -46,10 +50,6 @@ export default defineComponent({
     this.$nextTick(() => {
       this.initTable();
     });
-    window.addEventListener('message', this.handleMessage);
-  },
-  unmounted() {
-    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
     initTable() {
@@ -59,7 +59,7 @@ export default defineComponent({
           { type: 'text', label: 'Value' }
         ],
         this.stringValue(this.value),
-        { readonly: this.readonly, singleLine: this.singleLine }
+        { readonly: this.options.readonly, singleLine: this.singleLine }
       );
 
       if (this.values) {
@@ -69,7 +69,7 @@ export default defineComponent({
             this.$emit('openFile', action.args!.path);
           }
         });
-        table.setDecorator((text: string) => decorator.decorate(text, this.getTheme()));
+        table.setDecorator((text: string) => decorator.decorate(text, this.options.theme));
       }
 
       this.syncTheme();
@@ -109,16 +109,8 @@ export default defineComponent({
       }
       return val;
     },
-    handleMessage(event: MessageEvent) {
-      if (event.data.type === 'theme-change') {
-        this.syncTheme();
-      }
-    },
     syncTheme() {
-      this.$el.className = `flowbee-configurator-${this.getTheme()} table-container`;
-    },
-    getTheme(): 'light' | 'dark' {
-      return document.body.className.endsWith('vscode-light') ? 'light' : 'dark';
+      this.$el.className = `flowbee-configurator-${this.options.theme} table-container`;
     }
   }
 });

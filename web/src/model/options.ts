@@ -1,8 +1,9 @@
 export interface Options {
+    base: string;
+    theme: 'light' | 'dark';
     iconBase: string;
     dummyUrl: string;
     runnable?: boolean;
-    base: string;
     indent?: number;
     readonly?: false;
     lineNumbers?: boolean;

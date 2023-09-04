@@ -181,6 +181,9 @@ export default defineComponent({
           evalOptions: message.options,
           overrides: message.overrides
         };
+      } else if (message.type === 'theme-change') {
+        this.options.theme = document.body.className.endsWith('vscode-dark') ? 'dark' : 'light';
+        this.options.iconBase = `${this.options.base}/img/icons/${this.options.theme}`;
       }
     },
     onUpdate(updatedRequest: Request) {
