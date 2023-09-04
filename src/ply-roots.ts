@@ -617,12 +617,7 @@ export class PlyRoots {
     }
 
     static fromUri(uri: Uri): string {
-        const rootId = uri.path.endsWith('.flow')
-            ? 'flows'
-            : uri.path.endsWith('.ts')
-            ? 'cases'
-            : 'requests';
-        return `${rootId}|${uri.toString(true)}`;
+        return `base|${uri.toString(true)}`;
     }
 
     /**

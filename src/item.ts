@@ -180,7 +180,11 @@ export class PlyItem {
                 if (workspaceFolder) {
                     return { id: args[0], uri, workspaceFolder };
                 }
-            } else if (args[0] as Item) {
+            } else if (
+                (args[0] as Item).id &&
+                (args[0] as Item).uri &&
+                (args[0] as Item).workspaceFolder
+            ) {
                 return args[0];
             }
         }

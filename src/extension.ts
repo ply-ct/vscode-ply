@@ -89,16 +89,22 @@ export async function activate(context: vscode.ExtensionContext) {
     // open request in custom editor
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.open-request', async (...args: any[]) => {
-            let uri =
-                typeof args[0] === 'string'
-                    ? vscode.Uri.parse(args[0]).with({ fragment: '' })
-                    : args[0].uri;
-            if (typeof args[0].runNumber === 'number') {
+            let uri;
+            if (args.length === 0) {
+                // prompt
+                uri = (await PlyItem.getItem())?.uri;
+            } else {
+                uri =
+                    typeof args[0] === 'string'
+                        ? vscode.Uri.parse(args[0]).with({ fragment: '' })
+                        : args[0].uri;
+            }
+            if (typeof args[0]?.runNumber === 'number') {
                 uri = uri.with({ query: `runNumber=${args[0].runNumber}` });
             }
             if (uri.path.endsWith('.ply')) {
                 // honor preview if possible
-                vscode.commands.executeCommand('vscode.open', uri, { preview: args[0].preview });
+                vscode.commands.executeCommand('vscode.open', uri, { preview: args[0]?.preview });
             } else {
                 // eg: my-requests.ply.yaml#Request1 -- cannot honor preview
                 // https://github.com/microsoft/vscode/issues/123360
@@ -138,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     };
                 }
                 await vscode.commands.executeCommand('vscode.open', fileUri, {
-                    preview: args[0].preview
+                    preview: args[0]?.preview
                 });
                 if (item.uri.fragment) {
                     _onFlowItemSelect.emit({ uri: item.uri });
