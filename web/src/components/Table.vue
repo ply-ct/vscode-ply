@@ -37,6 +37,9 @@ export default defineComponent({
     },
     values() {
       this.initTable();
+    },
+    'values.overrides'() {
+      this.initTable();
     }
   },
   mounted() {

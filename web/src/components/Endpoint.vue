@@ -87,6 +87,9 @@ export default defineComponent({
     },
     values() {
       this.decorate();
+    },
+    'values.overrides'() {
+      this.decorate();
     }
   },
   mounted() {

@@ -220,6 +220,7 @@ export default defineComponent({
       vscode.postMessage({ type: 'open-file', file });
     },
     onSaveValues(overrides: { [expr: string]: string }) {
+      this.values.overrides = overrides;
       vscode.postMessage({ type: 'save-values', overrides });
     },
     onAction(action: string, requestName: string) {

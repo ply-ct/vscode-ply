@@ -125,13 +125,13 @@ export class Flow implements flowbee.Disposable {
                     } else if (e.action === 'Select File') {
                         vscode.postMessage({ type: 'select', element: 'file', target: id });
                     } else if (e.action === 'edit_request') {
-                        const msg: any = { type: 'edit', element: 'request', target: id };
-                        if (Object.keys(this.userOverrides).length) {
-                            msg.options = {
-                                overrides: JSON.parse(JSON.stringify(this.userOverrides))
-                            };
-                        }
-                        vscode.postMessage(msg);
+                        const overrides = readState(false)?.userOverrides || {};
+                        vscode.postMessage({
+                            type: 'edit',
+                            element: 'request',
+                            target: id,
+                            options: { overrides }
+                        });
                     }
                 } else if (typeof e.action === 'string' && e.action.endsWith('.ts')) {
                     vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
@@ -373,12 +373,10 @@ export class Flow implements flowbee.Disposable {
                 }
                 if (e.action === 'submit') {
                     this.onFlowAction({ action: 'run', options: { submit: true } });
-                } else if (e.action === 'edit' && e.element === 'request') {
-                    if (Object.keys(this.userOverrides).length) {
-                        e.options = { overides: JSON.parse(JSON.stringify(this.userOverrides)) };
-                    }
-                    this.onFlowAction(e);
                 } else {
+                    if (e.action === 'edit' && e.element === 'request') {
+                        e.options = { overrides: readState(false)?.userOverrides || {} };
+                    }
                     this.onFlowAction(e);
                 }
             };
