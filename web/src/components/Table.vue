@@ -59,7 +59,7 @@ export default defineComponent({
           { type: 'text', label: 'Value' }
         ],
         this.stringValue(this.value),
-        { readonly: this.options.readonly, singleLine: this.singleLine }
+        { readonly: this.options?.readonly, singleLine: this.singleLine }
       );
 
       if (this.values) {
@@ -112,7 +112,7 @@ export default defineComponent({
       return val;
     },
     syncTheme() {
-      this.$el.className = `flowbee-configurator-${this.options.theme} table-container`;
+      this.$el.className = `flowbee-configurator-${this.options?.theme || 'light'} table-container`;
     }
   }
 });

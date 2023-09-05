@@ -765,10 +765,14 @@ export class Flow implements flowbee.Disposable {
                 const required = this.getRequiredValueNames()
                     .map((v) => toExpression(v))
                     .includes(text);
+                const userVals = this.getUserValues();
+                const override = userVals.overrides ? userVals.overrides[text] : '';
+                const value = override || userVals.values.find((v) => v.expression === text)?.value;
+                const exprClass = value ? 'expression' : 'unresolved';
                 return [
                     {
                         range: { line: 0, start: 0, end: text.length - 1 },
-                        className: required ? 'expression required' : 'expression'
+                        className: required ? `${exprClass} required` : exprClass
                     }
                 ];
             }
