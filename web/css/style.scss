@@ -190,14 +190,15 @@ a:hover {
   margin-right: 15px;
 }
 .cancel-btn {
-  color: var(--vscode-editor-foreground);
+  // color: var(--vscode-editor-foreground);
+  color: #ea4f69;
   background: var(--vscode-editor-background);
-  border: 1px solid rgba(128, 128, 128, 0.5);
+  border: 1px solid rgba(234, 79, 105, 0.5);
   margin-top: -1px;
 }
 .cancel-btn:hover {
   background: var(--vscode-editor-background);
-  border: 1px solid rgba(128, 128, 128, 1);
+  border: 1px solid rgba(234, 79, 105, 1);
 }
 
 .form-data {
