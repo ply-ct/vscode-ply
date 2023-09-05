@@ -32,7 +32,10 @@ export class PlyCodeLensProvider implements vscode.CodeLensProvider {
                                 arguments: [
                                     {
                                         id: child.id,
-                                        uri: document.uri,
+                                        uri: document.uri.with({
+                                            scheme: 'ply-request',
+                                            fragment: child.label
+                                        }),
                                         workspaceFolder: this.workspaceFolder
                                     }
                                 ]

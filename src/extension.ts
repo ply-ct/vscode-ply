@@ -106,9 +106,15 @@ export async function activate(context: vscode.ExtensionContext) {
                 // honor preview if possible
                 vscode.commands.executeCommand('vscode.open', uri, { preview: args[0]?.preview });
             } else {
-                // eg: my-requests.ply.yaml#Request1 -- cannot honor preview
-                // https://github.com/microsoft/vscode/issues/123360
-                vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
+                if (uri.fragment) {
+                    // eg: my-requests.ply.yaml#Request1 -- cannot honor preview
+                    // https://github.com/microsoft/vscode/issues/123360
+                    vscode.commands.executeCommand('vscode.openWith', uri, 'ply.request');
+                } else {
+                    vscode.commands.executeCommand('vscode.open', uri, {
+                        preview: args[0]?.preview
+                    });
+                }
             }
         })
     );
