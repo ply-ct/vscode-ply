@@ -123,9 +123,10 @@ export class PlyAdapter implements TestAdapter {
                         const doc = await vscode.workspace.openTextDocument(file.newUri);
                         let yamlObj = ply.loadYaml(file.newUri.toString(), doc.getText());
                         const keys = Object.keys(yamlObj);
+                        const oldName = path.basename(file.oldUri.path, '.ply');
                         if (
                             keys.length === 1 &&
-                            keys[0] === path.basename(file.oldUri.path, '.ply')
+                            (keys[0] === oldName || oldName === `${keys[0]} copy`)
                         ) {
                             yamlObj = {
                                 [path.basename(file.newUri.path, '.ply')]: yamlObj[keys[0]]
