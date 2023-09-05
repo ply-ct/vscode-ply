@@ -14,7 +14,7 @@ export class Decorator {
         this.valuesAccess = new ValuesAccess(values.valuesHolders, values.evalOptions);
     }
 
-    decorate(text: string, theme: 'light' | 'dark'): Decoration[] {
+    decorate(text: string, options: { theme: 'light' | 'dark'; hover: boolean }): Decoration[] {
         if (!text) return [];
         const lines = text.split(/\r?\n/);
         return lines.reduce((decs, line, i) => {
@@ -26,35 +26,38 @@ export class Decorator {
 
                     const override = this.values.overrides ? this.values.overrides[expr.text] : '';
                     const value = override || locatedValue?.value;
-                    if (value) {
-                        hoverLines.push({ label: 'Value:', value: override || value });
-                    }
-                    const location = override ? '<Override>' : locatedValue?.location?.path;
-                    if (location) {
-                        hoverLines.push({
-                            label: 'From:',
-                            link: {
-                                label: location,
-                                action: {
-                                    name: 'openFile',
-                                    args: { path: location }
-                                },
-                                title: 'Open values file'
-                            }
-                        });
-                    } else {
-                        hoverLines.push({ label: 'Not found: ', value: expr.text });
-                    }
 
-                    decs.push({
+                    const dec: Decoration = {
                         range: { line: i, start: expr.start, end: expr.end },
-                        className: 'expression',
-                        hover: {
-                            theme,
+                        className: value ? 'expression' : 'unresolved'
+                    };
+                    if (options.hover) {
+                        if (value) {
+                            hoverLines.push({ label: 'Value:', value: override || value });
+                        }
+                        const location = override ? '<Override>' : locatedValue?.location?.path;
+                        if (location) {
+                            hoverLines.push({
+                                label: 'From:',
+                                link: {
+                                    label: location,
+                                    action: {
+                                        name: 'openFile',
+                                        args: { path: location }
+                                    },
+                                    title: 'Open values file'
+                                }
+                            });
+                        } else {
+                            hoverLines.push({ label: 'Not found: ', value: expr.text });
+                        }
+                        dec.hover = {
+                            theme: options.theme,
                             lines: hoverLines,
                             onAction: (action) => this._onHoverAction.emit(action)
-                        }
-                    });
+                        };
+                    }
+                    decs.push(dec);
                 }
             }
             return decs;

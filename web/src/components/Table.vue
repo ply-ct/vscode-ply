@@ -69,7 +69,9 @@ export default defineComponent({
             this.$emit('openFile', action.args!.path);
           }
         });
-        table.setDecorator((text: string) => decorator.decorate(text, this.options.theme));
+        table.setDecorator((text: string) =>
+          decorator.decorate(text, { theme: this.options.theme, hover: true })
+        );
       }
 
       this.syncTheme();

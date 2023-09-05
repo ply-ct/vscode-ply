@@ -2,6 +2,15 @@ import * as monaco from 'monaco-editor';
 import { setDiagnosticsOptions } from 'monaco-yaml';
 import * as time from './time';
 
+interface ValuesAccess {
+    getValue(expression: string):
+        | {
+              value: string;
+              location?: { path: string; line?: number };
+          }
+        | undefined;
+}
+
 let initialized = false;
 export const initialize = () => {
     if (!initialized) {
@@ -82,6 +91,7 @@ export const getEditor = (
 export interface Expression {
     text: string;
     range: monaco.Range;
+    resolved?: boolean;
 }
 
 export const getDecorations = (
@@ -89,15 +99,24 @@ export const getDecorations = (
 ): monaco.editor.IModelDeltaDecoration[] => {
     return expressions.map((expression) => ({
         range: expression.range,
-        options: { inlineClassName: 'expression' }
+        options: { inlineClassName: expression.resolved ? 'expression' : 'unresolved' }
     }));
 };
 
-export const getExpressions = (model?: monaco.editor.ITextModel | null): Expression[] => {
+export const getExpressions = (
+    model?: monaco.editor.ITextModel | null,
+    valuesAccess?: ValuesAccess | null
+): Expression[] => {
     if (model && expressionLanguages.includes(model.getLanguageId())) {
         return model
             .findMatches('\\$\\{.+?\\}', true, true, true, null, true, undefined)
-            .map((match) => ({ text: match.matches ? match.matches[0] : '', range: match.range }));
+            .map((match) => {
+                return {
+                    text: match.matches ? match.matches[0] : '',
+                    range: match.range,
+                    resolved: !!(match.matches?.length && valuesAccess?.getValue(match.matches[0]))
+                };
+            });
     }
     return [];
 };

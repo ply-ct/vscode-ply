@@ -115,20 +115,20 @@ export default defineComponent({
               this.$emit('openFile', action.args!.path);
             }
           });
-          const decs = decorator.decorate(
-            text,
-            document.body.className.endsWith('vscode-light') ? 'light' : 'dark'
-          );
+          const decs = decorator.decorate(text, {
+            theme: document.body.className.endsWith('vscode-light') ? 'light' : 'dark',
+            hover: true
+          });
           decs.forEach((dec) => {
             if (dec.hover?.lines) {
               const expr = text.substring(dec.range.start, dec.range.end + 1);
               const width = this.measureTextWidth(expr);
               let left = width;
               dec.hover.location = {
-                top: '-32px',
+                top: `-${dec.hover.lines.length * 16}px`,
                 left: `${left}px`
               };
-              if (dec.hover.lines.length > 1) {
+              if (dec.hover.lines.length > 0) {
                 dec.onHover = (element: HTMLElement, tooltip: HTMLElement) => {
                   const iRect = this.urlInput.getBoundingClientRect();
                   tooltip.style.visibility = 'hidden';

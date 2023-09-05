@@ -53,6 +53,7 @@ export default defineComponent({
   data() {
     return {} as {
       editor?: monaco.editor.IStandaloneCodeEditor;
+      decorations?: monaco.editor.IEditorDecorationsCollection;
       resizeObserver?: ResizeObserver;
       valuesAccess?: ValuesAccess;
     };
@@ -82,6 +83,8 @@ export default defineComponent({
     values() {
       if (this.values) {
         this.valuesAccess = new ValuesAccess(this.values.valuesHolders, this.values.evalOptions);
+        const expressions = getExpressions(this.editor?.getModel(), this.valuesAccess);
+        this.decorations?.set(getDecorations(expressions));
       } else {
         this.valuesAccess = undefined;
       }
@@ -111,8 +114,8 @@ export default defineComponent({
 
       let disposables: monaco.IDisposable[] = [];
 
-      let expressions = getExpressions(this.editor.getModel());
-      const decorations = this.editor.createDecorationsCollection(getDecorations(expressions));
+      let expressions = getExpressions(this.editor.getModel(), this.valuesAccess);
+      this.decorations = this.editor.createDecorationsCollection(getDecorations(expressions));
 
       disposables.push(
         this.editor.onDidChangeModelContent(() => {
@@ -121,8 +124,8 @@ export default defineComponent({
             this.$emit('updateSource', value);
           }
 
-          expressions = getExpressions(this.editor?.getModel());
-          decorations.set(getDecorations(expressions));
+          expressions = getExpressions(this.editor?.getModel(), this.valuesAccess);
+          this.decorations?.set(getDecorations(expressions));
         })
       );
 
@@ -152,7 +155,7 @@ export default defineComponent({
       ) {
         registeredHoverLanguages.push(language);
         const commandId = this.editor.addCommand(0, (...args: any[]) => {
-          this.$emit('openFile', args[1].path);
+          this.$emit('openFile', args[1].path === '&lt;Override&gt;' ? '<Override>' : args[1].path);
         });
         disposables.push(
           monaco.languages.registerHoverProvider(language, {
@@ -164,25 +167,29 @@ export default defineComponent({
                   expr.range.endColumn >= position.column
               );
               if (expression && this.values) {
-                const value = this.valuesAccess?.getValue(expression.text);
+                const locatedValue = this.valuesAccess?.getValue(expression.text);
+                const override = this.values.overrides
+                  ? this.values.overrides[expression.text]
+                  : '';
+                const value = override || locatedValue?.value;
+
                 if (value) {
                   const hover: monaco.languages.Hover = {
                     contents: [
                       {
                         supportHtml: true,
-                        value: `Value: \`${value.value}\``
+                        value: `Value: \`${value}\``
                       }
                     ]
                   };
-                  if (value.location) {
-                    const args = { path: value.location.path, expression: expression.text };
+                  const location = override ? '&lt;Override&gt;' : locatedValue?.location?.path;
+                  if (location) {
+                    const args = { path: location, expression: expression.text };
                     hover.contents.push({
                       isTrusted: true,
-                      value: `From: [${
-                        value.location.path
-                      }](command:${commandId}?${encodeURIComponent(
+                      value: `From: [${location}](command:${commandId}?${encodeURIComponent(
                         JSON.stringify(args)
-                      )} "Open values file")`
+                      )} "Open value location")`
                     });
                   }
                   return hover;

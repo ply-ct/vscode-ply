@@ -11,6 +11,7 @@ import {
 } from 'flowbee';
 import { ValuesAccess, ExpressionHolder, expressions, isExpression } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
+import { Decorator } from '../util/decorate';
 
 export default defineComponent({
   name: 'Values',
@@ -64,14 +65,10 @@ export default defineComponent({
       if (this.open) {
         this.userOverrides = this.values.overrides;
         this.openPopup();
-        this.popup!.setDecorator((text: string) => {
-          if (text && isExpression(text)) {
-            return [
-              { range: { line: 0, start: 0, end: text.length - 1 }, className: 'expression' }
-            ];
-          }
-          return [];
-        });
+        const decorator = new Decorator(this.values);
+        this.popup!.setDecorator((text: string) =>
+          decorator.decorate(text, { theme: this.theme as 'light' | 'dark', hover: false })
+        );
       } else {
         this.closePopup();
       }
@@ -112,7 +109,6 @@ export default defineComponent({
           location: locatedValue?.location?.path
         };
       });
-
       return { values, overrides: this.userOverrides };
     },
     getOptions(): ValuesOptions {
