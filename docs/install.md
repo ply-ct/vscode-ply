@@ -1,7 +1,9 @@
 # Ply Extension Installation
 
 ## Install from VS Code marketplace
-
+ - Launch VS Code and click the Extensions activity bar icon
+ - Search for 'Ply'
+ - Click the Install button
 
 ## Install vscode-ply preview release
 Find the latest preview release on GitHub:  

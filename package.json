@@ -3,13 +3,14 @@
   "displayName": "Ply",
   "description": "Automated Testing for REST and GraphQL APIs",
   "icon": "icons/ply.png",
-  "version": "3.0.0-beta64",
+  "version": "3.0.0",
   "license": "MIT",
   "author": {
     "name": "Donald Oakes",
     "email": "donald.h.oakes@gmail.com"
   },
   "publisher": "ply-ct",
+  "private": "true",
   "homepage": "https://ply-ct.org/",
   "repository": {
     "type": "git",

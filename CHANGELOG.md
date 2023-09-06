@@ -1,5 +1,14 @@
 # Change Log
 
+## [3.0.0](https://github.com/ply-ct/vscode-ply/tree/3.0.0) (2023-09-05)
+
+- Enhancement: Conditional activation [\#26](https://github.com/ply-ct/vscode-ply/issues/26)
+- Enhancement: Custom flow/request editor icons [\#27](https://github.com/ply-ct/vscode-ply/issues/27)
+- Enhancement: Embedded Ply Explorer custom view [\#95](https://github.com/ply-ct/vscode-ply/issues/95)
+- Enhancement: Test run output visualization [\#128](https://github.com/ply-ct/vscode-ply/issues/128)
+- Enhancement: Improved user experience for selecting and entering Values [\#132](https://github.com/ply-ct/vscode-ply/issues/132)
+
+
 ## [2.2.4](https://github.com/ply-ct/vscode-ply/tree/2.2.4) (2023-01-07)
 
 - Bug: Missing templates for flow custom steps [\#155](https://github.com/ply-ct/vscode-ply/issues/155)

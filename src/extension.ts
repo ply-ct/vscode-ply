@@ -104,7 +104,9 @@ export async function activate(context: vscode.ExtensionContext) {
             }
             if (uri.path.endsWith('.ply')) {
                 // honor preview if possible
-                vscode.commands.executeCommand('vscode.open', uri, { preview: args[0]?.preview });
+                vscode.commands.executeCommand('vscode.open', uri.with({ scheme: 'file' }), {
+                    preview: args[0]?.preview
+                });
             } else {
                 if (uri.fragment) {
                     // eg: my-requests.ply.yaml#Request1 -- cannot honor preview
