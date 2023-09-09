@@ -37,7 +37,7 @@
         />
       </el-tab-pane>
       <el-tab-pane v-if="response.status.code !== 0" label="Headers">
-        <table-comp :value="response.headers" :readonly="true" />
+        <table-comp :value="response.headers" :options="options" />
       </el-tab-pane>
       <el-tab-pane v-if="response.status.code !== 0" label="Source">
         <editor

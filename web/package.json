@@ -12,7 +12,8 @@
     "editor-worker": "parcel build node_modules/monaco-editor/esm/vs/editor/editor.worker.js --dist-dir out/workers",
     "json-worker": "parcel build node_modules/monaco-editor/esm/vs/language/json/json.worker.js --dist-dir out/workers",
     "yaml-worker": "parcel build node_modules/monaco-yaml/lib/esm/yaml.worker.js --dist-dir out/workers",
-    "monaco-workers": "npm run editor-worker && npm run json-worker && npm run yaml-worker"
+    "graphql-worker": "parcel build node_modules/monaco-graphql/esm/graphql.worker.js --dist-dir out/workers",
+    "monaco-workers": "npm run editor-worker && npm run json-worker && npm run yaml-worker && npm run graphql-worker"
   },
   "overrides": {
     "sass-graph": "^4.0.1"
@@ -26,7 +27,7 @@
     "js-yaml": "^4.1.0",
     "monaco-editor": "^0.36.1",
     "monaco-yaml": "^3.2.1",
-    "vscode-uri": "^3.0.7",
+    "monaco-graphql": "^1.3.0",
     "vue": "^3.3.4"
   },
   "devDependencies": {
