@@ -1,4 +1,4 @@
-Subflow:
+Step:
   widgets:
     - type: text
       instanceProp: status
@@ -9,3 +9,16 @@ Subflow:
     - type: datetime
       instanceProp: end
       label: End
+
+Subflow:
+  widgets:
+    - type: table
+      instanceProp: subflows
+      widgets:
+        - type: link
+          label: Subflow
+          action: subflowInstance
+        - type: datetime
+          label: Start
+        - type: datetime
+          label: End

@@ -299,25 +299,35 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         vscode.commands.executeCommand('ply.new.request');
                     }
                 } else if (message.type === 'select') {
-                    if (message.element === 'file') {
-                        // TODO conditional
+                    if (message.element === 'file' || message.element === 'flow') {
                         const dlgOptions: vscode.OpenDialogOptions = {
                             openLabel: 'Select',
                             canSelectMany: false,
-                            title: 'Select TypeScript File'
+                            title:
+                                message.element === 'flow'
+                                    ? 'Select Ply Flow'
+                                    : 'Select TypeScript File'
                         };
-                        dlgOptions.filters = { 'TypeScript Source File': ['ts'] };
-
+                        if (message.element === 'flow') {
+                            dlgOptions.filters = { 'Ply Flow': ['ply.flow'] };
+                        } else {
+                            dlgOptions.filters = { 'TypeScript Source File': ['ts'] };
+                        }
                         const selUris = await vscode.window.showOpenDialog(dlgOptions);
                         if (selUris?.length === 1) {
                             const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
                             const filepath = files.pathInWorkspaceFolder(wsFolder!, selUris[0]);
                             if (filepath) {
-                                webviewPanel.webview.postMessage({
+                                const msg: any = {
                                     type: 'step',
-                                    stepId: message.target,
-                                    file: filepath
-                                });
+                                    stepId: message.target
+                                };
+                                if (message.element === 'flow') {
+                                    msg.flow = filepath;
+                                } else {
+                                    msg.file = filepath;
+                                }
+                                webviewPanel.webview.postMessage(msg);
                             }
                         }
                     }

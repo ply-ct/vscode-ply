@@ -1,14 +1,16 @@
 Subflow:
   widgets:
-    - type: radio
-      attribute: when
-      label: When
-      options:
-        - Before
-        - After
-      default: Before
-    - type: text
-      attribute: steps
-      label: Steps
-    - type: note
-      label: 'Glob pattern: "" = before all, "*" = before each'
+    - type: file
+      label: Subflow
+      attribute: subflow
+      action: Select Flow
+Flow Values:
+  widgets:
+    - type: table
+      multi: false
+      attribute: values
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Expression

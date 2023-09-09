@@ -1,0 +1,11 @@
+Subflow:
+  widgets:
+    - type: text
+      instanceProp: status
+      label: Status
+    - type: datetime
+      instanceProp: start
+      label: Start
+    - type: datetime
+      instanceProp: end
+      label: End

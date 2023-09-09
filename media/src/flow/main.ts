@@ -106,6 +106,7 @@ export class Flow implements flowbee.Disposable {
             Flow.configurator.onFlowElementUpdate((e) => {
                 if (
                     e.action === 'Select File' ||
+                    e.action === 'Select Flow' ||
                     e.action === 'Create File' ||
                     e.action === 'edit_request'
                 ) {
@@ -124,6 +125,8 @@ export class Flow implements flowbee.Disposable {
                         vscode.postMessage({ type: 'new', element: 'file', target: id });
                     } else if (e.action === 'Select File') {
                         vscode.postMessage({ type: 'select', element: 'file', target: id });
+                    } else if (e.action === 'Select Flow') {
+                        vscode.postMessage({ type: 'select', element: 'flow', target: id });
                     } else if (e.action === 'edit_request') {
                         const overrides = readState(false)?.userOverrides || {};
                         vscode.postMessage({
@@ -474,14 +477,17 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    updateStep(stepId: string, reqObjOrTsFile: object | string) {
+    updateStep(stepId: string, reqObjOrStepAttr: object | [string, string]) {
         const step = this.findStep(stepId);
         if (step) {
             if (!step.attributes) step.attributes = {};
-            if (typeof reqObjOrTsFile === 'object') {
-                const reqName = Object.keys(reqObjOrTsFile)[0];
+            if (Array.isArray(reqObjOrStepAttr)) {
+                step.attributes[reqObjOrStepAttr[0]] = reqObjOrStepAttr[1];
+                this.updateFlow(true);
+            } else {
+                const reqName = Object.keys(reqObjOrStepAttr)[0];
                 step.name = reqName.replace(/_/g, EOL);
-                const req = (reqObjOrTsFile as any)[reqName];
+                const req = (reqObjOrStepAttr as any)[reqName];
                 step.attributes.url = req.url;
                 step.attributes.method = req.method;
                 if (req.headers) {
@@ -493,9 +499,6 @@ export class Flow implements flowbee.Disposable {
                 }
                 if (req.body) step.attributes.body = req.body;
                 this.updateFlow(false);
-            } else {
-                step.attributes.tsFile = reqObjOrTsFile;
-                this.updateFlow(true);
             }
         }
     }
@@ -937,7 +940,14 @@ window.addEventListener('message', async (event) => {
     } else if (message.type === 'step') {
         const flow = readState(false);
         if (flow) {
-            flow.updateStep(message.stepId, message.reqObj || message.file);
+            if (message.reqObj) {
+                flow.updateStep(message.stepId, message.reqObj);
+            } else {
+                flow.updateStep(message.stepId, [
+                    message.flow ? 'subflow' : 'tsFile',
+                    message.flow || message.file
+                ]);
+            }
         }
     } else if (message.type === 'values') {
         const values = {
