@@ -366,6 +366,18 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             this.setOverrideValues(uri, message.options.overrides);
                         }
                         vscode.commands.executeCommand('ply.open-request', { uri });
+                    } else if (
+                        message.element === 'flowInstance' &&
+                        (message.path || message.target)
+                    ) {
+                        const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                        const uri = wsFolder?.uri.with({
+                            path: `${wsFolder.uri.path}/${message.path || message.target}`,
+                            query: 'instance'
+                        });
+                        if (uri) {
+                            await vscode.commands.executeCommand('ply.open-flow', { uri });
+                        }
                     }
                 } else if (message.type === 'expected') {
                     this.adapterHelper.expectedResult(document.uri, 'flow', message.target);

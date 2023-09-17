@@ -136,8 +136,10 @@ export class Flow implements flowbee.Disposable {
                             options: { overrides }
                         });
                     }
-                } else if (typeof e.action === 'string' && e.action.endsWith('.ts')) {
-                    vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
+                } else if (typeof e.action === 'string' && e.element.type === 'step') {
+                    if (e.action.endsWith('.ts') || e.element.path?.endsWith('subflow')) {
+                        vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
+                    }
                 } else if (typeof e.action === 'object') {
                     if (e.element.type === 'link') {
                         const disp = flowbee.LinkLayout.fromAttr(e.element.attributes?.display);
@@ -168,6 +170,14 @@ export class Flow implements flowbee.Disposable {
                             e.element.attributes!.display = flowbee.LinkLayout.toAttr(disp);
                             this.updateFlow();
                             this.flowDiagram.render(this.options.diagramOptions);
+                        }
+                    } else if (e.element.type === 'step') {
+                        if (e.action.name === 'subflowInstance' && e.element.attributes?.subflow) {
+                            vscode.postMessage({
+                                type: 'edit',
+                                element: 'flowInstance',
+                                path: e.element.attributes.subflow
+                            });
                         }
                     }
                 } else {
@@ -377,8 +387,12 @@ export class Flow implements flowbee.Disposable {
                 if (e.action === 'submit') {
                     this.onFlowAction({ action: 'run', options: { submit: true } });
                 } else {
-                    if (e.action === 'edit' && e.element === 'request') {
-                        e.options = { overrides: readState(false)?.userOverrides || {} };
+                    if (e.action === 'edit') {
+                        if (e.element === 'request') {
+                            e.options = { overrides: readState(false)?.userOverrides || {} };
+                        } else if (e.element === 'subflow') {
+                            e.element = this.flowDiagram.instance ? 'flowInstance' : 'file';
+                        }
                     }
                     this.onFlowAction(e);
                 }
@@ -428,7 +442,7 @@ export class Flow implements flowbee.Disposable {
             return { path: flowElement.path };
         } else if (flowElement.path === 'typescript' && flowElement.attributes?.tsFile) {
             return { path: flowElement.attributes.tsFile };
-        } else if (flowElement.path === 'request') {
+        } else if (flowElement.path?.endsWith('request')) {
             let path = this.file;
             let lastSep = path.lastIndexOf('/');
             if (lastSep === -1) lastSep = path.lastIndexOf('\\');

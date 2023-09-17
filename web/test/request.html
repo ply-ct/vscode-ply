@@ -17,7 +17,6 @@
       const acquireVsCodeApi = () => {
         return {
           postMessage: (obj) => {
-            console.log('RECEIVED: ' + JSON.stringify(obj, null, 2));
             if (obj.type === 'ready') {
               const evt = new CustomEvent('message');
               evt.data = {

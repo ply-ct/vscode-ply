@@ -13,12 +13,16 @@ Step:
 Subflow:
   widgets:
     - type: table
-      instanceProp: subflows
+      instanceProp: data
       widgets:
         - type: link
           label: Subflow
           action: subflowInstance
+        - type: text
+          label: Status
         - type: datetime
           label: Start
         - type: datetime
           label: End
+        - type: text
+          label: Message
