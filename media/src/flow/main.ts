@@ -149,7 +149,7 @@ export class Flow implements flowbee.Disposable {
                         const to = this.flowDiagram.flow.steps?.find(
                             (s) => s.id === (e.element as any).to
                         );
-                        // TODO from/to in subflow
+                        // TODO from/to in embedded
                         if (from?.attributes?.display && to?.attributes?.display) {
                             const linkLayout = new flowbee.LinkLayout(
                                 disp,
@@ -157,12 +157,11 @@ export class Flow implements flowbee.Disposable {
                                 flowbee.parseDisplay(to)!
                             );
                             let points: number | undefined;
-                            const action: any = e.action;
-                            if (action.name === 'shape' && typeof action.value === 'string') {
-                                disp.type = action.value;
+                            if (e.action.name === 'shape' && typeof e.action.value === 'string') {
+                                disp.type = e.action.value;
                             }
-                            if (action.name === 'points' && typeof action.value === 'string') {
-                                const pts = parseInt(action.value);
+                            if (e.action.name === 'points' && typeof e.action.value === 'string') {
+                                const pts = parseInt(e.action.value);
                                 if (!isNaN(pts)) points = pts;
                             }
                             linkLayout.calcLink(points);
@@ -535,7 +534,7 @@ export class Flow implements flowbee.Disposable {
                     if (typeof widget.default === 'object') {
                         const defaultObj = widget.default;
                         widget.default = (element) => {
-                            const expr = Object.keys(defaultObj)[0];
+                            const expr = '${' + Object.keys(defaultObj)[0] + '}';
                             return this.getDynamicDefault(expr, element, defaultObj[expr]);
                         };
                     }
@@ -657,7 +656,7 @@ export class Flow implements flowbee.Disposable {
         fallback: string
     ): string {
         if (element.attributes) {
-            if (expr.startsWith('display.') && element.attributes.display) {
+            if (expr.startsWith('${display.') && element.attributes.display) {
                 return resolve(
                     expr,
                     {
@@ -668,6 +667,7 @@ export class Flow implements flowbee.Disposable {
                     console
                 );
             }
+
             return resolve(expr, element.attributes, false, console);
         }
         return fallback;
