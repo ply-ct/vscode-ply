@@ -34,6 +34,9 @@ web/tsconfig.json
 web/out/workers/editor.worker.js.map
 web/out/workers/json.worker.js.map
 web/out/workers/yaml.worker.js.map
+web/out/workers/graphql.worker.js.map
+web/out/workers/parser-graphql.*.js.map
+web/out/workers/standalone.*.js.map
 !node_modules/@ply-ct/ply/package.json
 !node_modules/@ply-ct/ply/templates
 !node_modules/@ply-ct/ply/dist/index.js
