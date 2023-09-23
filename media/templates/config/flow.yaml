@@ -17,3 +17,13 @@ Values:
           label: Required
         - type: text
           label: Required If
+
+Return:
+  widgets:
+    - type: table
+      attribute: return
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Expression

@@ -4,13 +4,25 @@ Subflow:
       label: Subflow
       attribute: subflow
       action: Select Flow
-Flow Values:
+
+In Values:
   widgets:
     - type: table
       multi: false
-      attribute: values
+      attribute: inValues
       widgets:
         - type: text
-          label: Name
+          label: Subflow Value Name
         - type: text
           label: Expression
+
+Out Values:
+  widgets:
+    - type: table
+      multi: false
+      attribute: outValues
+      widgets:
+        - type: text
+          label: Return Value Name
+        - type: text
+          label: Flow Value Name

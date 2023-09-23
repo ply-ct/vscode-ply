@@ -7,6 +7,7 @@ import {
     resolve,
     ValuesAccess
 } from '@ply-ct/ply-values';
+import * as jsYaml from 'js-yaml';
 import { Options } from './options';
 import { Templates } from './templates';
 import { FlowSplitter, ToolboxSplitter } from './splitter';
@@ -548,12 +549,25 @@ export class Flow implements flowbee.Disposable {
                 }
             }
             if (instances && instances.length > 0) {
-                const instance = instances[instances.length - 1] as any;
+                const instance = instances[instances.length - 1] as flowbee.StepInstance & {
+                    request?: any;
+                    response?: any;
+                };
                 if (instance.data) {
                     if (instance.data.request) {
                         instance.request = instance.data.request;
+                        if (typeof instance.request === 'object') {
+                            instance.request = jsYaml.dump(instance.request, {
+                                indent: this.options.indent
+                            });
+                        }
                         if (instance.data.response) {
                             instance.response = instance.data.response;
+                            if (typeof instance.response === 'object') {
+                                instance.response = jsYaml.dump(instance.response, {
+                                    indent: this.options.indent
+                                });
+                            }
                         }
                     } else if (typeof instance.data === 'object') {
                         instance.data = JSON.stringify(instance.data, null, this.options.indent);
