@@ -2,7 +2,18 @@ import * as path from 'path';
 import { Fs } from '../fs';
 import * as vscode from 'vscode';
 import { WebSocketServer } from 'ws';
-import { Disposable, Listener, TypedEvent, FlowEvent, FlowInstance } from '@ply-ct/ply-api';
+import {
+    Disposable,
+    Listener,
+    TypedEvent,
+    FlowEvent,
+    FlowInstance,
+    SubflowSpec,
+    Flow,
+    getSubflowSpec,
+    getSubflowSteps,
+    Step
+} from '@ply-ct/ply-api';
 import { RunOptions, loadYaml } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
@@ -154,6 +165,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     await updateWebview();
                     const requests = await this.adapterHelper.getRequestDescriptors(document.uri);
                     webviewPanel.webview.postMessage({ type: 'requests', requests });
+                    const subflows = await this.getSubflows(document);
+                    webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                     if (this.onceWebviewReady) {
                         this.onceWebviewReady(document.uri);
                         delete this.onceWebviewReady;
@@ -327,7 +340,19 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 } else {
                                     msg.file = filepath;
                                 }
-                                webviewPanel.webview.postMessage(msg);
+                                await webviewPanel.webview.postMessage(msg);
+                                let subflows = await this.getSubflows(document);
+                                if (!subflows.find((sf) => sf.subflow === filepath)) {
+                                    const subflowSpec = await this.readSubflowSpec(document.uri, {
+                                        id: message.target,
+                                        attributes: { subflow: filepath }
+                                    } as unknown as Step);
+                                    if (subflowSpec) subflows = [...subflows, subflowSpec];
+                                    webviewPanel.webview.postMessage({
+                                        type: 'subflows',
+                                        subflows
+                                    });
+                                }
                             }
                         }
                     }
@@ -417,6 +442,21 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             reqObj: loadYaml(uri.toString(), docChange.document.getText())
                         });
                         this.adapterHelper.removeActualResult(document.uri);
+                    }
+                }
+            })
+        );
+
+        disposables.push(
+            vscode.window.tabGroups.onDidChangeTabs(async (tabChange) => {
+                for (const tab of tabChange.changed) {
+                    if (
+                        tab.isActive &&
+                        (tab.input as vscode.TabInputCustom)?.uri?.toString() ===
+                            document.uri.toString()
+                    ) {
+                        const subflows = await this.getSubflows(document);
+                        webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                     }
                 }
             })
@@ -518,6 +558,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         ? await this.adapterHelper.getRequestDescriptors(document.uri)
                         : [];
                     webviewPanel.webview.postMessage({ type: 'requests', requests });
+                    const subflows = loaded.success ? await this.getSubflows(document) : [];
+                    webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                 })
             );
 
@@ -659,5 +701,39 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             `${docUri}/ply-user-values`,
             Object.keys(overrides).length ? overrides : undefined
         );
+    }
+
+    private async getSubflows(document: vscode.TextDocument): Promise<SubflowSpec[]> {
+        const before = Date.now();
+        const flow = loadYaml(document.uri.fsPath, document.getText()) as Flow;
+        const specs: SubflowSpec[] = [];
+        if (flow) {
+            // check not needed after #14
+            for (const subflowStep of getSubflowSteps(flow)) {
+                const spec = await this.readSubflowSpec(document.uri, subflowStep);
+                if (spec) specs.push(spec);
+            }
+        }
+
+        console.debug(`Loaded subflows in: ${Date.now() - before} ms`);
+        return specs;
+    }
+
+    private async readSubflowSpec(
+        docUri: vscode.Uri,
+        subflowStep: Step
+    ): Promise<SubflowSpec | undefined> {
+        if (subflowStep.attributes?.subflow) {
+            const wsFolderUri = this.adapterHelper.getWorkspaceFolder(docUri).uri;
+            const subflowDoc = await vscode.workspace.openTextDocument(
+                wsFolderUri.with({
+                    path: `${wsFolderUri.path}/${subflowStep.attributes.subflow}`
+                })
+            );
+            if (subflowDoc) {
+                const subflow = loadYaml(subflowDoc.uri.fsPath, subflowDoc.getText()) as Flow;
+                return getSubflowSpec(subflowStep, subflow);
+            }
+        }
     }
 }

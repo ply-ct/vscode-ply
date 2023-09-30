@@ -12,9 +12,10 @@ In Values:
       attribute: inValues
       widgets:
         - type: text
-          label: Subflow Value Name
+          label: Subflow Value
+          readonly: true
         - type: text
-          label: Expression
+          label: Expression or Static Text
 
 Out Values:
   widgets:
@@ -23,6 +24,7 @@ Out Values:
       attribute: outValues
       widgets:
         - type: text
-          label: Return Value Name
+          label: Return Value
+          readonly: true
         - type: text
           label: Flow Value Name
