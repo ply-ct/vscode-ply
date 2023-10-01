@@ -247,8 +247,8 @@ body {
   height: 167px; /* enough for five tabs */
 }
 
-.flowbee-values-dark .flowbee-values-footer input[type='button'],
-.flowbee-values-light .flowbee-values-footer input[type='button'] {
+.flowbee-popup-dark .flowbee-popup-footer input[type='button'],
+.flowbee-popup-light .flowbee-popup-footer input[type='button'] {
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
   border: none;

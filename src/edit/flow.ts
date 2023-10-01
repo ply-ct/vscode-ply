@@ -371,7 +371,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 webviewPanel.webview.postMessage({
                                     type: 'action',
                                     action: 'configurator',
-                                    options: { state: 'open', mode: 'select', tab: 'Values' }
+                                    options: { state: 'open', mode: 'select', tab: 'Input Values' }
                                 });
                             } else {
                                 await vscode.commands.executeCommand('vscode.open', fileUri);

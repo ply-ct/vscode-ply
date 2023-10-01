@@ -809,7 +809,7 @@ export class Flow implements flowbee.Disposable {
         if (!valuesPopup) {
             const container = document.getElementById('flow-container') as HTMLDivElement;
             valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
-            valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+            valuesPopup.onPopupAction((actionEvent) => this.onValuesAction(actionEvent));
             valuesPopup.onOpenValues((openValuesEvent) => {
                 vscode.postMessage({
                     type: 'edit',
@@ -819,7 +819,8 @@ export class Flow implements flowbee.Disposable {
             });
         }
         this.closeConfigurator();
-        valuesPopup.render(this.getUserValues(), getValuesOptions());
+        valuesPopup.iconBase = this.options.iconBase;
+        valuesPopup.render({ values: this.getUserValues(), options: getValuesOptions() });
         valuesPopup.setDecorator((text: string) => {
             if (text && isExpression(text)) {
                 const required = this.getRequiredValueNames()

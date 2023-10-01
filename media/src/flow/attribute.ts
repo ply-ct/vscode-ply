@@ -2,6 +2,8 @@ import * as flowbee from 'flowbee/dist/nostyles';
 import { SubflowSpec } from '@ply-ct/ply-api';
 import { resolve } from '@ply-ct/ply-values';
 
+export type AttributeHolder = { attributes?: { [name: string]: string } };
+
 export interface AttributeValueProvider {
     /**
      * Get dynamically-determined default attribute value.
@@ -55,7 +57,7 @@ export class LinkValueProvider implements AttributeValueProvider {
     getDynamicDefault(
         flowElement: flowbee.FlowElement,
         expr: string
-    ): ((element: flowbee.FlowElement) => string) | undefined {
+    ): ((element: AttributeHolder) => string) | undefined {
         if (flowElement.type === 'link' && expr.startsWith('${display.')) {
             return (element) => {
                 if (element.attributes?.display) {

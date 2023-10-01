@@ -956,7 +956,7 @@
   .flowbee-configurator-dark .flowbee-config-footer input[type=button] {
     background-color: #c8c8c8; }
 
-.flowbee-values-light {
+.flowbee-popup-light {
   display: none;
   z-index: 100;
   position: absolute;
@@ -973,7 +973,7 @@
   font-size: 13px;
   box-sizing: border-box;
   outline: none; }
-  .flowbee-values-light .flowbee-values-header {
+  .flowbee-popup-light .flowbee-popup-header {
     display: flex;
     height: 30px;
     background-color: #f8f8f8;
@@ -982,23 +982,23 @@
     padding: 5px 5px 0 5px;
     font-weight: 500;
     box-sizing: border-box; }
-  .flowbee-values-light .flowbee-values-title {
+  .flowbee-popup-light .flowbee-popup-title {
     flex-grow: 1;
     user-select: none; }
-  .flowbee-values-light .flowbee-values-title a {
+  .flowbee-popup-light .flowbee-popup-title a {
     text-decoration: none;
     margin-left: 7px;
     font-weight: normal; }
-  .flowbee-values-light .flowbee-values-help {
+  .flowbee-popup-light .flowbee-popup-help {
     margin-left: 10px;
     vertical-align: middle;
     outline: none; }
-  .flowbee-values-light .flowbee-values-help:focus {
+  .flowbee-popup-light .flowbee-popup-help:focus {
     outline: none; }
-  .flowbee-values-light .flowbee-values-close {
+  .flowbee-popup-light .flowbee-popup-close {
     cursor: pointer;
     user-select: none; }
-  .flowbee-values-light .flowbee-values-content {
+  .flowbee-popup-light .flowbee-popup-content {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -1007,7 +1007,7 @@
     overflow: auto;
     padding: 10px;
     background-color: #ffffff; }
-  .flowbee-values-light .flowbee-values-content table {
+  .flowbee-popup-light .flowbee-popup-content table {
     width: 100%;
     grid-column: 1/3;
     border-spacing: 0;
@@ -1015,7 +1015,7 @@
     table-layout: fixed;
     margin-bottom: 10px;
     height: fit-content; }
-  .flowbee-values-light .flowbee-values-content th, .flowbee-values-light td {
+  .flowbee-popup-light .flowbee-popup-content th, .flowbee-popup-light td {
     border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
@@ -1024,7 +1024,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis; }
-  .flowbee-values-light .flowbee-values-footer {
+  .flowbee-popup-light .flowbee-popup-footer {
     display: flex;
     justify-content: flex-end;
     height: 36px;
@@ -1034,11 +1034,11 @@
     padding: 5px;
     font-weight: 500;
     box-sizing: border-box; }
-  .flowbee-values-light .flowbee-values-footer input[type=button] {
+  .flowbee-popup-light .flowbee-popup-footer input[type=button] {
     border-width: 1px;
     margin-right: 10px; }
 
-.flowbee-values-dark {
+.flowbee-popup-dark {
   display: none;
   z-index: 100;
   position: absolute;
@@ -1059,7 +1059,7 @@
   color: #cccccc;
   border: 1px solid #454545;
   box-shadow: 0 2px 8px #000000; }
-  .flowbee-values-dark .flowbee-values-header {
+  .flowbee-popup-dark .flowbee-popup-header {
     display: flex;
     height: 30px;
     background-color: #f8f8f8;
@@ -1068,23 +1068,23 @@
     padding: 5px 5px 0 5px;
     font-weight: 500;
     box-sizing: border-box; }
-  .flowbee-values-dark .flowbee-values-title {
+  .flowbee-popup-dark .flowbee-popup-title {
     flex-grow: 1;
     user-select: none; }
-  .flowbee-values-dark .flowbee-values-title a {
+  .flowbee-popup-dark .flowbee-popup-title a {
     text-decoration: none;
     margin-left: 7px;
     font-weight: normal; }
-  .flowbee-values-dark .flowbee-values-help {
+  .flowbee-popup-dark .flowbee-popup-help {
     margin-left: 10px;
     vertical-align: middle;
     outline: none; }
-  .flowbee-values-dark .flowbee-values-help:focus {
+  .flowbee-popup-dark .flowbee-popup-help:focus {
     outline: none; }
-  .flowbee-values-dark .flowbee-values-close {
+  .flowbee-popup-dark .flowbee-popup-close {
     cursor: pointer;
     user-select: none; }
-  .flowbee-values-dark .flowbee-values-content {
+  .flowbee-popup-dark .flowbee-popup-content {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -1093,7 +1093,7 @@
     overflow: auto;
     padding: 10px;
     background-color: #ffffff; }
-  .flowbee-values-dark .flowbee-values-content table {
+  .flowbee-popup-dark .flowbee-popup-content table {
     width: 100%;
     grid-column: 1/3;
     border-spacing: 0;
@@ -1101,7 +1101,7 @@
     table-layout: fixed;
     margin-bottom: 10px;
     height: fit-content; }
-  .flowbee-values-dark .flowbee-values-content th, .flowbee-values-dark td {
+  .flowbee-popup-dark .flowbee-popup-content th, .flowbee-popup-dark td {
     border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
@@ -1110,7 +1110,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis; }
-  .flowbee-values-dark .flowbee-values-footer {
+  .flowbee-popup-dark .flowbee-popup-footer {
     display: flex;
     justify-content: flex-end;
     height: 36px;
@@ -1120,25 +1120,25 @@
     padding: 5px;
     font-weight: 500;
     box-sizing: border-box; }
-  .flowbee-values-dark .flowbee-values-footer input[type=button] {
+  .flowbee-popup-dark .flowbee-popup-footer input[type=button] {
     border-width: 1px;
     margin-right: 10px; }
-  .flowbee-values-dark .flowbee-values-header {
+  .flowbee-popup-dark .flowbee-popup-header {
     background-color: #323232;
     color: #c8c8c8;
     border-bottom: 1px solid #454545; }
-  .flowbee-values-dark .flowbee-values-content {
+  .flowbee-popup-dark .flowbee-popup-content {
     background-color: #252526; }
-  .flowbee-values-dark .flowbee-values-content table {
+  .flowbee-popup-dark .flowbee-popup-content table {
     background-color: #3c3c3c;
     color: #cccccc; }
-  .flowbee-values-dark .flowbee-values-content th, .flowbee-values-dark td {
+  .flowbee-popup-dark .flowbee-popup-content th, .flowbee-popup-dark td {
     border: 1px solid #606060; }
-  .flowbee-values-dark .flowbee-values-footer {
+  .flowbee-popup-dark .flowbee-popup-footer {
     background-color: #323232;
     color: #c8c8c8;
     border-top: 1px solid #454545; }
-  .flowbee-values-dark .flowbee-values-footer input[type=button] {
+  .flowbee-popup-dark .flowbee-popup-footer input[type=button] {
     background-color: #c8c8c8; }
 
 .flowbee-tree-light {
