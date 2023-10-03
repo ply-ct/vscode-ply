@@ -14,7 +14,7 @@ import {
     getSubflowSteps,
     Step
 } from '@ply-ct/ply-api';
-import { RunOptions, loadYaml } from '@ply-ct/ply';
+import { RunOptions, loadYaml, PlyResults } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapter-helper';
@@ -227,12 +227,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 } else if (message.type === 'stop') {
                     this.adapterHelper.getAdapter(document.uri)?.cancel();
                     let instance;
+                    let results;
                     try {
                         instance = this.getInstance(document.uri);
+                        results = await this.adapterHelper.getPlyResults(document.uri);
                     } finally {
                         webviewPanel.webview.postMessage({
                             type: 'instance',
                             instance,
+                            ...(results && { results }),
                             event: 'stop'
                         });
                     }
@@ -410,10 +413,17 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     this.adapterHelper.compareResults(document.uri, message.target);
                 } else if (message.type === 'instance') {
                     const instance = this.getInstance(document.uri);
-                    webviewPanel.webview.postMessage({ type: 'instance', instance });
+                    let results: PlyResults | undefined;
                     if (!instance) {
                         this.promptToRunForInstance(document.uri);
+                    } else {
+                        results = await this.adapterHelper.getPlyResults(document.uri);
                     }
+                    webviewPanel.webview.postMessage({
+                        type: 'instance',
+                        instance,
+                        ...(results && { results })
+                    });
                 } else if (message.type === 'configurator') {
                     await vscode.commands.executeCommand('workbench.action.closePanel');
                 } else if (message.type === 'save-values') {
@@ -506,14 +516,18 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 flowEvent.eventType === 'finish' ||
                                 flowEvent.eventType === 'error')
                         ) {
+                            let results: PlyResults | undefined;
                             if (flowEvent.eventType === 'start') {
                                 flowInstanceId = null;
+                            } else {
+                                results = await this.adapterHelper.getPlyResults(document.uri);
                             }
                             // set the diagram instance so it'll start listening for websocket updates
                             webviewPanel.webview.postMessage({
                                 type: 'instance',
                                 instance: flowEvent.instance as FlowInstance,
-                                event: flowEvent.eventType
+                                event: flowEvent.eventType,
+                                ...(results && { results })
                             });
                         } else {
                             if (!flowInstanceId) {

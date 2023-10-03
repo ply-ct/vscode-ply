@@ -1,5 +1,5 @@
 import * as flowbee from 'flowbee/dist/nostyles';
-import { PlyRequest as Request, SubflowSpec } from '@ply-ct/ply-api';
+import { PlyRequest as Request, SubflowSpec, PlyResults } from '@ply-ct/ply-api';
 import {
     ExpressionHolder,
     expressions,
@@ -21,7 +21,13 @@ import {
 } from './actions';
 import { getDescriptors } from './descriptors';
 import { MenuProvider } from './menu';
-import { getValuesOptions, Values } from './values';
+import {
+    getPopupOptions,
+    getValuesOptions,
+    RunValuesPopup,
+    Values,
+    getFlowRunValues
+} from './values';
 import {
     AttributeValueProvider,
     FlowValueProvider,
@@ -60,6 +66,7 @@ class DialogProvider implements flowbee.DialogProvider {
 let oldFlow: flowbee.Disposable;
 let requests: (flowbee.Descriptor & { request: Request })[] = [];
 let valuesPopup: flowbee.ValuesPopup | undefined;
+let runValsPopup: RunValuesPopup | undefined;
 
 interface Config {
     customDescriptors?: flowbee.Descriptor[];
@@ -86,6 +93,7 @@ export class Flow implements flowbee.Disposable {
         overrides: {}
     };
     userOverrides = {};
+    results?: PlyResults;
     subflows: SubflowSpec[] = [];
     private attributeValueProviders: AttributeValueProvider[] = [
         new FlowValueProvider({ getFlow: () => this.flowDiagram.flow }),
@@ -806,39 +814,53 @@ export class Flow implements flowbee.Disposable {
     }
 
     openValuesPopup() {
-        if (!valuesPopup) {
-            const container = document.getElementById('flow-container') as HTMLDivElement;
-            valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
-            valuesPopup.onPopupAction((actionEvent) => this.onValuesAction(actionEvent));
-            valuesPopup.onOpenValues((openValuesEvent) => {
-                vscode.postMessage({
-                    type: 'edit',
-                    element: 'file',
-                    path: openValuesEvent.path
+        this.closeConfigurator();
+        if (this.flowDiagram.mode === 'runtime') {
+            const runValues = getFlowRunValues(this.flowDiagram.flow, this.results);
+            if (!runValsPopup) {
+                const container = document.getElementById('flow-container') as HTMLDivElement;
+                runValsPopup = new RunValuesPopup(container, this.options.iconBase);
+            }
+            runValsPopup.iconBase = this.options.iconBase;
+            runValsPopup.render({
+                options: { ...getPopupOptions(), title: 'Flow Run Values', indent: 2 },
+                runValues
+            });
+        } else {
+            if (!valuesPopup) {
+                const container = document.getElementById('flow-container') as HTMLDivElement;
+                valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
+                valuesPopup.onPopupAction((actionEvent) => this.onValuesAction(actionEvent));
+                valuesPopup.onOpenValues((openValuesEvent) => {
+                    vscode.postMessage({
+                        type: 'edit',
+                        element: 'file',
+                        path: openValuesEvent.path
+                    });
                 });
+            }
+            valuesPopup.iconBase = this.options.iconBase;
+            valuesPopup.render({ values: this.getUserValues(), options: getValuesOptions() });
+            valuesPopup.setDecorator((text: string) => {
+                if (text && isExpression(text)) {
+                    const required = this.getRequiredValueNames()
+                        .map((v) => toExpression(v))
+                        .includes(text);
+                    const userVals = this.getUserValues();
+                    const override = userVals.overrides ? userVals.overrides[text] : '';
+                    const value =
+                        override || userVals.values.find((v) => v.expression === text)?.value;
+                    const exprClass = value ? 'expression' : 'unresolved';
+                    return [
+                        {
+                            range: { line: 0, start: 0, end: text.length - 1 },
+                            className: required ? `${exprClass} required` : exprClass
+                        }
+                    ];
+                }
+                return [];
             });
         }
-        this.closeConfigurator();
-        valuesPopup.iconBase = this.options.iconBase;
-        valuesPopup.render({ values: this.getUserValues(), options: getValuesOptions() });
-        valuesPopup.setDecorator((text: string) => {
-            if (text && isExpression(text)) {
-                const required = this.getRequiredValueNames()
-                    .map((v) => toExpression(v))
-                    .includes(text);
-                const userVals = this.getUserValues();
-                const override = userVals.overrides ? userVals.overrides[text] : '';
-                const value = override || userVals.values.find((v) => v.expression === text)?.value;
-                const exprClass = value ? 'expression' : 'unresolved';
-                return [
-                    {
-                        range: { line: 0, start: 0, end: text.length - 1 },
-                        className: required ? `${exprClass} required` : exprClass
-                    }
-                ];
-            }
-            return [];
-        });
     }
 
     /**
@@ -981,9 +1003,10 @@ window.addEventListener('message', async (event) => {
             const hasInstance = !!flow.flowDiagram.instance;
             flow.flowActions?.setRunning(hasInstance && message.event === 'start');
             if (hasInstance) {
+                flow.results = message.results;
                 flow.flowDiagram.readonly = true;
                 flow.switchMode('runtime');
-                updateState({ mode: 'runtime' });
+                updateState({ mode: 'runtime', results: flow.results });
             } else {
                 flow.switchMode(flow.flowDiagram.mode);
             }
@@ -1037,7 +1060,7 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'theme-change') {
         const flow = readState();
-        if (flow && valuesPopup?.isOpen) {
+        if (flow && (valuesPopup?.isOpen || runValsPopup?.isOpen)) {
             flow.openValuesPopup();
         }
     } else if (message.type === 'confirm') {
@@ -1063,6 +1086,7 @@ interface FlowState {
     values?: Values;
     userOverrides?: { [expr: string]: string };
     storeVals?: any;
+    results?: PlyResults;
     requests?: flowbee.Descriptor[];
     subflows?: SubflowSpec[];
 }
@@ -1086,6 +1110,7 @@ function readState(loadInstance = true): Flow | undefined {
         flow.switchMode(mode);
         flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
         requests = state.requests || [];
+        flow.results = state.results;
         flow.subflows = state.subflows || [];
         flow.render();
         if (state.selected) {

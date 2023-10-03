@@ -241,6 +241,31 @@ body {
   color: #ff0000;
   padding-left: 1px;
 }
+
+.split {
+  display: flex;
+  min-height: 100%;
+  overflow: hidden;
+}
+.pane {
+  flex-basis: 50%;
+}
+.pane-left {
+  width: 50%;
+  overflow: scroll;
+}
+.pane-right {
+  border-left: 1px solid var(--vscode-panel-border);
+  width: 50%;
+  overflow: scroll;
+}
+
+.values {
+  margin: 0;
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+}
+
 /* customized flowbee styles */
 .flowbee-configurator {
   width: calc(100% - 200px);
