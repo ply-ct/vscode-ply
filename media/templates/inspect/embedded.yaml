@@ -1,4 +1,4 @@
-Flow:
+Subflow:
   widgets:
     - type: text
       instanceProp: status

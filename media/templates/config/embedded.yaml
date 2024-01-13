@@ -1,0 +1,14 @@
+Subflow:
+  widgets:
+    - type: radio
+      attribute: when
+      label: When
+      options:
+        - Before
+        - After
+      default: Before
+    - type: text
+      attribute: steps
+      label: Steps
+    - type: note
+      label: 'Glob pattern: "" = before all, "*" = before each'

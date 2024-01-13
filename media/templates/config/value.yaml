@@ -1,0 +1,8 @@
+Value:
+  widgets:
+    - type: text
+      attribute: name
+      label: Name
+    - type: text
+      attribute: expression
+      label: Expression

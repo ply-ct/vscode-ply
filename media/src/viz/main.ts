@@ -27,7 +27,7 @@ select.onchange = () => {
 
 window.addEventListener('message', async (event) => {
     const message = event.data; // json message data from extension
-    console.debug(`message: ${JSON.stringify(message, null, 2)}`);
+    // console.debug(`message: ${JSON.stringify(message, null, 2)}`);
     if (message.type === 'update') {
         const file = message.file;
         const testRunData = new TestRunData(message.runs, { intervals: 10 });

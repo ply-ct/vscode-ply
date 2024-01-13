@@ -1,5 +1,10 @@
 # Change Log
 
+## [3.1.0](https://github.com/ply-ct/vscode-ply/tree/3.1.0) (2024-01-13)
+
+- Enhancement: Flow link waypoints [\#33](https://github.com/ply-ct/vscode-ply/issues/33)
+- Enhancement: Subflows [\#165](https://github.com/ply-ct/vscode-ply/issues/165)
+
 ## [3.0.0](https://github.com/ply-ct/vscode-ply/tree/3.0.0) (2023-09-05)
 
 - Enhancement: Conditional activation [\#26](https://github.com/ply-ct/vscode-ply/issues/26)

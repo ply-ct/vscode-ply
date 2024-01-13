@@ -34,6 +34,8 @@ export const initialize = () => {
                     url = `${baseUrl}/json.worker.js`;
                 } else if (label === 'yaml') {
                     url = `${baseUrl}/yaml.worker.js`;
+                } else if (label === 'graphql') {
+                    url = `${baseUrl}/graphql.worker.js`;
                 }
                 const blob = await (await fetch(url)).blob();
                 return new Worker(URL.createObjectURL(blob));
@@ -121,7 +123,7 @@ export const getExpressions = (
     return [];
 };
 
-export const expressionLanguages = ['json', 'yaml', 'xml'];
+export const expressionLanguages = ['json', 'yaml', 'xml', 'graphql'];
 export const registeredHoverLanguages: string[] = [];
 
 export const filterMarkers = (

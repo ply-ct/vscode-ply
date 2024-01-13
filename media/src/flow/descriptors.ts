@@ -20,21 +20,25 @@ export const getDescriptors = (customDescriptors?: flowbee.Descriptor[]): flowbe
                 name: 'TypeScript',
                 icon: 'typescript.svg'
             },
+            {
+                type: 'step',
+                path: 'value',
+                name: 'Set Value',
+                icon: 'value.svg'
+            },
             flowbee.decide,
             {
                 type: 'step',
                 path: 'delay',
                 name: 'Delay',
                 icon: 'delay.svg'
-            }
-            /*
+            },
             {
                 type: 'step',
-                path: 'sync',
-                name: 'Sync',
-                icon: 'sync.svg'
+                path: 'subflow',
+                name: 'Subflow',
+                icon: 'subflow.svg'
             }
-            */
         ] as flowbee.Descriptor[])
     );
 

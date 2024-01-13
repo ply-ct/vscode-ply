@@ -9,7 +9,7 @@ import {
   ValuesOptions,
   ValuesActionEvent
 } from 'flowbee';
-import { ValuesAccess, ExpressionHolder, expressions, isExpression } from '@ply-ct/ply-values';
+import { ValuesAccess, ExpressionHolder, expressions } from '@ply-ct/ply-values';
 import { Values } from '../model/values';
 import { Decorator } from '../util/decorate';
 
@@ -88,10 +88,11 @@ export default defineComponent({
       if (!this.popup) {
         const split = document.getElementById('split') as HTMLDivElement;
         this.popup = new ValuesPopup(split, this.iconBase);
-        this.popup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
+        this.popup.onPopupAction((actionEvent) => this.onValuesAction(actionEvent));
         this.popup.onOpenValues((openValuesEvent) => this.$emit('openFile', openValuesEvent.path));
       }
-      this.popup.render(this.getUserValues(), this.getOptions());
+      this.popup.iconBase = this.iconBase;
+      this.popup.render({ values: this.getUserValues(), options: this.getOptions() });
     },
     closePopup() {
       this.popup?.close();

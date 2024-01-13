@@ -134,14 +134,17 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('ply.open-flow', async (...args: any[]) => {
-            // hack for runner callback to avoid breaking something
             const callback = args.length > 1 && typeof args[1] === 'function' ? args[1] : null;
             const item = callback ? await PlyItem.getItem(args[0]) : await PlyItem.getItem(...args);
             if (item?.uri) {
-                const fileUri = vscode.Uri.file(item.uri.fsPath);
+                const fileUri = vscode.Uri.file(item.uri.fsPath).with({ query: '' });
                 if (item.uri.fragment) {
                     flowEditor.onceWebviewReady = () => {
                         _onFlowItemSelect.emit({ uri: item.uri });
+                    };
+                } else if (item.uri.query === 'instance') {
+                    flowEditor.onceWebviewReady = () => {
+                        _onFlowModeChange.emit({ mode: 'runtime' });
                     };
                 }
                 if (callback) {
@@ -156,6 +159,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 });
                 if (item.uri.fragment) {
                     _onFlowItemSelect.emit({ uri: item.uri });
+                } else if (item.uri.query === 'instance') {
+                    _onFlowModeChange.emit({ mode: 'runtime' });
                 }
                 return fileUri;
             }

@@ -2,8 +2,19 @@ import * as path from 'path';
 import { Fs } from '../fs';
 import * as vscode from 'vscode';
 import { WebSocketServer } from 'ws';
-import { Disposable, Listener, TypedEvent, FlowEvent, FlowInstance } from '@ply-ct/ply-api';
-import { RunOptions, loadYaml } from '@ply-ct/ply';
+import {
+    Disposable,
+    Listener,
+    TypedEvent,
+    FlowEvent,
+    FlowInstance,
+    SubflowSpec,
+    Flow,
+    getSubflowSpec,
+    getSubflowSteps,
+    Step
+} from '@ply-ct/ply-api';
+import { RunOptions, loadYaml, PlyResults } from '@ply-ct/ply';
 import { Setting } from '../config';
 import { WebSocketSender } from '../websocket';
 import { AdapterHelper } from '../adapter-helper';
@@ -154,6 +165,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     await updateWebview();
                     const requests = await this.adapterHelper.getRequestDescriptors(document.uri);
                     webviewPanel.webview.postMessage({ type: 'requests', requests });
+                    const subflows = await this.getSubflows(document);
+                    webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                     if (this.onceWebviewReady) {
                         this.onceWebviewReady(document.uri);
                         delete this.onceWebviewReady;
@@ -214,12 +227,15 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                 } else if (message.type === 'stop') {
                     this.adapterHelper.getAdapter(document.uri)?.cancel();
                     let instance;
+                    let results;
                     try {
                         instance = this.getInstance(document.uri);
+                        results = await this.adapterHelper.getPlyResults(document.uri);
                     } finally {
                         webviewPanel.webview.postMessage({
                             type: 'instance',
                             instance,
+                            ...(results && { results }),
                             event: 'stop'
                         });
                     }
@@ -299,25 +315,47 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         vscode.commands.executeCommand('ply.new.request');
                     }
                 } else if (message.type === 'select') {
-                    if (message.element === 'file') {
-                        // TODO conditional
+                    if (message.element === 'file' || message.element === 'flow') {
                         const dlgOptions: vscode.OpenDialogOptions = {
                             openLabel: 'Select',
                             canSelectMany: false,
-                            title: 'Select TypeScript File'
+                            title:
+                                message.element === 'flow'
+                                    ? 'Select Ply Flow'
+                                    : 'Select TypeScript File'
                         };
-                        dlgOptions.filters = { 'TypeScript Source File': ['ts'] };
-
+                        if (message.element === 'flow') {
+                            dlgOptions.filters = { 'Ply Flow': ['ply.flow'] };
+                        } else {
+                            dlgOptions.filters = { 'TypeScript Source File': ['ts'] };
+                        }
                         const selUris = await vscode.window.showOpenDialog(dlgOptions);
                         if (selUris?.length === 1) {
                             const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
                             const filepath = files.pathInWorkspaceFolder(wsFolder!, selUris[0]);
                             if (filepath) {
-                                webviewPanel.webview.postMessage({
+                                const msg: any = {
                                     type: 'step',
-                                    stepId: message.target,
-                                    file: filepath
-                                });
+                                    stepId: message.target
+                                };
+                                if (message.element === 'flow') {
+                                    msg.flow = filepath;
+                                } else {
+                                    msg.file = filepath;
+                                }
+                                await webviewPanel.webview.postMessage(msg);
+                                let subflows = await this.getSubflows(document);
+                                if (!subflows.find((sf) => sf.subflow === filepath)) {
+                                    const subflowSpec = await this.readSubflowSpec(document.uri, {
+                                        id: message.target,
+                                        attributes: { subflow: filepath }
+                                    } as unknown as Step);
+                                    if (subflowSpec) subflows = [...subflows, subflowSpec];
+                                    webviewPanel.webview.postMessage({
+                                        type: 'subflows',
+                                        subflows
+                                    });
+                                }
                             }
                         }
                     }
@@ -336,7 +374,7 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 webviewPanel.webview.postMessage({
                                     type: 'action',
                                     action: 'configurator',
-                                    options: { state: 'open', mode: 'select', tab: 'Values' }
+                                    options: { state: 'open', mode: 'select', tab: 'Input Values' }
                                 });
                             } else {
                                 await vscode.commands.executeCommand('vscode.open', fileUri);
@@ -356,6 +394,18 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             this.setOverrideValues(uri, message.options.overrides);
                         }
                         vscode.commands.executeCommand('ply.open-request', { uri });
+                    } else if (
+                        message.element === 'flowInstance' &&
+                        (message.path || message.target)
+                    ) {
+                        const wsFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+                        const uri = wsFolder?.uri.with({
+                            path: `${wsFolder.uri.path}/${message.path || message.target}`,
+                            query: 'instance'
+                        });
+                        if (uri) {
+                            await vscode.commands.executeCommand('ply.open-flow', { uri });
+                        }
                     }
                 } else if (message.type === 'expected') {
                     this.adapterHelper.expectedResult(document.uri, 'flow', message.target);
@@ -363,10 +413,17 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                     this.adapterHelper.compareResults(document.uri, message.target);
                 } else if (message.type === 'instance') {
                     const instance = this.getInstance(document.uri);
-                    webviewPanel.webview.postMessage({ type: 'instance', instance });
+                    let results: PlyResults | undefined;
                     if (!instance) {
                         this.promptToRunForInstance(document.uri);
+                    } else {
+                        results = await this.adapterHelper.getPlyResults(document.uri);
                     }
+                    webviewPanel.webview.postMessage({
+                        type: 'instance',
+                        instance,
+                        ...(results && { results })
+                    });
                 } else if (message.type === 'configurator') {
                     await vscode.commands.executeCommand('workbench.action.closePanel');
                 } else if (message.type === 'save-values') {
@@ -395,6 +452,21 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                             reqObj: loadYaml(uri.toString(), docChange.document.getText())
                         });
                         this.adapterHelper.removeActualResult(document.uri);
+                    }
+                }
+            })
+        );
+
+        disposables.push(
+            vscode.window.tabGroups.onDidChangeTabs(async (tabChange) => {
+                for (const tab of tabChange.changed) {
+                    if (
+                        tab.isActive &&
+                        (tab.input as vscode.TabInputCustom)?.uri?.toString() ===
+                            document.uri.toString()
+                    ) {
+                        const subflows = await this.getSubflows(document);
+                        webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                     }
                 }
             })
@@ -444,14 +516,18 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                                 flowEvent.eventType === 'finish' ||
                                 flowEvent.eventType === 'error')
                         ) {
+                            let results: PlyResults | undefined;
                             if (flowEvent.eventType === 'start') {
                                 flowInstanceId = null;
+                            } else {
+                                results = await this.adapterHelper.getPlyResults(document.uri);
                             }
                             // set the diagram instance so it'll start listening for websocket updates
                             webviewPanel.webview.postMessage({
                                 type: 'instance',
                                 instance: flowEvent.instance as FlowInstance,
-                                event: flowEvent.eventType
+                                event: flowEvent.eventType,
+                                ...(results && { results })
                             });
                         } else {
                             if (!flowInstanceId) {
@@ -496,6 +572,8 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
                         ? await this.adapterHelper.getRequestDescriptors(document.uri)
                         : [];
                     webviewPanel.webview.postMessage({ type: 'requests', requests });
+                    const subflows = loaded.success ? await this.getSubflows(document) : [];
+                    webviewPanel.webview.postMessage({ type: 'subflows', subflows });
                 })
             );
 
@@ -637,5 +715,39 @@ export class FlowEditor implements vscode.CustomTextEditorProvider {
             `${docUri}/ply-user-values`,
             Object.keys(overrides).length ? overrides : undefined
         );
+    }
+
+    private async getSubflows(document: vscode.TextDocument): Promise<SubflowSpec[]> {
+        const before = Date.now();
+        const flow = loadYaml(document.uri.fsPath, document.getText()) as Flow;
+        const specs: SubflowSpec[] = [];
+        if (flow) {
+            // check not needed after #14
+            for (const subflowStep of getSubflowSteps(flow)) {
+                const spec = await this.readSubflowSpec(document.uri, subflowStep);
+                if (spec) specs.push(spec);
+            }
+        }
+
+        console.debug(`Loaded subflows in: ${Date.now() - before} ms`);
+        return specs;
+    }
+
+    private async readSubflowSpec(
+        docUri: vscode.Uri,
+        subflowStep: Step
+    ): Promise<SubflowSpec | undefined> {
+        if (subflowStep.attributes?.subflow) {
+            const wsFolderUri = this.adapterHelper.getWorkspaceFolder(docUri).uri;
+            const subflowDoc = await vscode.workspace.openTextDocument(
+                wsFolderUri.with({
+                    path: `${wsFolderUri.path}/${subflowStep.attributes.subflow}`
+                })
+            );
+            if (subflowDoc) {
+                const subflow = loadYaml(subflowDoc.uri.fsPath, subflowDoc.getText()) as Flow;
+                return getSubflowSpec(subflowStep, subflow);
+            }
+        }
     }
 }

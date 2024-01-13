@@ -4,7 +4,7 @@ Options:
       attribute: bail
       label: Bail on first failure
 
-Values:
+Input Values:
   widgets:
     - type: table
       attribute: values
@@ -17,3 +17,13 @@ Values:
           label: Required
         - type: text
           label: Required If
+
+Return Values:
+  widgets:
+    - type: table
+      attribute: return
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Expression

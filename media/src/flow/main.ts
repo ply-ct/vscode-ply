@@ -1,12 +1,14 @@
 import * as flowbee from 'flowbee/dist/nostyles';
+import { PlyRequest as Request, SubflowSpec, PlyResults } from '@ply-ct/ply-api';
 import {
     ExpressionHolder,
     expressions,
     isExpression,
     toExpression,
-    resolve,
-    ValuesAccess
+    ValuesAccess,
+    resolve
 } from '@ply-ct/ply-values';
+import * as jsYaml from 'js-yaml';
 import { Options } from './options';
 import { Templates } from './templates';
 import { FlowSplitter, ToolboxSplitter } from './splitter';
@@ -19,8 +21,19 @@ import {
 } from './actions';
 import { getDescriptors } from './descriptors';
 import { MenuProvider } from './menu';
-import { Request } from './request';
-import { getValuesOptions, Values } from './values';
+import {
+    getPopupOptions,
+    getValuesOptions,
+    RunValuesPopup,
+    Values,
+    getFlowRunValues
+} from './values';
+import {
+    AttributeValueProvider,
+    FlowValueProvider,
+    LinkValueProvider,
+    SubflowValueProvider
+} from './attribute';
 
 const container = document.getElementById('container') as HTMLDivElement;
 
@@ -53,6 +66,7 @@ class DialogProvider implements flowbee.DialogProvider {
 let oldFlow: flowbee.Disposable;
 let requests: (flowbee.Descriptor & { request: Request })[] = [];
 let valuesPopup: flowbee.ValuesPopup | undefined;
+let runValsPopup: RunValuesPopup | undefined;
 
 interface Config {
     customDescriptors?: flowbee.Descriptor[];
@@ -79,6 +93,13 @@ export class Flow implements flowbee.Disposable {
         overrides: {}
     };
     userOverrides = {};
+    results?: PlyResults;
+    subflows: SubflowSpec[] = [];
+    private attributeValueProviders: AttributeValueProvider[] = [
+        new FlowValueProvider({ getFlow: () => this.flowDiagram.flow }),
+        new LinkValueProvider(),
+        new SubflowValueProvider({ getSubflows: () => this.subflows })
+    ];
 
     /**
      * @param readonly file is readonly
@@ -106,6 +127,7 @@ export class Flow implements flowbee.Disposable {
             Flow.configurator.onFlowElementUpdate((e) => {
                 if (
                     e.action === 'Select File' ||
+                    e.action === 'Select Flow' ||
                     e.action === 'Create File' ||
                     e.action === 'edit_request'
                 ) {
@@ -124,6 +146,8 @@ export class Flow implements flowbee.Disposable {
                         vscode.postMessage({ type: 'new', element: 'file', target: id });
                     } else if (e.action === 'Select File') {
                         vscode.postMessage({ type: 'select', element: 'file', target: id });
+                    } else if (e.action === 'Select Flow') {
+                        vscode.postMessage({ type: 'select', element: 'flow', target: id });
                     } else if (e.action === 'edit_request') {
                         const overrides = readState(false)?.userOverrides || {};
                         vscode.postMessage({
@@ -133,8 +157,10 @@ export class Flow implements flowbee.Disposable {
                             options: { overrides }
                         });
                     }
-                } else if (typeof e.action === 'string' && e.action.endsWith('.ts')) {
-                    vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
+                } else if (typeof e.action === 'string' && e.element.type === 'step') {
+                    if (e.action.endsWith('.ts') || e.element.path?.endsWith('subflow')) {
+                        vscode.postMessage({ type: 'edit', element: 'file', path: e.action });
+                    }
                 } else if (typeof e.action === 'object') {
                     if (e.element.type === 'link') {
                         const disp = flowbee.LinkLayout.fromAttr(e.element.attributes?.display);
@@ -144,7 +170,7 @@ export class Flow implements flowbee.Disposable {
                         const to = this.flowDiagram.flow.steps?.find(
                             (s) => s.id === (e.element as any).to
                         );
-                        // TODO from/to in subflow
+                        // TODO from/to in embedded
                         if (from?.attributes?.display && to?.attributes?.display) {
                             const linkLayout = new flowbee.LinkLayout(
                                 disp,
@@ -152,12 +178,11 @@ export class Flow implements flowbee.Disposable {
                                 flowbee.parseDisplay(to)!
                             );
                             let points: number | undefined;
-                            const action: any = e.action;
-                            if (action.name === 'shape' && typeof action.value === 'string') {
-                                disp.type = action.value;
+                            if (e.action.name === 'shape' && typeof e.action.value === 'string') {
+                                disp.type = e.action.value;
                             }
-                            if (action.name === 'points' && typeof action.value === 'string') {
-                                const pts = parseInt(action.value);
+                            if (e.action.name === 'points' && typeof e.action.value === 'string') {
+                                const pts = parseInt(e.action.value);
                                 if (!isNaN(pts)) points = pts;
                             }
                             linkLayout.calcLink(points);
@@ -166,8 +191,25 @@ export class Flow implements flowbee.Disposable {
                             this.updateFlow();
                             this.flowDiagram.render(this.options.diagramOptions);
                         }
+                    } else if (e.element.type === 'step') {
+                        if (e.action.name === 'subflowInstance' && e.element.attributes?.subflow) {
+                            vscode.postMessage({
+                                type: 'edit',
+                                element: 'flowInstance',
+                                path: e.element.attributes.subflow
+                            });
+                        }
                     }
                 } else {
+                    if (e.element.attributes) {
+                        const attrs = Object.keys(e.element.attributes);
+                        for (const attr of attrs) {
+                            const unstagedVal = this.getUnstagedAttributeValue(e.element, attr);
+                            if (unstagedVal) {
+                                e.element.attributes[attr] = unstagedVal;
+                            }
+                        }
+                    }
                     this.updateFlow();
                 }
             })
@@ -374,8 +416,12 @@ export class Flow implements flowbee.Disposable {
                 if (e.action === 'submit') {
                     this.onFlowAction({ action: 'run', options: { submit: true } });
                 } else {
-                    if (e.action === 'edit' && e.element === 'request') {
-                        e.options = { overrides: readState(false)?.userOverrides || {} };
+                    if (e.action === 'edit') {
+                        if (e.element === 'request') {
+                            e.options = { overrides: readState(false)?.userOverrides || {} };
+                        } else if (e.element === 'subflow') {
+                            e.element = this.flowDiagram.instance ? 'flowInstance' : 'file';
+                        }
                     }
                     this.onFlowAction(e);
                 }
@@ -425,7 +471,7 @@ export class Flow implements flowbee.Disposable {
             return { path: flowElement.path };
         } else if (flowElement.path === 'typescript' && flowElement.attributes?.tsFile) {
             return { path: flowElement.attributes.tsFile };
-        } else if (flowElement.path === 'request') {
+        } else if (flowElement.path?.endsWith('request')) {
             let path = this.file;
             let lastSep = path.lastIndexOf('/');
             if (lastSep === -1) lastSep = path.lastIndexOf('\\');
@@ -474,14 +520,17 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    updateStep(stepId: string, reqObjOrTsFile: object | string) {
+    updateStep(stepId: string, reqObjOrStepAttr: object | [string, string]) {
         const step = this.findStep(stepId);
         if (step) {
             if (!step.attributes) step.attributes = {};
-            if (typeof reqObjOrTsFile === 'object') {
-                const reqName = Object.keys(reqObjOrTsFile)[0];
+            if (Array.isArray(reqObjOrStepAttr)) {
+                step.attributes[reqObjOrStepAttr[0]] = reqObjOrStepAttr[1];
+                this.updateFlow(true);
+            } else {
+                const reqName = Object.keys(reqObjOrStepAttr)[0];
                 step.name = reqName.replace(/_/g, EOL);
-                const req = (reqObjOrTsFile as any)[reqName];
+                const req = (reqObjOrStepAttr as any)[reqName];
                 step.attributes.url = req.url;
                 step.attributes.method = req.method;
                 if (req.headers) {
@@ -493,9 +542,6 @@ export class Flow implements flowbee.Disposable {
                 }
                 if (req.body) step.attributes.body = req.body;
                 this.updateFlow(false);
-            } else {
-                step.attributes.tsFile = reqObjOrTsFile;
-                this.updateFlow(true);
             }
         }
     }
@@ -514,30 +560,41 @@ export class Flow implements flowbee.Disposable {
             );
             for (const tab of Object.keys(template)) {
                 for (const widget of (template as flowbee.ConfigTemplate)[tab].widgets) {
-                    // dynamic default value
-                    if (typeof widget.default === 'object') {
-                        const defaultObj = widget.default;
-                        widget.default = (element) => {
-                            const expr = Object.keys(defaultObj)[0];
-                            return this.getDynamicDefault(expr, element, defaultObj[expr]);
-                        };
-                    }
-                    // dynamic options values
-                    if (typeof widget.options === 'string') {
-                        const optsAttrName = widget.options;
-                        widget.options = () => {
-                            return this.getDynamicOptions(optsAttrName);
-                        };
+                    // dynamic defaults
+                    const dynamicDefault = this.getDynamicAttributeDefault(flowElement, widget);
+                    if (dynamicDefault) widget.default = dynamicDefault;
+
+                    // dynamic options
+                    const dynamicOptions = this.getDynamicAttributeOptions(flowElement, widget);
+                    if (dynamicOptions) widget.options = dynamicOptions;
+
+                    const stagedVal = this.getStagedAttributeValue(flowElement, widget);
+                    if (stagedVal) {
+                        if (!flowElement.attributes) flowElement.attributes = {};
+                        flowElement.attributes[widget.attribute!] = stagedVal;
                     }
                 }
             }
             if (instances && instances.length > 0) {
-                const instance = instances[instances.length - 1] as any;
+                const instance = instances[instances.length - 1] as flowbee.StepInstance & {
+                    request?: any;
+                    response?: any;
+                };
                 if (instance.data) {
                     if (instance.data.request) {
                         instance.request = instance.data.request;
+                        if (typeof instance.request === 'object') {
+                            instance.request = jsYaml.dump(instance.request, {
+                                indent: this.options.indent
+                            });
+                        }
                         if (instance.data.response) {
                             instance.response = instance.data.response;
+                            if (typeof instance.response === 'object') {
+                                instance.response = jsYaml.dump(instance.response, {
+                                    indent: this.options.indent
+                                });
+                            }
                         }
                     } else if (typeof instance.data === 'object') {
                         instance.data = JSON.stringify(instance.data, null, this.options.indent);
@@ -611,49 +668,60 @@ export class Flow implements flowbee.Disposable {
         }
     }
 
-    /**
-     * Get options list from flow table attributes
-     * TODO other possibilities besides flow attributes
-     * (especially attribute from another tab on same step)
-     * other types besides tables?
-     */
-    getDynamicOptions(optsAttrName: string): string[] {
-        const attributes = this.flowDiagram.flow.attributes;
-        if (attributes) {
-            const attrVal = attributes[optsAttrName];
-            if (attrVal) {
-                if (attrVal.startsWith('[[') && attrVal.endsWith(']]')) {
-                    return JSON.parse(attrVal).map((row: string[]) => row[0]);
-                }
+    getDynamicAttributeDefault(
+        flowElement: flowbee.FlowElement,
+        widget: flowbee.Widget
+    ): ((element: flowbee.FlowElement) => string) | undefined {
+        if (typeof widget.default === 'object') {
+            const defaultObj = widget.default;
+            const expr = '${' + Object.keys(defaultObj)[0] + '}';
+            for (const avp of this.attributeValueProviders) {
+                const defaultFn = avp.getDynamicDefault?.(flowElement, expr);
+                if (defaultFn) return defaultFn;
             }
+            return (element) => {
+                if (element.attributes) {
+                    return resolve(expr, element.attributes, false, console);
+                }
+                return defaultObj[expr];
+            };
         }
-        return [];
     }
 
-    /**
-     * Get dynamically-determined default attribute value.
-     * Used for link waypoint configuration
-     */
-    getDynamicDefault(
-        expr: string,
-        element: { attributes?: { [key: string]: string } },
-        fallback: string
-    ): string {
-        if (element.attributes) {
-            if (expr.startsWith('display.') && element.attributes.display) {
-                return resolve(
-                    expr,
-                    {
-                        ...element.attributes,
-                        display: flowbee.LinkLayout.fromAttr(element.attributes.display)
-                    },
-                    false,
-                    console
-                );
+    getDynamicAttributeOptions(
+        flowElement: flowbee.FlowElement,
+        widget: flowbee.Widget
+    ): ((attribute?: string) => string[]) | undefined {
+        if (typeof widget.options === 'string') {
+            for (const avp of this.attributeValueProviders) {
+                const optsFn = avp.getDynamicOptions?.(flowElement);
+                if (optsFn) return optsFn;
             }
-            return resolve(expr, element.attributes, false, console);
         }
-        return fallback;
+    }
+
+    getStagedAttributeValue(
+        flowElement: flowbee.FlowElement,
+        widget: flowbee.Widget
+    ): string | undefined {
+        if (flowElement.attributes && widget.attribute) {
+            for (const avp of this.attributeValueProviders) {
+                const stagedVal = avp.stageAttribute?.(flowElement, widget.attribute);
+                if (stagedVal) return stagedVal;
+            }
+        }
+    }
+
+    getUnstagedAttributeValue(
+        flowElement: flowbee.FlowElement,
+        attribute?: string
+    ): string | undefined {
+        if (flowElement.attributes && attribute) {
+            for (const avp of this.attributeValueProviders) {
+                const unstagedVal = avp.unstageAttribute?.(flowElement, attribute);
+                if (unstagedVal) return unstagedVal;
+            }
+        }
     }
 
     onOptionToggle(e: OptionToggleEvent) {
@@ -746,38 +814,53 @@ export class Flow implements flowbee.Disposable {
     }
 
     openValuesPopup() {
-        if (!valuesPopup) {
-            const container = document.getElementById('flow-container') as HTMLDivElement;
-            valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
-            valuesPopup.onValuesAction((actionEvent) => this.onValuesAction(actionEvent));
-            valuesPopup.onOpenValues((openValuesEvent) => {
-                vscode.postMessage({
-                    type: 'edit',
-                    element: 'file',
-                    path: openValuesEvent.path
+        this.closeConfigurator();
+        if (this.flowDiagram.mode === 'runtime') {
+            const runValues = getFlowRunValues(this.flowDiagram.flow, this.results);
+            if (!runValsPopup) {
+                const container = document.getElementById('flow-container') as HTMLDivElement;
+                runValsPopup = new RunValuesPopup(container, this.options.iconBase);
+            }
+            runValsPopup.iconBase = this.options.iconBase;
+            runValsPopup.render({
+                options: { ...getPopupOptions(), title: 'Flow Run Values', indent: 2 },
+                runValues
+            });
+        } else {
+            if (!valuesPopup) {
+                const container = document.getElementById('flow-container') as HTMLDivElement;
+                valuesPopup = new flowbee.ValuesPopup(container, this.options.iconBase);
+                valuesPopup.onPopupAction((actionEvent) => this.onValuesAction(actionEvent));
+                valuesPopup.onOpenValues((openValuesEvent) => {
+                    vscode.postMessage({
+                        type: 'edit',
+                        element: 'file',
+                        path: openValuesEvent.path
+                    });
                 });
+            }
+            valuesPopup.iconBase = this.options.iconBase;
+            valuesPopup.render({ values: this.getUserValues(), options: getValuesOptions() });
+            valuesPopup.setDecorator((text: string) => {
+                if (text && isExpression(text)) {
+                    const required = this.getRequiredValueNames()
+                        .map((v) => toExpression(v))
+                        .includes(text);
+                    const userVals = this.getUserValues();
+                    const override = userVals.overrides ? userVals.overrides[text] : '';
+                    const value =
+                        override || userVals.values.find((v) => v.expression === text)?.value;
+                    const exprClass = value ? 'expression' : 'unresolved';
+                    return [
+                        {
+                            range: { line: 0, start: 0, end: text.length - 1 },
+                            className: required ? `${exprClass} required` : exprClass
+                        }
+                    ];
+                }
+                return [];
             });
         }
-        this.closeConfigurator();
-        valuesPopup.render(this.getUserValues(), getValuesOptions());
-        valuesPopup.setDecorator((text: string) => {
-            if (text && isExpression(text)) {
-                const required = this.getRequiredValueNames()
-                    .map((v) => toExpression(v))
-                    .includes(text);
-                const userVals = this.getUserValues();
-                const override = userVals.overrides ? userVals.overrides[text] : '';
-                const value = override || userVals.values.find((v) => v.expression === text)?.value;
-                const exprClass = value ? 'expression' : 'unresolved';
-                return [
-                    {
-                        range: { line: 0, start: 0, end: text.length - 1 },
-                        className: required ? `${exprClass} required` : exprClass
-                    }
-                ];
-            }
-            return [];
-        });
     }
 
     /**
@@ -920,9 +1003,10 @@ window.addEventListener('message', async (event) => {
             const hasInstance = !!flow.flowDiagram.instance;
             flow.flowActions?.setRunning(hasInstance && message.event === 'start');
             if (hasInstance) {
+                flow.results = message.results;
                 flow.flowDiagram.readonly = true;
                 flow.switchMode('runtime');
-                updateState({ mode: 'runtime' });
+                updateState({ mode: 'runtime', results: flow.results });
             } else {
                 flow.switchMode(flow.flowDiagram.mode);
             }
@@ -934,10 +1018,23 @@ window.addEventListener('message', async (event) => {
             flow.updateRequests(message.requests);
         }
         updateState({ requests: message.requests });
+    } else if (message.type === 'subflows') {
+        const flow = readState(false);
+        if (flow) {
+            flow.subflows = message.subflows;
+        }
+        updateState({ subflows: message.subflows });
     } else if (message.type === 'step') {
         const flow = readState(false);
         if (flow) {
-            flow.updateStep(message.stepId, message.reqObj || message.file);
+            if (message.reqObj) {
+                flow.updateStep(message.stepId, message.reqObj);
+            } else {
+                flow.updateStep(message.stepId, [
+                    message.flow ? 'subflow' : 'tsFile',
+                    message.flow || message.file
+                ]);
+            }
         }
     } else if (message.type === 'values') {
         const values = {
@@ -963,7 +1060,7 @@ window.addEventListener('message', async (event) => {
         }
     } else if (message.type === 'theme-change') {
         const flow = readState();
-        if (flow && valuesPopup?.isOpen) {
+        if (flow && (valuesPopup?.isOpen || runValsPopup?.isOpen)) {
             flow.openValuesPopup();
         }
     } else if (message.type === 'confirm') {
@@ -989,7 +1086,9 @@ interface FlowState {
     values?: Values;
     userOverrides?: { [expr: string]: string };
     storeVals?: any;
+    results?: PlyResults;
     requests?: flowbee.Descriptor[];
+    subflows?: SubflowSpec[];
 }
 
 function updateState(delta: FlowState) {
@@ -1011,6 +1110,8 @@ function readState(loadInstance = true): Flow | undefined {
         flow.switchMode(mode);
         flow.flowActions?.enableCompare(!!flow.flowDiagram.instance);
         requests = state.requests || [];
+        flow.results = state.results;
+        flow.subflows = state.subflows || [];
         flow.render();
         if (state.selected) {
             if (state.selected.id) {

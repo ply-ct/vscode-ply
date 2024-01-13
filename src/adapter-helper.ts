@@ -46,6 +46,11 @@ export class AdapterHelper {
         }
     }
 
+    sameWorkspaceFolder(docUri: vscode.Uri, uri: vscode.Uri): boolean {
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+        return workspaceFolder?.uri?.toString() === this.getWorkspaceFolder(docUri).uri.toString();
+    }
+
     async run(
         uri: vscode.Uri,
         target?: string,

@@ -241,14 +241,39 @@ body {
   color: #ff0000;
   padding-left: 1px;
 }
+
+.split {
+  display: flex;
+  min-height: 100%;
+  overflow: hidden;
+}
+.pane {
+  flex-basis: 50%;
+}
+.pane-left {
+  width: 50%;
+  overflow: scroll;
+}
+.pane-right {
+  border-left: 1px solid var(--vscode-panel-border);
+  width: 50%;
+  overflow: scroll;
+}
+
+.values {
+  margin: 0;
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+}
+
 /* customized flowbee styles */
 .flowbee-configurator {
   width: calc(100% - 200px);
   height: 167px; /* enough for five tabs */
 }
 
-.flowbee-values-dark .flowbee-values-footer input[type='button'],
-.flowbee-values-light .flowbee-values-footer input[type='button'] {
+.flowbee-popup-dark .flowbee-popup-footer input[type='button'],
+.flowbee-popup-light .flowbee-popup-footer input[type='button'] {
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
   border: none;
