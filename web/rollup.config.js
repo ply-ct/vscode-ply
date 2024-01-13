@@ -4,8 +4,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import esbuild from 'rollup-plugin-esbuild';
 import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
-import copy from 'rollup-plugin-copy-watch';
-import sass from 'node-sass';
 import json from '@rollup/plugin-json';
 
 console.log('NODE_ENV: ' + process.env.NODE_ENV);
@@ -31,17 +29,6 @@ export default {
         replace({
             preventAssignment: true,
             'process.env.NODE_ENV': JSON.stringify('production')
-        }),
-        copy({
-            watch: process.env.VSCODE_PLY_WEB_WATCH,
-            targets: [
-                {
-                    src: 'css/style.scss',
-                    dest: 'out',
-                    rename: 'style.css',
-                    transform: (contents) => sass.renderSync({ data: contents.toString() }).css
-                }
-            ]
         }),
         json({
             compact: true

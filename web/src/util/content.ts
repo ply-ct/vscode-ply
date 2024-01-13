@@ -27,7 +27,10 @@ export const getLanguage = (
             return 'html';
         } else if (contentType === 'application/xml') {
             return 'xml';
-        } else if (contentType?.endsWith('/yaml')) {
+        } else if (
+            contentType?.endsWith('/yaml') ||
+            contentType === 'application/vnd.oai.openapi' // TODO: what about json?
+        ) {
             return 'yaml';
         }
     } else {

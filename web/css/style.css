@@ -98,7 +98,7 @@ a:hover {
   overflow-x: clip;
 }
 .url-input {
-  inline-size: 1px; // allows cursor move to right when overflow
+  inline-size: 1px; /* allows cursor move to right when overflow */
 }
 
 .action-btn {
@@ -190,7 +190,7 @@ a:hover {
   margin-right: 15px;
 }
 .cancel-btn {
-  // color: var(--vscode-editor-foreground);
+  /* color: var(--vscode-editor-foreground); */
   color: #ea4f69;
   background: var(--vscode-editor-background);
   border: 1px solid rgba(234, 79, 105, 0.5);
@@ -245,13 +245,13 @@ a:hover {
   margin-top: -10px;
 }
 .flowbee-configurator-dark .flowbee-config-tab-content {
-  overflow: visible; // tooltips extend outside container
+  overflow: visible; /* tooltips extend outside container */
 }
 .flowbee-configurator-light .flowbee-config-tab-content {
-  overflow: visible; // tooltips extend outside container
+  overflow: visible; /* tooltips extend outside container */
 }
 .table-container .flowbee-config-tab-content table {
-  overflow-x: clip; // no grow beyond width
+  overflow-x: clip; /* no grow beyond width */
   width: 100%;
 }
 .table-container .flowbee-config-tab-content th {
@@ -291,7 +291,7 @@ a:hover {
 .auth-popper.el-popper[data-popper-placement^='bottom'] > .el-popper__arrow {
   top: -10px;
 }
-// ignore clicks to avoid closing auth popup
+/* ignore clicks to avoid closing auth popup */
 .el-input__password svg {
   pointer-events: none;
 }
@@ -319,7 +319,7 @@ a:hover {
   line-height: 26px;
   padding: 1px 8px;
   border-radius: 0;
-  // dark theme doesn't define settings.textInputBorder
+  /* dark theme doesn't define settings.textInputBorder */
   border: 1px solid var(--vscode-settings-textInputBorder, #80808050);
   background-color: var(--vscode-settings-textInputBackground);
   box-shadow: none;
