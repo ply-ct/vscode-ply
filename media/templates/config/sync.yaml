@@ -1,0 +1,9 @@
+Trigger:
+  widgets:
+    - type: select
+      attribute: mode
+      label: Mode
+      options:
+        - Await all incoming links
+        - Await any incoming links
+      default: Await all incoming links
