@@ -1,0 +1,15 @@
+Logging:
+  widgets:
+    - type: select
+      attribute: level
+      label: Level
+      options:
+        - Info
+        - Error
+        - Debug
+      default: Info
+Message:
+  widgets:
+    - type: textarea
+      attribute: message
+      label: Log message text, object or expression

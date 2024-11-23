@@ -1,0 +1,24 @@
+Request:
+  widgets:
+    - type: text
+      attribute: url
+      label: URL
+    - type: number
+      attribute: timeout
+      label: Timeout (ms)
+      default: 5000
+Headers:
+  widgets:
+    - type: table
+      multi: false
+      attribute: headers
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Value
+Message:
+  widgets:
+    - type: textarea
+      attribute: message
+      label: Optional message text, object or expression

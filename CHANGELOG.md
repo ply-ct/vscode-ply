@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.2.0](https://github.com/ply-ct/vscode-ply/tree/3.2.0) (2024-11-23)
+
+- Chore: Accumulated dependency vulnerabilities [\#180](https://github.com/ply-ct/vscode-ply/issues/180)
+- Enhancement: WebSocket step [\#181](https://github.com/ply-ct/vscode-ply/issues/181)
+- Enhancement: Logger step [\#182](https://github.com/ply-ct/vscode-ply/issues/182)
+- Enhancement: Flow sync step [\#183](https://github.com/ply-ct/vscode-ply/issues/183)
+
 ## [3.1.0](https://github.com/ply-ct/vscode-ply/tree/3.1.0) (2024-01-13)
 
 - Enhancement: Flow link waypoints [\#33](https://github.com/ply-ct/vscode-ply/issues/33)

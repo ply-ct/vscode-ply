@@ -29,6 +29,12 @@ export const getDescriptors = (customDescriptors?: flowbee.Descriptor[]): flowbe
             flowbee.decide,
             {
                 type: 'step',
+                path: 'log',
+                name: 'Log',
+                icon: 'log.svg'
+            },
+            {
+                type: 'step',
                 path: 'delay',
                 name: 'Delay',
                 icon: 'delay.svg'
@@ -38,6 +44,18 @@ export const getDescriptors = (customDescriptors?: flowbee.Descriptor[]): flowbe
                 path: 'subflow',
                 name: 'Subflow',
                 icon: 'subflow.svg'
+            },
+            {
+                type: 'step',
+                path: 'sync',
+                name: 'Sync',
+                icon: 'sync.svg'
+            },
+            {
+                type: 'step',
+                path: 'websocket',
+                name: 'WebSocket',
+                icon: 'websocket.svg'
             }
         ] as flowbee.Descriptor[])
     );
@@ -45,5 +63,7 @@ export const getDescriptors = (customDescriptors?: flowbee.Descriptor[]): flowbe
     if (customDescriptors) {
         descriptors.push(...customDescriptors);
     }
+
+    console.log('DESCRIPTORS: ' + JSON.stringify(descriptors, null, 2));
     return descriptors;
 };
