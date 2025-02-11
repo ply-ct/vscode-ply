@@ -99,7 +99,7 @@
     "@typescript-eslint/parser": "^5.51.0",
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.17.8",
+    "esbuild": "^0.25.0",
     "eslint": "^8.34.0",
     "mocha": "^10.2.0",
     "rollup": "^2.79.1",
